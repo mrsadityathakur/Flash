@@ -50,7 +50,6 @@
         .mb-1 { margin-bottom: 0.5rem; }
         .mb-2 { margin-bottom: 1rem; }
 
-        /* Modern Buttons */
         button {
             font-family: inherit; border: none; border-radius: var(--radius); font-weight: 700;
             font-size: 1rem; cursor: pointer; transition: all 0.2s;
@@ -64,7 +63,6 @@
         .btn-danger { background-color: rgba(255, 68, 68, 0.1); color: var(--danger); border: 1px solid rgba(255, 68, 68, 0.3); }
         .btn-sm { padding: 8px 16px; font-size: 0.85rem; border-radius: 10px; }
 
-        /* Inputs */
         input, select, textarea {
             width: 100%; background-color: var(--surface); border: 1px solid var(--surface-light);
             color: var(--text); padding: 16px; border-radius: var(--radius); font-family: inherit;
@@ -75,7 +73,6 @@
         
         .card { background-color: var(--surface); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; border: 1px solid var(--surface-light); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         
-        /* Badges */
         .badge { padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
         .badge-requested { background: rgba(255, 215, 0, 0.15); color: var(--primary); }
         .badge-accepted { background: rgba(0, 200, 81, 0.15); color: var(--success); }
@@ -85,7 +82,6 @@
 
         #app { display: flex; flex-direction: column; height: 100%; position: relative; }
         
-        /* Splash Screen */
         #splash-screen {
             position: absolute; inset: 0; background-color: var(--bg); z-index: 9999;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -96,7 +92,6 @@
         .logo-text { font-size: 3rem; font-weight: 900; font-style: italic; color: var(--primary); letter-spacing: -2px; }
         @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.05); opacity: 0.8; } 100% { transform: scale(1); opacity: 1; } }
 
-        /* Header */
         .app-header {
             height: var(--header-height); display: flex; align-items: center; justify-content: space-between;
             padding: 0 20px; background-color: var(--bg); border-bottom: 1px solid var(--surface);
@@ -106,14 +101,12 @@
         .header-logo svg { width: 28px; height: 28px; fill: var(--primary); }
         .header-logo h1 { font-size: 1.3rem; font-weight: 900; font-style: italic; letter-spacing: -1px;}
         
-        /* Main Content */
         #main-content {
             flex: 1; overflow-y: auto; overflow-x: hidden; padding: 20px;
             padding-bottom: calc(var(--nav-height) + 20px + env(safe-area-inset-bottom));
             -webkit-overflow-scrolling: touch;
         }
 
-        /* Bottom Nav */
         .bottom-nav {
             position: absolute; bottom: 0; left: 0; right: 0; height: var(--nav-height);
             background-color: rgba(18, 18, 18, 0.95); backdrop-filter: blur(10px);
@@ -124,21 +117,18 @@
         .nav-item svg { width: 24px; height: 24px; fill: currentColor; }
         .nav-item.active { color: var(--primary); transform: translateY(-2px); }
 
-        /* Auth Screens */
         .auth-container { display: flex; flex-direction: column; justify-content: center; min-height: 100%; padding: 20px; z-index: 50; background: var(--bg); position: absolute; inset: 0; }
         .auth-tabs { display: flex; margin-bottom: 30px; background: var(--surface); border-radius: var(--radius); padding: 4px; }
         .auth-tab { flex: 1; padding: 12px; text-align: center; color: var(--text-muted); cursor: pointer; font-weight: 700; border-radius: 10px; transition: 0.3s; }
         .auth-tab.active { background: var(--primary); color: #000; box-shadow: 0 2px 10px rgba(255, 215, 0, 0.3); }
         .form-group { margin-bottom: 20px; }
 
-        /* Toasts */
         #toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 10000; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 400px; pointer-events: none; }
         .toast { background: var(--surface-light); color: white; padding: 16px 20px; border-radius: var(--radius); font-size: 0.9rem; font-weight: 600; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); animation: slideDown 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), fadeOut 0.4s ease 3.6s forwards; border-left: 4px solid var(--primary); backdrop-filter: blur(10px); }
         .toast.error { border-left-color: var(--danger); }
         @keyframes slideDown { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         @keyframes fadeOut { to { opacity: 0; transform: translateY(-20px); } }
 
-        /* Modals */
         #modal-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);
             z-index: 10001; display: flex; align-items: center; justify-content: center;
@@ -148,7 +138,6 @@
         .modal-box { background: var(--surface); width: 90%; max-width: 340px; border-radius: 20px; padding: 24px; transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); text-align: center; border: 1px solid var(--surface-light); }
         #modal-overlay.active .modal-box { transform: scale(1); }
 
-        /* Ride Specifics */
         .pin-display { font-size: 3rem; font-weight: 900; letter-spacing: 10px; color: var(--primary); text-align: center; background: var(--surface-light); padding: 20px; border-radius: var(--radius); margin: 16px 0; border: 2px dashed var(--primary); }
         .loader { border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid var(--primary); border-radius: 50%; width: 24px; height: 24px; animation: spin 0.8s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -156,7 +145,6 @@
         .map-container { width: 100%; height: 180px; border-radius: var(--radius); overflow: hidden; margin-bottom: 16px; border: 1px solid var(--surface-light); background: #1a1a1a; }
         .map-container iframe { width: 100%; height: 100%; border: none; filter: grayscale(80%) invert(90%) contrast(120%); }
 
-        /* Visual Timeline */
         .timeline { display: flex; justify-content: space-between; margin: 20px 0; position: relative; padding: 0 10px; }
         .timeline::before { content: ''; position: absolute; top: 12px; left: 30px; right: 30px; height: 2px; background: var(--surface-light); z-index: 1; }
         .timeline-step { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 8px; }
@@ -172,7 +160,6 @@
 </head>
 <body>
 
-    <!-- Splash -->
     <div id="splash-screen">
         <div class="logo-container">
             <svg class="logo-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
@@ -186,7 +173,6 @@
         <p class="mt-2 text-muted text-sm font-bold">Fast rides. Fair for everyone.</p>
     </div>
 
-    <!-- Custom Modal -->
     <div id="modal-overlay">
         <div class="modal-box">
             <h2 id="modal-title" class="font-bold text-lg mb-1">Title</h2>
@@ -200,7 +186,6 @@
 
     <div id="toast-container"></div>
 
-    <!-- Main App -->
     <div id="app" class="hidden">
         <header class="app-header">
             <div class="header-logo">
@@ -235,7 +220,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, addDoc, deleteDoc, collection, query, where, onSnapshot, updateDoc, serverTimestamp, runTransaction, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, addDoc, deleteDoc, collection, query, where, onSnapshot, updateDoc, serverTimestamp, runTransaction, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBCzsWEbfQRWlGQIsY7z_BP_xQoiYqdeDI",
@@ -264,7 +249,6 @@
         const headerTitle = document.getElementById('header-title');
         const btnExitDriver = document.getElementById('btn-exit-driver');
 
-        // --- UTILITIES ---
         function playSound(type) {
             try {
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -338,7 +322,6 @@
             return Math.floor(1000 + Math.random() * 9000).toString(); 
         }
 
-        // --- AUTH FLOW ---
         function renderAuth() {
             cleanupListeners(); 
             appEl.classList.add('hidden'); 
@@ -433,7 +416,6 @@
             }
         });
 
-        // --- NAVIGATION ---
         function switchMode(mode) {
             currentMode = mode; activeRideId = null; cleanupListeners();
             if (mode === 'customer') {
@@ -528,8 +510,6 @@
                     if (ride.status === 'accepted' || ride.status === 'arrived') pinSection = `<div class="card mt-2 text-center"><p class="text-muted text-sm mb-1">Ride Start PIN</p><div class="pin-display">${ride.pin}</div></div>`;
                 }
                 const waText = encodeURIComponent(`FLASH Ride:\nFrom: ${ride.pickup}\nTo: ${ride.destination}`);
-                
-                // Map Embed
                 const mapEmbed = `<div class="map-container mt-2"><iframe src="https://maps.google.com/maps?q=${encodeURIComponent(ride.pickup)}&output=embed"></iframe></div>`;
 
                 mainContent.innerHTML = `
@@ -537,12 +517,6 @@
                     ${renderTimeline(ride.status)}
                     ${mapEmbed}
                     <div class="card">
-                        <div class="flex justify-between items-center mb-2">
-                            <span class="text-xs text-muted font-bold">RIDE ID: ${ride.pin}</span>
-                            <button class="copy-btn" onclick="navigator.clipboard.writeText('${ride.pin}');showToast('Ride ID Copied!')">
-                                <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
-                            </button>
-                        </div>
                         <div class="flex flex-col" style="gap: 12px;">
                             <div><p class="text-sm text-muted">Pickup</p><p class="font-bold">${ride.pickup}</p></div>
                             <div><p class="text-sm text-muted">Destination</p><p class="font-bold">${ride.destination}</p></div>
@@ -551,8 +525,8 @@
                     ${driverInfo} ${pinSection}
                     ${ride.status === 'requested' ? `
                         <div class="flex w-full" style="gap: 10px; margin-top: 16px;">
-                            <a href="https://wa.me/?text=${waText}" target="_blank" class="btn-outline w-full" style="text-decoration: none;">Share via WhatsApp</a>
-                            <button class="btn-danger w-full" id="btn-cancel-ride">Cancel Ride</button>
+                            <a href="https://wa.me/?text=${waText}" target="_blank" class="btn-outline w-full" style="text-decoration: none;">WhatsApp</a>
+                            <button class="btn-danger w-full" id="btn-cancel-ride">Cancel</button>
                         </div>` : ''}
                 `;
                 const cBtn = document.getElementById('btn-cancel-ride');
@@ -619,24 +593,11 @@
             };
         }
 
-        // --- DRIVER FLOW ---
+        // --- DRIVER FLOW (DIAGNOSTIC MODE) ---
         function renderDriverDashboard() {
             cleanupListeners();
             mainContent.innerHTML = `<div class="text-center mt-3"><div class="loader" style="margin: 0 auto;"></div></div>`;
             
-            // Get driver stats (Completed rides)
-            const qStats = query(collection(db, "rides"), where("driverUid", "==", currentUser.uid), where("status", "==", "completed"));
-            getDocs(qStats).then(snap => {
-                const earnings = snap.size * 50; // Mock: ₹50 per ride
-                document.getElementById('driver-stats').innerHTML = `
-                    <div class="flex justify-between text-center w-full mb-3">
-                        <div><p class="text-lg font-bold text-primary">${snap.size}</p><p class="text-xs text-muted">Rides</p></div>
-                        <div><p class="text-lg font-bold text-success" style="color:var(--success)">₹${earnings}</p><p class="text-xs text-muted">Earned</p></div>
-                        <div><p class="text-lg font-bold">4.9★</p><p class="text-xs text-muted">Rating</p></div>
-                    </div>
-                `;
-            });
-
             const qActive = query(collection(db, "rides"), where("driverUid", "==", currentUser.uid), where("status", "in", ["accepted", "arrived", "in_progress"]));
             
             const unsubActive = onSnapshot(qActive, (snapshot) => {
@@ -652,58 +613,98 @@
 
         function renderAvailableRides() {
             mainContent.innerHTML = `
-                <div class="card" style="background: var(--surface-light);">
-                    <div id="driver-stats"><div class="loader" style="margin: 0 auto; width: 16px; height: 16px;"></div></div>
-                </div>
                 <div class="flex justify-between items-center mb-2">
                     <div>
-                        <h2 class="font-bold text-primary text-lg">Available Rides</h2>
-                        <p class="text-muted text-sm">Accept a ride to start earning.</p>
+                        <h2 class="font-bold text-primary text-lg">Diagnostic Mode</h2>
+                        <p class="text-muted text-sm">Fetching ALL rides (No Filters)</p>
                     </div>
                     <button class="btn-outline btn-sm" onclick="renderDriverDashboard()">Refresh</button>
                 </div>
                 <div id="rides-list"><div class="loader" style="margin: 20px auto;"></div></div>
             `;
             
-            const q = query(collection(db, "rides"), where("status", "==", "requested"), orderBy("createdAt", "desc"));
+            // NO FILTERS applied here
+            const q = query(collection(db, "rides"));
             
             const unsub = onSnapshot(q, (snapshot) => {
-                const listEl = document.getElementById('rides-list'); if (!listEl) return;
-                if (snapshot.empty) { listEl.innerHTML = `<div class="text-center mt-3 text-muted"><p>No rides available.</p></div>`; return; }
+                const listEl = document.getElementById('rides-list'); 
+                if (!listEl) return;
                 
-                let html = ''; let count = 0;
+                if (snapshot.empty) { 
+                    listEl.innerHTML = `
+                        <div class="card" style="border-color: var(--danger);">
+                            <p class="text-danger font-bold">Database is totally EMPTY!</p>
+                            <p class="text-sm mt-1">Iska matlab Customer ki ride sach mein save nahi ho rahi hai. Ya aap galat Firebase project se connect hain.</p>
+                        </div>`; 
+                    return; 
+                }
+                
+                let html = `<div class="card" style="background: #222;"><p class="text-primary font-bold">Total Rides in Database: ${snapshot.size}</p></div>`;
+                let count = 0;
+                
                 snapshot.forEach(doc => {
                     const ride = doc.data();
+                    
+                    // Skip own ride
                     if(ride.customerUid === currentUser.uid) return; 
+                    
                     count++;
                     html += `
-                    <div class="card">
-                        <div class="flex justify-between items-center mb-1">
-                            <span class="text-xs text-muted">${formatDate(ride.createdAt)}</span>
-                            <span class="badge badge-requested">${ride.rideType}</span>
-                        </div>
-                        <p class="text-sm"><span class="text-muted">From:</span> <span class="font-bold">${ride.pickup}</span></p>
-                        <p class="text-sm mb-2"><span class="text-muted">To:</span> <span class="font-bold">${ride.destination}</span></p>
-                        <button class="btn-primary w-full accept-btn" data-id="${doc.id}">Accept Ride</button>
+                    <div class="card" style="border-color: ${ride.status === 'requested' ? 'var(--success)' : 'var(--surface-light)'};">
+                        <p class="text-xs text-muted">Ride ID: ${doc.id}</p>
+                        <p class="text-sm"><strong>Status:</strong> <span class="badge badge-${ride.status || 'requested'}">${ride.status}</span></p>
+                        <p class="text-sm"><strong>Customer:</strong> ${ride.customerName || 'N/A'}</p>
+                        <p class="text-sm"><strong>From:</strong> ${ride.pickup || 'N/A'}</p>
+                        <p class="text-sm mb-2"><strong>To:</strong> ${ride.destination || 'N/A'}</p>
+                        
+                        ${ride.status === 'requested' ? `
+                            <button class="btn-primary w-full accept-btn" data-id="${doc.id}">Accept Ride</button>
+                        ` : `<p class="text-xs text-muted">(This ride is already ${ride.status})</p>`}
                     </div>`;
                 });
                 
-                listEl.innerHTML = count === 0 ? `<div class="text-center mt-3 text-muted"><p>No rides available.</p></div>` : html;
+                if (count === 0) {
+                     listEl.innerHTML = html + `<div class="text-center mt-3 text-muted"><p>Only YOUR own rides are in the database.</p></div>`;
+                } else {
+                     listEl.innerHTML = html;
+                }
                 
                 listEl.querySelectorAll('.accept-btn').forEach(btn => {
                     btn.onclick = async (e) => {
-                        const rideId = e.target.dataset.id; setLoading(e.target, true);
+                        const rideId = e.target.dataset.id; 
+                        setLoading(e.target, true);
                         try {
                             await runTransaction(db, async (transaction) => {
-                                const rideRef = doc(db, "rides", rideId); const rideDoc = await transaction.get(rideRef);
+                                const rideRef = doc(db, "rides", rideId); 
+                                const rideDoc = await transaction.get(rideRef);
                                 if (!rideDoc.exists()) throw new Error("Ride no longer exists.");
                                 if (rideDoc.data().status !== 'requested') throw new Error("Ride already accepted.");
-                                transaction.update(rideRef, { status: 'accepted', driverUid: currentUser.uid, driverName: userProfile.name, driverPhone: userProfile.phone, acceptedAt: serverTimestamp() });
+                                
+                                transaction.update(rideRef, { 
+                                    status: 'accepted', 
+                                    driverUid: currentUser.uid, 
+                                    driverName: userProfile.name, 
+                                    driverPhone: userProfile.phone, 
+                                    acceptedAt: serverTimestamp() 
+                                });
                             });
                             showToast("Ride accepted!");
-                        } catch (error) { showToast(error.message, true); setLoading(e.target, false); }
+                        } catch (error) { 
+                            showToast(error.message, true); 
+                            setLoading(e.target, false); 
+                        }
                     };
                 });
+            }, (error) => {
+                const listEl = document.getElementById('rides-list');
+                if (listEl) {
+                    listEl.innerHTML = `
+                        <div class="card" style="border-color: var(--danger); background: rgba(255,68,68,0.05);">
+                            <p class="text-danger font-bold">Firebase Permission Error!</p>
+                            <p class="text-sm mt-1">${error.message}</p>
+                            <p class="text-xs mt-2 text-muted">Aapke Firestore Rules data read nahi karne de rahe hain.</p>
+                        </div>`;
+                }
             });
             listeners.push(unsub);
         }

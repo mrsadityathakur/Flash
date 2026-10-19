@@ -11,7 +11,6 @@
             --surface: #121212;
             --surface-light: #222222;
             --primary: #FFD700;
-            --primary-dark: #ccac00;
             --text: #ffffff;
             --text-muted: #888888;
             --danger: #ff4444;
@@ -216,7 +215,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, addDoc, deleteDoc, collection, query, where, onSnapshot, updateDoc, serverTimestamp, runTransaction, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, addDoc, deleteDoc, collection, query, where, onSnapshot, updateDoc, serverTimestamp, runTransaction, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBCzsWEbfQRWlGQIsY7z_BP_xQoiYqdeDI",
@@ -245,6 +244,7 @@
         const headerTitle = document.getElementById('header-title');
         const btnExitDriver = document.getElementById('btn-exit-driver');
 
+        // --- UTILS ---
         function playSound(type) {
             try {
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -256,14 +256,11 @@
                 if(type === 'success') {
                     osc.frequency.setValueAtTime(523.25, ctx.currentTime); 
                     osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1); 
-                } else if (type === 'alert') {
-                    osc.frequency.setValueAtTime(440, ctx.currentTime);
-                }
+                } else { osc.frequency.setValueAtTime(440, ctx.currentTime); }
                 gain.gain.setValueAtTime(0.1, ctx.currentTime);
                 gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
-                osc.start();
-                osc.stop(ctx.currentTime + 0.3);
-            } catch(e) { console.log("Audio not supported"); }
+                osc.start(); osc.stop(ctx.currentTime + 0.3);
+            } catch(e) {}
         }
 
         function showModal(title, desc, onConfirm) {
@@ -271,14 +268,8 @@
             document.getElementById('modal-title').innerText = title;
             document.getElementById('modal-desc').innerText = desc;
             overlay.classList.add('active');
-            
-            document.getElementById('modal-confirm').onclick = () => {
-                overlay.classList.remove('active');
-                onConfirm();
-            };
-            document.getElementById('modal-cancel').onclick = () => {
-                overlay.classList.remove('active');
-            };
+            document.getElementById('modal-confirm').onclick = () => { overlay.classList.remove('active'); onConfirm(); };
+            document.getElementById('modal-cancel').onclick = () => { overlay.classList.remove('active'); };
         }
 
         function showToast(msg, isError = false) {
@@ -287,66 +278,39 @@
             toast.className = `toast ${isError ? 'error' : ''}`;
             toast.textContent = msg;
             container.appendChild(toast);
-            if(!isError) playSound('success'); else playSound('alert');
+            playSound(isError ? 'alert' : 'success');
             setTimeout(() => toast.remove(), 4000);
         }
 
         function setLoading(btn, isLoading) {
             if (!btn) return;
-            if (isLoading) {
-                btn.dataset.originalText = btn.innerHTML;
-                btn.innerHTML = '<div class="loader"></div>';
-                btn.disabled = true;
-            } else {
-                btn.innerHTML = btn.dataset.originalText;
-                btn.disabled = false;
-            }
+            if (isLoading) { btn.dataset.originalText = btn.innerHTML; btn.innerHTML = '<div class="loader"></div>'; btn.disabled = true; } 
+            else { btn.innerHTML = btn.dataset.originalText; btn.disabled = false; }
         }
 
-        function cleanupListeners() { 
-            listeners.forEach(unsub => unsub()); 
-            listeners = []; 
-        }
-        
-        function formatDate(ts) { 
-            if(!ts) return 'N/A'; 
-            const d = ts.toDate ? ts.toDate() : new Date(ts); 
-            return d.toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }); 
-        }
+        function cleanupListeners() { listeners.forEach(unsub => unsub()); listeners = []; }
+        function formatDate(ts) { if(!ts) return 'N/A'; const d = ts.toDate ? ts.toDate() : new Date(ts); return d.toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }); }
 
+        // --- AUTH ---
         function renderAuth() {
             cleanupListeners(); 
-            appEl.classList.add('hidden'); 
-            splashEl.classList.add('hidden');
+            appEl.classList.add('hidden'); splashEl.classList.add('hidden');
             
             let authOverlay = document.getElementById('auth-overlay');
             if (!authOverlay) {
-                authOverlay = document.createElement('div'); 
-                authOverlay.id = 'auth-overlay'; 
-                authOverlay.className = 'auth-container'; 
-                document.body.appendChild(authOverlay);
+                authOverlay = document.createElement('div'); authOverlay.id = 'auth-overlay'; authOverlay.className = 'auth-container'; document.body.appendChild(authOverlay);
             }
             authOverlay.classList.remove('hidden');
             
             authOverlay.innerHTML = `
-                <div class="text-center mb-3">
-                    <div class="logo-container" style="animation: none;">
-                        <div class="logo-text" style="font-size: 2.5rem;">FLASH</div>
-                    </div>
-                </div>
-                
-                <div class="auth-tabs">
-                    <div class="auth-tab active" id="tab-login">Login</div>
-                    <div class="auth-tab" id="tab-signup">Sign Up</div>
-                </div>
-                
+                <div class="text-center mb-3"><div class="logo-container" style="animation: none;"><div class="logo-text" style="font-size: 2.5rem;">FLASH</div></div></div>
+                <div class="auth-tabs"><div class="auth-tab active" id="tab-login">Login</div><div class="auth-tab" id="tab-signup">Sign Up</div></div>
                 <form id="form-login">
                     <div class="form-group"><label>Email</label><input type="email" id="login-email" required placeholder="you@example.com"></div>
                     <div class="form-group"><label>Password</label><input type="password" id="login-password" required placeholder="••••••••"></div>
                     <button type="submit" class="btn-primary w-full mt-2" id="btn-login">Sign In</button>
                     <p class="text-center mt-3 text-sm text-muted" id="link-forgot" style="cursor:pointer;">Forgot Password?</p>
                 </form>
-                
                 <form id="form-signup" class="hidden">
                     <div class="form-group"><label>Full Name</label><input type="text" id="signup-name" required placeholder="John Doe"></div>
                     <div class="form-group"><label>Phone Number</label><input type="tel" id="signup-phone" required placeholder="+91 9876543210"></div>
@@ -356,14 +320,8 @@
                 </form>
             `;
 
-            document.getElementById('tab-login').onclick = () => { 
-                document.getElementById('tab-login').classList.add('active'); document.getElementById('tab-signup').classList.remove('active'); 
-                document.getElementById('form-login').classList.remove('hidden'); document.getElementById('form-signup').classList.add('hidden'); 
-            };
-            document.getElementById('tab-signup').onclick = () => { 
-                document.getElementById('tab-signup').classList.add('active'); document.getElementById('tab-login').classList.remove('active'); 
-                document.getElementById('form-signup').classList.remove('hidden'); document.getElementById('form-login').classList.add('hidden'); 
-            };
+            document.getElementById('tab-login').onclick = () => { document.getElementById('tab-login').classList.add('active'); document.getElementById('tab-signup').classList.remove('active'); document.getElementById('form-login').classList.remove('hidden'); document.getElementById('form-signup').classList.add('hidden'); };
+            document.getElementById('tab-signup').onclick = () => { document.getElementById('tab-signup').classList.add('active'); document.getElementById('tab-login').classList.remove('active'); document.getElementById('form-signup').classList.remove('hidden'); document.getElementById('form-login').classList.add('hidden'); };
 
             document.getElementById('form-login').onsubmit = async (e) => {
                 e.preventDefault(); const btn = document.getElementById('btn-login'); setLoading(btn, true);
@@ -375,18 +333,12 @@
                 e.preventDefault(); const btn = document.getElementById('btn-signup'); setLoading(btn, true);
                 try {
                     const uc = await createUserWithEmailAndPassword(auth, document.getElementById('signup-email').value, document.getElementById('signup-password').value);
-                    
-                    await setDoc(doc(db, "users", uc.user.uid), { 
-                        uid: uc.user.uid, name: document.getElementById('signup-name').value, 
-                        email: document.getElementById('signup-email').value, phone: document.getElementById('signup-phone').value, 
-                        createdAt: serverTimestamp() 
-                    });
+                    await setDoc(doc(db, "users", uc.user.uid), { uid: uc.user.uid, name: document.getElementById('signup-name').value, email: document.getElementById('signup-email').value, phone: document.getElementById('signup-phone').value, createdAt: serverTimestamp() });
                 } catch (error) { showToast(error.message.replace('Firebase: ', ''), true); } finally { setLoading(btn, false); }
             };
 
             document.getElementById('link-forgot').onclick = async () => {
-                const email = document.getElementById('login-email').value; 
-                if (!email) return showToast("Enter your email first", true);
+                const email = document.getElementById('login-email').value; if (!email) return showToast("Enter your email first", true);
                 try { await sendPasswordResetEmail(auth, email); showToast("Reset link sent!"); } catch (error) { showToast(error.message.replace('Firebase: ', ''), true); }
             };
         }
@@ -394,31 +346,20 @@
         onAuthStateChanged(auth, async (user) => {
             const authOverlay = document.getElementById('auth-overlay');
             if (user) {
-                currentUser = user; 
-                if (authOverlay) authOverlay.remove();
+                currentUser = user; if (authOverlay) authOverlay.remove();
                 try {
                     const docRef = doc(db, "users", user.uid); const docSnap = await getDoc(docRef);
                     if (docSnap.exists()) { userProfile = docSnap.data(); } 
-                    else {
-                        const newProfile = { uid: user.uid, name: "Flash User", email: user.email, phone: "0000000000", createdAt: serverTimestamp() };
-                        await setDoc(docRef, newProfile); userProfile = newProfile;
-                    }
+                    else { const newProfile = { uid: user.uid, name: "Flash User", email: user.email, phone: "0000000000", createdAt: serverTimestamp() }; await setDoc(docRef, newProfile); userProfile = newProfile; }
                     splashEl.classList.add('hidden'); appEl.classList.remove('hidden'); switchMode('customer');
                 } catch (error) { showToast("DB Error: " + error.message, true); setTimeout(() => renderAuth(), 4000); }
-            } else {
-                currentUser = null; userProfile = null; activeRideId = null; cleanupListeners(); appEl.classList.add('hidden'); renderAuth();
-            }
+            } else { currentUser = null; userProfile = null; activeRideId = null; cleanupListeners(); appEl.classList.add('hidden'); renderAuth(); }
         });
 
         function switchMode(mode) {
             currentMode = mode; activeRideId = null; cleanupListeners();
-            if (mode === 'customer') {
-                headerTitle.innerText = "FLASH"; btnExitDriver.style.display = 'none';
-                bottomNav.style.display = 'flex'; renderCustomerHome(); 
-            } else {
-                headerTitle.innerText = "Driver Dashboard"; btnExitDriver.style.display = 'block';
-                bottomNav.style.display = 'none'; renderDriverDashboard(); 
-            }
+            if (mode === 'customer') { headerTitle.innerText = "FLASH"; btnExitDriver.style.display = 'none'; bottomNav.style.display = 'flex'; renderCustomerHome(); } 
+            else { headerTitle.innerText = "Driver Dashboard"; btnExitDriver.style.display = 'block'; bottomNav.style.display = 'none'; renderDriverDashboard(); }
         }
 
         btnExitDriver.onclick = () => { switchMode('customer'); };
@@ -432,7 +373,7 @@
             if (navItem.dataset.view === 'profile') renderProfile();
         };
 
-        // --- CUSTOMER FLOW ---
+        // --- CUSTOMER ---
         function renderCustomerHome() {
             cleanupListeners(); bottomNav.style.display = 'flex';
             bottomNav.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
@@ -458,8 +399,7 @@
                         customerUid: currentUser.uid, customerName: userProfile.name, phone: document.getElementById('contact-phone').value,
                         pickup: document.getElementById('pickup').value, destination: document.getElementById('destination').value,
                         rideType: document.getElementById('ride-type').value, instructions: document.getElementById('instructions').value,
-                        status: 'requested', 
-                        createdAt: serverTimestamp(), driverUid: null
+                        status: 'requested', createdAt: serverTimestamp(), driverUid: null
                     });
                     showToast("Ride requested!");
                     bottomNav.querySelector('[data-view="active"]').click();
@@ -469,16 +409,12 @@
 
         function renderTimeline(status) {
             const steps = ['requested', 'accepted', 'arrived', 'in_progress'];
-            let idx = steps.indexOf(status);
-            if(status === 'completed') idx = 4;
-
+            let idx = steps.indexOf(status); if(status === 'completed') idx = 4;
             return `
             <div class="timeline">
                 ${steps.map((s, i) => `
                     <div class="timeline-step ${i <= idx ? 'active' : ''}">
-                        <div class="timeline-dot ${i <= idx ? 'active' : ''}">
-                            ${i <= idx ? '<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>' : ''}
-                        </div>
+                        <div class="timeline-dot ${i <= idx ? 'active' : ''}">${i <= idx ? '<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>' : ''}</div>
                         <span class="timeline-label">${s.replace('_',' ')}</span>
                     </div>
                 `).join('')}
@@ -543,15 +479,7 @@
             const unsub = onSnapshot(q, (snapshot) => {
                 if (snapshot.empty) { mainContent.innerHTML = `<h2 class="font-bold text-lg mb-2">History</h2><p class="text-muted text-center mt-3">No past rides.</p>`; return; }
                 let html = `<h2 class="font-bold text-lg mb-2">History</h2>`;
-                snapshot.forEach(doc => { 
-                    const r = doc.data(); 
-                    html += `
-                    <div class="card">
-                        <div class="flex justify-between mb-1"><span class="badge badge-${r.status}">${r.status}</span><span class="text-xs text-muted">${formatDate(r.createdAt)}</span></div>
-                        <p class="text-sm font-bold mt-1">${r.destination}</p>
-                        <p class="text-xs text-muted">From: ${r.pickup}</p>
-                    </div>`; 
-                });
+                snapshot.forEach(doc => { const r = doc.data(); html += `<div class="card"><div class="flex justify-between mb-1"><span class="badge badge-${r.status}">${r.status}</span><span class="text-xs text-muted">${formatDate(r.createdAt)}</span></div><p class="text-sm font-bold mt-1">${r.destination}</p><p class="text-xs text-muted">From: ${r.pickup}</p></div>`; });
                 mainContent.innerHTML = html;
             });
             listeners.push(unsub);
@@ -562,44 +490,28 @@
             mainContent.innerHTML = `
                 <h2 class="font-bold text-lg mb-2">Profile</h2>
                 <div class="card flex items-center gap-3">
-                    <div style="width: 60px; height: 60px; border-radius: 50%; background: var(--primary); color: #000; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold;">
-                        ${userProfile.name.charAt(0).toUpperCase()}
-                    </div>
-                    <div>
-                        <p class="font-bold text-lg">${userProfile.name}</p>
-                        <p class="text-sm text-muted">${userProfile.email}</p>
-                        <p class="text-sm text-muted">${userProfile.phone}</p>
-                    </div>
+                    <div style="width: 60px; height: 60px; border-radius: 50%; background: var(--primary); color: #000; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold;">${userProfile.name.charAt(0).toUpperCase()}</div>
+                    <div><p class="font-bold text-lg">${userProfile.name}</p><p class="text-sm text-muted">${userProfile.email}</p><p class="text-sm text-muted">${userProfile.phone}</p></div>
                 </div>
-                
                 <div class="card" style="border-color: var(--primary); background: linear-gradient(145deg, rgba(255,215,0,0.1), transparent);">
                     <h3 class="font-bold mb-1 text-primary">Become a Driver</h3>
                     <p class="text-sm text-muted mb-2">Zero commission. Keep 100% of your earnings.</p>
                     <button class="btn-primary w-full" id="btn-become-driver">Switch to Driver Mode</button>
                 </div>
-
                 <button class="btn-outline w-full mt-2" id="btn-logout">Logout</button>
             `;
             document.getElementById('btn-become-driver').onclick = () => { switchMode('driver'); };
-            document.getElementById('btn-logout').onclick = () => { 
-                showModal("Logout?", "You will need to login again.", () => { signOut(auth); });
-            };
+            document.getElementById('btn-logout').onclick = () => { showModal("Logout?", "You will need to login again.", () => { signOut(auth); }); };
         }
 
-        // --- DRIVER FLOW ---
+        // --- DRIVER ---
         function renderDriverDashboard() {
             cleanupListeners();
             mainContent.innerHTML = `<div class="text-center mt-3"><div class="loader" style="margin: 0 auto;"></div></div>`;
-            
             const qActive = query(collection(db, "rides"), where("driverUid", "==", currentUser.uid), where("status", "in", ["accepted", "arrived", "in_progress"]));
-            
             const unsubActive = onSnapshot(qActive, (snapshot) => {
-                if (!snapshot.empty) {
-                    const rideDoc = snapshot.docs[0]; 
-                    renderDriverActiveRideUI(rideDoc.id, rideDoc.data());
-                } else {
-                    renderAvailableRides();
-                }
+                if (!snapshot.empty) { const rideDoc = snapshot.docs[0]; renderDriverActiveRideUI(rideDoc.id, rideDoc.data()); } 
+                else { renderAvailableRides(); }
             }, (error) => { showToast("Error: " + error.message, true); });
             listeners.push(unsubActive);
         }
@@ -607,31 +519,57 @@
         function renderAvailableRides() {
             mainContent.innerHTML = `
                 <div class="flex justify-between items-center mb-2">
-                    <div>
-                        <h2 class="font-bold text-primary text-lg">Available Rides</h2>
-                        <p class="text-muted text-sm">Accept a ride to start earning.</p>
+                    <div><h2 class="font-bold text-primary text-lg">Available Rides</h2><p class="text-muted text-sm">Accept a ride to start earning.</p></div>
+                    <div class="flex gap-2">
+                        <button class="btn-outline btn-sm" id="btn-clear-old" style="border-color: var(--danger); color: var(--danger);">Clear Old</button>
+                        <button class="btn-outline btn-sm" onclick="renderDriverDashboard()">Refresh</button>
                     </div>
-                    <button class="btn-outline btn-sm" onclick="renderDriverDashboard()">Refresh</button>
                 </div>
                 <div id="rides-list"><div class="loader" style="margin: 20px auto;"></div></div>
             `;
             
+            // Auto Cleanup Old Rides
+            document.getElementById('btn-clear-old').onclick = async () => {
+                showModal("Clear Old Rides?", "This will delete all requested rides older than 30 minutes.", async () => {
+                    try {
+                        const qOld = query(collection(db, "rides"), where("status", "==", "requested"));
+                        const snap = await getDocs(qOld);
+                        let deleted = 0;
+                        const now = Date.now();
+                        snap.forEach(async (d) => {
+                            const data = d.data();
+                            if (data.createdAt) {
+                                const rideTime = data.createdAt.toDate().getTime();
+                                if (now - rideTime > 30 * 60 * 1000) { // 30 mins
+                                    await deleteDoc(doc(db, "rides", d.id));
+                                    deleted++;
+                                }
+                            }
+                        });
+                        showToast(`Cleaned up ${deleted} old rides.`);
+                    } catch (e) { showToast(e.message, true); }
+                });
+            };
+
             const q = query(collection(db, "rides"), where("status", "==", "requested"), orderBy("createdAt", "desc"));
             
             const unsub = onSnapshot(q, (snapshot) => {
-                const listEl = document.getElementById('rides-list'); 
-                if (!listEl) return;
-                
-                if (snapshot.empty) { 
-                    listEl.innerHTML = `<div class="text-center mt-3 text-muted"><p>No rides available right now.</p></div>`; 
-                    return; 
-                }
+                const listEl = document.getElementById('rides-list'); if (!listEl) return;
+                if (snapshot.empty) { listEl.innerHTML = `<div class="text-center mt-3 text-muted"><p>No rides available right now.</p></div>`; return; }
                 
                 let html = ''; let count = 0;
-                
+                const now = Date.now();
+
                 snapshot.forEach(doc => {
                     const ride = doc.data();
                     if(ride.customerUid === currentUser.uid) return; 
+                    
+                    // TIME FILTER: Skip rides older than 30 minutes
+                    if (ride.createdAt) {
+                        const rideTime = ride.createdAt.toDate().getTime();
+                        if (now - rideTime > 30 * 60 * 1000) return; // Hide old rides
+                    }
+
                     count++;
                     html += `
                     <div class="card">
@@ -645,54 +583,28 @@
                     </div>`;
                 });
                 
-                if (count === 0) {
-                     listEl.innerHTML = `<div class="text-center mt-3 text-muted"><p>No rides available.</p></div>`;
-                } else {
-                     listEl.innerHTML = html;
-                }
+                listEl.innerHTML = count === 0 ? `<div class="text-center mt-3 text-muted"><p>No rides available.</p></div>` : html;
                 
                 listEl.querySelectorAll('.accept-btn').forEach(btn => {
                     btn.onclick = async (e) => {
-                        const rideId = e.target.dataset.id; 
-                        setLoading(e.target, true);
+                        const rideId = e.target.dataset.id; setLoading(e.target, true);
                         try {
                             await runTransaction(db, async (transaction) => {
-                                const rideRef = doc(db, "rides", rideId); 
-                                const rideDoc = await transaction.get(rideRef);
+                                const rideRef = doc(db, "rides", rideId); const rideDoc = await transaction.get(rideRef);
                                 if (!rideDoc.exists()) throw new Error("Ride no longer exists.");
                                 if (rideDoc.data().status !== 'requested') throw new Error("Ride already accepted.");
-                                
-                                transaction.update(rideRef, { 
-                                    status: 'accepted', 
-                                    driverUid: currentUser.uid, 
-                                    driverName: userProfile.name, 
-                                    driverPhone: userProfile.phone, 
-                                    acceptedAt: serverTimestamp() 
-                                });
+                                transaction.update(rideRef, { status: 'accepted', driverUid: currentUser.uid, driverName: userProfile.name, driverPhone: userProfile.phone, acceptedAt: serverTimestamp() });
                             });
                             showToast("Ride accepted!");
-                        } catch (error) { 
-                            showToast(error.message, true); 
-                            setLoading(e.target, false); 
-                        }
+                        } catch (error) { showToast(error.message, true); setLoading(e.target, false); }
                     };
                 });
-            }, (error) => {
-                const listEl = document.getElementById('rides-list');
-                if (listEl) {
-                    listEl.innerHTML = `
-                        <div class="card" style="border-color: var(--danger); background: rgba(255,68,68,0.05);">
-                            <p class="text-danger font-bold">Database Error!</p>
-                            <p class="text-sm mt-1">${error.message}</p>
-                        </div>`;
-                }
             });
             listeners.push(unsub);
         }
 
         function renderDriverActiveRideUI(rideId, ride) {
-            let actionSection = '';
-            let cancelBtnSection = '';
+            let actionSection = ''; let cancelBtnSection = '';
             const pickupMapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ride.pickup)}`;
             const dropMapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ride.destination)}`;
             
@@ -700,7 +612,6 @@
                 actionSection = `<button class="btn-primary w-full mt-2" id="btn-arrived">I've Arrived at Pickup</button>`;
                 cancelBtnSection = `<button class="btn-danger w-full mt-2" id="btn-release-ride">Cancel & Release Ride</button>`;
             } else if (ride.status === 'arrived') {
-                // Direct Start Ride button (No PIN input)
                 actionSection = `<button class="btn-primary w-full mt-2" id="btn-start-ride">Start Ride</button>`;
                 cancelBtnSection = `<button class="btn-danger w-full mt-2" id="btn-release-ride">Cancel & Release Ride</button>`;
             } else if (ride.status === 'in_progress') {
@@ -712,16 +623,10 @@
                 ${renderTimeline(ride.status)}
                 <div class="card" style="border-color: var(--primary);">
                     <div class="flex justify-between items-center mb-3">
-                        <div>
-                            <p class="text-xs text-muted">CUSTOMER</p>
-                            <p class="font-bold">${ride.customerName}</p>
-                            <p class="text-sm">${ride.phone}</p>
-                        </div>
+                        <div><p class="text-xs text-muted">CUSTOMER</p><p class="font-bold">${ride.customerName}</p><p class="text-sm">${ride.phone}</p></div>
                         <button class="btn-outline btn-sm" id="btn-copy-details">Copy Info</button>
                     </div>
-                    
                     <div class="map-container"><iframe src="https://maps.google.com/maps?q=${encodeURIComponent(ride.pickup)}&output=embed"></iframe></div>
-                    
                     <div class="flex justify-between items-center mb-2">
                         <div><p class="text-xs text-muted">PICKUP</p><p class="font-bold text-sm">${ride.pickup}</p></div>
                         <a href="${pickupMapUrl}" target="_blank" class="btn-primary btn-sm" style="text-decoration:none;">Open Map</a>
@@ -744,17 +649,7 @@
 
             const btnStart = document.getElementById('btn-start-ride');
             if (btnStart) {
-                // Direct state update without PIN
-                btnStart.onclick = async () => { 
-                    setLoading(btnStart, true); 
-                    try { 
-                        await updateDoc(doc(db, "rides", rideId), { status: 'in_progress', startedAt: serverTimestamp() }); 
-                        showToast("Ride Started!"); 
-                    } catch (e) { 
-                        showToast(e.message, true); 
-                        setLoading(btnStart, false); 
-                    } 
-                };
+                btnStart.onclick = async () => { setLoading(btnStart, true); try { await updateDoc(doc(db, "rides", rideId), { status: 'in_progress', startedAt: serverTimestamp() }); showToast("Ride Started!"); } catch (e) { showToast(e.message, true); setLoading(btnStart, false); } };
             }
 
             const btnComplete = document.getElementById('btn-complete-ride');
@@ -765,10 +660,8 @@
                 btnRelease.onclick = () => {
                     showModal("Release Ride?", "This ride will go back to the pool for other drivers.", async () => {
                         setLoading(btnRelease, true);
-                        try {
-                            await updateDoc(doc(db, "rides", rideId), { status: 'requested', driverUid: null, driverName: null, driverPhone: null, acceptedAt: null, arrivedAt: null });
-                            showToast("Ride released.");
-                        } catch (e) { showToast(e.message, true); setLoading(btnRelease, false); }
+                        try { await updateDoc(doc(db, "rides", rideId), { status: 'requested', driverUid: null, driverName: null, driverPhone: null, acceptedAt: null, arrivedAt: null }); showToast("Ride released."); } 
+                        catch (e) { showToast(e.message, true); setLoading(btnRelease, false); }
                     });
                 };
             }

@@ -327,26 +327,47 @@
         }
 
         if (isFirebaseConfigured) {
-            onAuthStateChanged(auth, async (user) => {
-                const authOverlay = document.getElementById('auth-overlay');
-                if (user) {
-                    currentUser = user;
-                    if (authOverlay) authOverlay.remove();
-                    const docSnap = await getDoc(doc(db, "users", user.uid));
-                    if (docSnap.exists()) {
-                        userProfile = docSnap.data();
-                        splashEl.classList.add('hidden'); appEl.classList.remove('hidden'); renderApp();
-                    } else {
-                        showToast("Profile missing.", true); 
-                    }
+    onAuthStateChanged(auth, async (user) => {
+        const authOverlay = document.getElementById('auth-overlay');
+        if (user) {
+            currentUser = user;
+            if (authOverlay) authOverlay.remove();
+            
+            try {
+                const docRef = doc(db, "users", user.uid);
+                const docSnap = await getDoc(docRef);
+                
+                if (docSnap.exists()) {
+                    userProfile = docSnap.data();
                 } else {
-                    currentUser = null; userProfile = null; activeRideId = null; cleanupListeners();
-                    appEl.classList.add('hidden'); renderAuth();
+                    // Profile nahi mili, toh naya banao
+                    const newProfile = {
+                        uid: user.uid, 
+                        name: user.displayName || "Flash User", 
+                        email: user.email,
+                        phone: "0000000000", 
+                        createdAt: serverTimestamp()
+                    };
+                    await setDoc(docRef, newProfile);
+                    userProfile = newProfile;
                 }
-            });
+                
+                // Agar sab theek raha toh App khol do
+                splashEl.classList.add('hidden'); 
+                appEl.classList.remove('hidden'); 
+                renderApp();
+                
+            } catch (error) {
+                // AGAR ERROR AAYA TOH SCREEN PAR DIKHAO
+                console.error("Firebase Error:", error);
+                showToast("Error: " + error.message, true);
+                setTimeout(() => renderAuth(), 4000); // 4 second baad wapas login par bhej do
+            }
         } else {
-            splashEl.classList.add('hidden'); renderAuth();
-            setTimeout(() => showToast("Firebase init failed.", true), 1000);
+            currentUser = null; userProfile = null; activeRideId = null; cleanupListeners();
+            appEl.classList.add('hidden'); renderAuth();
+        }
+    });
         }
 
         // ==========================================

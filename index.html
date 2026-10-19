@@ -138,7 +138,6 @@
         .modal-box { background: var(--surface); width: 90%; max-width: 340px; border-radius: 20px; padding: 24px; transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); text-align: center; border: 1px solid var(--surface-light); }
         #modal-overlay.active .modal-box { transform: scale(1); }
 
-        .pin-display { font-size: 3rem; font-weight: 900; letter-spacing: 10px; color: var(--primary); text-align: center; background: var(--surface-light); padding: 20px; border-radius: var(--radius); margin: 16px 0; border: 2px dashed var(--primary); }
         .loader { border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid var(--primary); border-radius: 50%; width: 24px; height: 24px; animation: spin 0.8s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
@@ -153,9 +152,6 @@
         .timeline-dot svg { width: 12px; height: 12px; fill: #000; }
         .timeline-label { font-size: 0.6rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; }
         .timeline-step.active .timeline-label { color: var(--primary); }
-        
-        .copy-btn { background: none; border: none; color: var(--text-muted); padding: 4px; cursor: pointer; }
-        .copy-btn svg { width: 16px; height: 16px; fill: currentColor; }
     </style>
 </head>
 <body>
@@ -220,7 +216,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, addDoc, deleteDoc, collection, query, where, onSnapshot, updateDoc, serverTimestamp, runTransaction, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, addDoc, deleteDoc, collection, query, where, onSnapshot, updateDoc, serverTimestamp, runTransaction, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBCzsWEbfQRWlGQIsY7z_BP_xQoiYqdeDI",
@@ -317,11 +313,6 @@
             const d = ts.toDate ? ts.toDate() : new Date(ts); 
             return d.toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }); 
         }
-        
-        // FIXED PIN GENERATOR (Uber/Rapido Style)
-        function generateFixedPIN() { 
-            return Math.floor(1000 + Math.random() * 9000).toString(); 
-        }
 
         function renderAuth() {
             cleanupListeners(); 
@@ -385,13 +376,9 @@
                 try {
                     const uc = await createUserWithEmailAndPassword(auth, document.getElementById('signup-email').value, document.getElementById('signup-password').value);
                     
-                    // Generate a fixed PIN for the customer
-                    const fixedPIN = generateFixedPIN();
-
                     await setDoc(doc(db, "users", uc.user.uid), { 
                         uid: uc.user.uid, name: document.getElementById('signup-name').value, 
                         email: document.getElementById('signup-email').value, phone: document.getElementById('signup-phone').value, 
-                        pin: fixedPIN, // Save fixed PIN
                         createdAt: serverTimestamp() 
                     });
                 } catch (error) { showToast(error.message.replace('Firebase: ', ''), true); } finally { setLoading(btn, false); }
@@ -411,17 +398,9 @@
                 if (authOverlay) authOverlay.remove();
                 try {
                     const docRef = doc(db, "users", user.uid); const docSnap = await getDoc(docRef);
-                    if (docSnap.exists()) { 
-                        userProfile = docSnap.data(); 
-                        // Fallback: If existing user doesn't have a fixed PIN, generate one now
-                        if (!userProfile.pin) {
-                            userProfile.pin = generateFixedPIN();
-                            await updateDoc(docRef, { pin: userProfile.pin });
-                        }
-                    } 
+                    if (docSnap.exists()) { userProfile = docSnap.data(); } 
                     else {
-                        const fixedPIN = generateFixedPIN();
-                        const newProfile = { uid: user.uid, name: "Flash User", email: user.email, phone: "0000000000", pin: fixedPIN, createdAt: serverTimestamp() };
+                        const newProfile = { uid: user.uid, name: "Flash User", email: user.email, phone: "0000000000", createdAt: serverTimestamp() };
                         await setDoc(docRef, newProfile); userProfile = newProfile;
                     }
                     splashEl.classList.add('hidden'); appEl.classList.remove('hidden'); switchMode('customer');
@@ -480,7 +459,6 @@
                         pickup: document.getElementById('pickup').value, destination: document.getElementById('destination').value,
                         rideType: document.getElementById('ride-type').value, instructions: document.getElementById('instructions').value,
                         status: 'requested', 
-                        pin: userProfile.pin, // Use FIXED PIN instead of generating a new one
                         createdAt: serverTimestamp(), driverUid: null
                     });
                     showToast("Ride requested!");
@@ -520,11 +498,9 @@
                 const rideDoc = snapshot.docs[0]; activeRideId = rideDoc.id; 
                 const ride = rideDoc.data();
                 
-                let driverInfo = ''; let pinSection = '';
-                if (ride.status === 'requested') pinSection = `<div class="card mt-2 text-center"><p class="text-muted text-sm mb-1">Share this PIN with driver</p><div class="pin-display">${ride.pin}</div></div>`;
-                else if (['accepted', 'arrived', 'in_progress'].includes(ride.status)) {
+                let driverInfo = '';
+                if (['accepted', 'arrived', 'in_progress'].includes(ride.status)) {
                     driverInfo = `<div class="card mt-2" style="border-color: var(--primary); background: rgba(255,215,0,0.05);"><h3 class="font-bold mb-1 text-primary">Driver Details</h3><p>Name: ${ride.driverName}</p><p>Phone: ${ride.driverPhone}</p></div>`;
-                    if (ride.status === 'accepted' || ride.status === 'arrived') pinSection = `<div class="card mt-2 text-center"><p class="text-muted text-sm mb-1">Ride Start PIN</p><div class="pin-display">${ride.pin}</div></div>`;
                 }
                 const waText = encodeURIComponent(`FLASH Ride:\nFrom: ${ride.pickup}\nTo: ${ride.destination}`);
                 const mapEmbed = `<div class="map-container mt-2"><iframe src="https://maps.google.com/maps?q=${encodeURIComponent(ride.pickup)}&output=embed"></iframe></div>`;
@@ -539,7 +515,7 @@
                             <div><p class="text-sm text-muted">Destination</p><p class="font-bold">${ride.destination}</p></div>
                         </div>
                     </div>
-                    ${driverInfo} ${pinSection}
+                    ${driverInfo}
                     ${ride.status === 'requested' ? `
                         <div class="flex w-full" style="gap: 10px; margin-top: 16px;">
                             <a href="https://wa.me/?text=${waText}" target="_blank" class="btn-outline w-full" style="text-decoration: none;">WhatsApp</a>
@@ -594,13 +570,6 @@
                         <p class="text-sm text-muted">${userProfile.email}</p>
                         <p class="text-sm text-muted">${userProfile.phone}</p>
                     </div>
-                </div>
-
-                <!-- Fixed PIN Display -->
-                <div class="card" style="border-color: var(--primary);">
-                    <p class="text-sm text-muted mb-1">Your Ride Start PIN</p>
-                    <div class="pin-display" style="margin: 0;">${userProfile.pin}</div>
-                    <p class="text-xs text-muted mt-2 text-center">Share this PIN with the driver to start your ride.</p>
                 </div>
                 
                 <div class="card" style="border-color: var(--primary); background: linear-gradient(145deg, rgba(255,215,0,0.1), transparent);">
@@ -731,7 +700,8 @@
                 actionSection = `<button class="btn-primary w-full mt-2" id="btn-arrived">I've Arrived at Pickup</button>`;
                 cancelBtnSection = `<button class="btn-danger w-full mt-2" id="btn-release-ride">Cancel & Release Ride</button>`;
             } else if (ride.status === 'arrived') {
-                actionSection = `<div class="card mt-2"><label>Enter Customer's PIN</label><input type="number" id="start-pin" placeholder="0000" style="text-align: center; font-size: 1.5rem; letter-spacing: 5px; margin-bottom: 10px;"><button class="btn-primary w-full" id="btn-start-ride">Start Ride</button></div>`;
+                // Direct Start Ride button (No PIN input)
+                actionSection = `<button class="btn-primary w-full mt-2" id="btn-start-ride">Start Ride</button>`;
                 cancelBtnSection = `<button class="btn-danger w-full mt-2" id="btn-release-ride">Cancel & Release Ride</button>`;
             } else if (ride.status === 'in_progress') {
                 actionSection = `<button class="btn-primary w-full mt-2" id="btn-complete-ride">Complete Ride</button>`;
@@ -774,24 +744,16 @@
 
             const btnStart = document.getElementById('btn-start-ride');
             if (btnStart) {
-                btnStart.onclick = async () => {
-                    const enteredPin = document.getElementById('start-pin').value;
-                    if (enteredPin.length !== 4) return showToast("Enter 4-digit PIN", true);
-                    setLoading(btnStart, true);
-                    try {
-                        await runTransaction(db, async (transaction) => {
-                            const rideRef = doc(db, "rides", rideId); const rideDoc = await transaction.get(rideRef);
-                            
-                            // FIX: Strict String Comparison with Trim
-                            const dbPin = String(rideDoc.data().pin).trim();
-                            const inputPin = String(enteredPin).trim();
-
-                            if (dbPin !== inputPin) throw new Error("Incorrect PIN. Please check with customer.");
-                            
-                            transaction.update(rideRef, { status: 'in_progress', startedAt: serverTimestamp() });
-                        });
-                        showToast("Ride Started!");
-                    } catch (e) { showToast(e.message, true); setLoading(btnStart, false); }
+                // Direct state update without PIN
+                btnStart.onclick = async () => { 
+                    setLoading(btnStart, true); 
+                    try { 
+                        await updateDoc(doc(db, "rides", rideId), { status: 'in_progress', startedAt: serverTimestamp() }); 
+                        showToast("Ride Started!"); 
+                    } catch (e) { 
+                        showToast(e.message, true); 
+                        setLoading(btnStart, false); 
+                    } 
                 };
             }
 

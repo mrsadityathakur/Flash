@@ -258,8 +258,8 @@
                 osc.connect(gain);
                 gain.connect(ctx.destination);
                 if(type === 'success') {
-                    osc.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
-                    osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1); // E5
+                    osc.frequency.setValueAtTime(523.25, ctx.currentTime); 
+                    osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1); 
                 } else if (type === 'alert') {
                     osc.frequency.setValueAtTime(440, ctx.currentTime);
                 }
@@ -318,7 +318,8 @@
             return d.toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }); 
         }
         
-        function generatePIN() { 
+        // FIXED PIN GENERATOR (Uber/Rapido Style)
+        function generateFixedPIN() { 
             return Math.floor(1000 + Math.random() * 9000).toString(); 
         }
 
@@ -383,9 +384,15 @@
                 e.preventDefault(); const btn = document.getElementById('btn-signup'); setLoading(btn, true);
                 try {
                     const uc = await createUserWithEmailAndPassword(auth, document.getElementById('signup-email').value, document.getElementById('signup-password').value);
+                    
+                    // Generate a fixed PIN for the customer
+                    const fixedPIN = generateFixedPIN();
+
                     await setDoc(doc(db, "users", uc.user.uid), { 
                         uid: uc.user.uid, name: document.getElementById('signup-name').value, 
-                        email: document.getElementById('signup-email').value, phone: document.getElementById('signup-phone').value, createdAt: serverTimestamp() 
+                        email: document.getElementById('signup-email').value, phone: document.getElementById('signup-phone').value, 
+                        pin: fixedPIN, // Save fixed PIN
+                        createdAt: serverTimestamp() 
                     });
                 } catch (error) { showToast(error.message.replace('Firebase: ', ''), true); } finally { setLoading(btn, false); }
             };
@@ -404,9 +411,17 @@
                 if (authOverlay) authOverlay.remove();
                 try {
                     const docRef = doc(db, "users", user.uid); const docSnap = await getDoc(docRef);
-                    if (docSnap.exists()) { userProfile = docSnap.data(); } 
+                    if (docSnap.exists()) { 
+                        userProfile = docSnap.data(); 
+                        // Fallback: If existing user doesn't have a fixed PIN, generate one now
+                        if (!userProfile.pin) {
+                            userProfile.pin = generateFixedPIN();
+                            await updateDoc(docRef, { pin: userProfile.pin });
+                        }
+                    } 
                     else {
-                        const newProfile = { uid: user.uid, name: "Flash User", email: user.email, phone: "0000000000", createdAt: serverTimestamp() };
+                        const fixedPIN = generateFixedPIN();
+                        const newProfile = { uid: user.uid, name: "Flash User", email: user.email, phone: "0000000000", pin: fixedPIN, createdAt: serverTimestamp() };
                         await setDoc(docRef, newProfile); userProfile = newProfile;
                     }
                     splashEl.classList.add('hidden'); appEl.classList.remove('hidden'); switchMode('customer');
@@ -464,7 +479,9 @@
                         customerUid: currentUser.uid, customerName: userProfile.name, phone: document.getElementById('contact-phone').value,
                         pickup: document.getElementById('pickup').value, destination: document.getElementById('destination').value,
                         rideType: document.getElementById('ride-type').value, instructions: document.getElementById('instructions').value,
-                        status: 'requested', pin: generatePIN(), createdAt: serverTimestamp(), driverUid: null
+                        status: 'requested', 
+                        pin: userProfile.pin, // Use FIXED PIN instead of generating a new one
+                        createdAt: serverTimestamp(), driverUid: null
                     });
                     showToast("Ride requested!");
                     bottomNav.querySelector('[data-view="active"]').click();
@@ -578,6 +595,13 @@
                         <p class="text-sm text-muted">${userProfile.phone}</p>
                     </div>
                 </div>
+
+                <!-- Fixed PIN Display -->
+                <div class="card" style="border-color: var(--primary);">
+                    <p class="text-sm text-muted mb-1">Your Ride Start PIN</p>
+                    <div class="pin-display" style="margin: 0;">${userProfile.pin}</div>
+                    <p class="text-xs text-muted mt-2 text-center">Share this PIN with the driver to start your ride.</p>
+                </div>
                 
                 <div class="card" style="border-color: var(--primary); background: linear-gradient(145deg, rgba(255,215,0,0.1), transparent);">
                     <h3 class="font-bold mb-1 text-primary">Become a Driver</h3>
@@ -593,7 +617,7 @@
             };
         }
 
-        // --- DRIVER FLOW (DIAGNOSTIC MODE) ---
+        // --- DRIVER FLOW ---
         function renderDriverDashboard() {
             cleanupListeners();
             mainContent.innerHTML = `<div class="text-center mt-3"><div class="loader" style="margin: 0 auto;"></div></div>`;
@@ -615,56 +639,45 @@
             mainContent.innerHTML = `
                 <div class="flex justify-between items-center mb-2">
                     <div>
-                        <h2 class="font-bold text-primary text-lg">Diagnostic Mode</h2>
-                        <p class="text-muted text-sm">Fetching ALL rides (No Filters)</p>
+                        <h2 class="font-bold text-primary text-lg">Available Rides</h2>
+                        <p class="text-muted text-sm">Accept a ride to start earning.</p>
                     </div>
                     <button class="btn-outline btn-sm" onclick="renderDriverDashboard()">Refresh</button>
                 </div>
                 <div id="rides-list"><div class="loader" style="margin: 20px auto;"></div></div>
             `;
             
-            // NO FILTERS applied here
-            const q = query(collection(db, "rides"));
+            const q = query(collection(db, "rides"), where("status", "==", "requested"), orderBy("createdAt", "desc"));
             
             const unsub = onSnapshot(q, (snapshot) => {
                 const listEl = document.getElementById('rides-list'); 
                 if (!listEl) return;
                 
                 if (snapshot.empty) { 
-                    listEl.innerHTML = `
-                        <div class="card" style="border-color: var(--danger);">
-                            <p class="text-danger font-bold">Database is totally EMPTY!</p>
-                            <p class="text-sm mt-1">Iska matlab Customer ki ride sach mein save nahi ho rahi hai. Ya aap galat Firebase project se connect hain.</p>
-                        </div>`; 
+                    listEl.innerHTML = `<div class="text-center mt-3 text-muted"><p>No rides available right now.</p></div>`; 
                     return; 
                 }
                 
-                let html = `<div class="card" style="background: #222;"><p class="text-primary font-bold">Total Rides in Database: ${snapshot.size}</p></div>`;
-                let count = 0;
+                let html = ''; let count = 0;
                 
                 snapshot.forEach(doc => {
                     const ride = doc.data();
-                    
-                    // Skip own ride
                     if(ride.customerUid === currentUser.uid) return; 
-                    
                     count++;
                     html += `
-                    <div class="card" style="border-color: ${ride.status === 'requested' ? 'var(--success)' : 'var(--surface-light)'};">
-                        <p class="text-xs text-muted">Ride ID: ${doc.id}</p>
-                        <p class="text-sm"><strong>Status:</strong> <span class="badge badge-${ride.status || 'requested'}">${ride.status}</span></p>
-                        <p class="text-sm"><strong>Customer:</strong> ${ride.customerName || 'N/A'}</p>
-                        <p class="text-sm"><strong>From:</strong> ${ride.pickup || 'N/A'}</p>
-                        <p class="text-sm mb-2"><strong>To:</strong> ${ride.destination || 'N/A'}</p>
-                        
-                        ${ride.status === 'requested' ? `
-                            <button class="btn-primary w-full accept-btn" data-id="${doc.id}">Accept Ride</button>
-                        ` : `<p class="text-xs text-muted">(This ride is already ${ride.status})</p>`}
+                    <div class="card">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-xs text-muted">${formatDate(ride.createdAt)}</span>
+                            <span class="badge badge-requested">${ride.rideType}</span>
+                        </div>
+                        <p class="text-sm"><span class="text-muted">From:</span> <span class="font-bold">${ride.pickup}</span></p>
+                        <p class="text-sm mb-2"><span class="text-muted">To:</span> <span class="font-bold">${ride.destination}</span></p>
+                        <button class="btn-primary w-full accept-btn" data-id="${doc.id}">Accept Ride</button>
                     </div>`;
                 });
                 
                 if (count === 0) {
-                     listEl.innerHTML = html + `<div class="text-center mt-3 text-muted"><p>Only YOUR own rides are in the database.</p></div>`;
+                     listEl.innerHTML = `<div class="text-center mt-3 text-muted"><p>No rides available.</p></div>`;
                 } else {
                      listEl.innerHTML = html;
                 }
@@ -700,9 +713,8 @@
                 if (listEl) {
                     listEl.innerHTML = `
                         <div class="card" style="border-color: var(--danger); background: rgba(255,68,68,0.05);">
-                            <p class="text-danger font-bold">Firebase Permission Error!</p>
+                            <p class="text-danger font-bold">Database Error!</p>
                             <p class="text-sm mt-1">${error.message}</p>
-                            <p class="text-xs mt-2 text-muted">Aapke Firestore Rules data read nahi karne de rahe hain.</p>
                         </div>`;
                 }
             });
@@ -769,7 +781,13 @@
                     try {
                         await runTransaction(db, async (transaction) => {
                             const rideRef = doc(db, "rides", rideId); const rideDoc = await transaction.get(rideRef);
-                            if (rideDoc.data().pin !== enteredPin) throw new Error("Incorrect PIN");
+                            
+                            // FIX: Strict String Comparison with Trim
+                            const dbPin = String(rideDoc.data().pin).trim();
+                            const inputPin = String(enteredPin).trim();
+
+                            if (dbPin !== inputPin) throw new Error("Incorrect PIN. Please check with customer.");
+                            
                             transaction.update(rideRef, { status: 'in_progress', startedAt: serverTimestamp() });
                         });
                         showToast("Ride Started!");

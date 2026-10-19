@@ -3,28 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#121212">
+    <meta name="theme-color" content="#000000">
     <title>FLASH - Fast rides. Fair for everyone.</title>
     <style>
         :root {
-            --bg: #0a0a0a;
-            --surface: #1a1a1a;
-            --surface-light: #2a2a2a;
-            --primary: #FFD700;
+            --bg: #000000;
+            --surface: #121212;
+            --surface-light: #222222;
+            --primary: #FFD700; /* Electric Yellow */
+            --primary-dark: #ccac00;
             --text: #ffffff;
             --text-muted: #888888;
             --danger: #ff4444;
             --success: #00C851;
             --radius: 12px;
             --header-height: 60px;
-            --nav-height: 65px;
+            --nav-height: 70px;
         }
+        
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg); color: var(--text); height: 100vh; height: 100dvh;
+            background-color: var(--bg); color: var(--text); 
+            height: 100vh; height: 100dvh;
             overflow: hidden; display: flex; flex-direction: column; user-select: none;
         }
+
+        /* Utility Classes */
         .hidden { display: none !important; }
         .flex { display: flex; }
         .flex-col { flex-direction: column; }
@@ -37,13 +43,15 @@
         .text-primary { color: var(--primary); }
         .text-danger { color: var(--danger); }
         .text-sm { font-size: 0.85rem; }
+        .text-lg { font-size: 1.2rem; }
         .font-bold { font-weight: 700; }
         .mt-1 { margin-top: 0.5rem; }
         .mt-2 { margin-top: 1rem; }
         .mt-3 { margin-top: 1.5rem; }
         .mb-1 { margin-bottom: 0.5rem; }
         .mb-2 { margin-bottom: 1rem; }
-        
+
+        /* UI Elements */
         button {
             font-family: inherit; border: none; border-radius: var(--radius); font-weight: 600;
             font-size: 1rem; cursor: pointer; transition: opacity 0.2s, transform 0.1s;
@@ -51,6 +59,7 @@
         }
         button:active { transform: scale(0.98); }
         button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        
         .btn-primary { background-color: var(--primary); color: #000; }
         .btn-outline { background-color: transparent; border: 1px solid var(--surface-light); color: var(--text); }
         .btn-danger { background-color: rgba(255, 68, 68, 0.1); color: var(--danger); border: 1px solid rgba(255, 68, 68, 0.3); }
@@ -71,6 +80,7 @@
         .badge-in_progress { background: rgba(255, 215, 0, 0.2); color: var(--primary); }
         .badge-completed { background: rgba(136, 136, 136, 0.2); color: var(--text-muted); }
 
+        /* Layout */
         #app { display: flex; flex-direction: column; height: 100%; position: relative; }
         
         #splash-screen {
@@ -78,17 +88,23 @@
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             transition: opacity 0.4s ease;
         }
-        .flash-logo { font-size: 3rem; font-weight: 900; font-style: italic; color: var(--primary); letter-spacing: -2px; display: flex; align-items: center; gap: 8px; }
-        .flash-logo svg { width: 40px; height: 40px; fill: var(--primary); }
+        
+        /* Custom Logo Container */
+        .logo-container { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+        .logo-svg { width: 140px; height: 140px; }
+        .logo-text { font-size: 3rem; font-weight: 900; font-style: italic; color: var(--primary); letter-spacing: -2px; }
 
         .app-header {
             height: var(--header-height); display: flex; align-items: center; justify-content: space-between;
             padding: 0 20px; background-color: var(--bg); border-bottom: 1px solid var(--surface);
             flex-shrink: 0; padding-top: env(safe-area-inset-top);
         }
-        .app-header h1 { font-size: 1.2rem; font-weight: 700; }
+        .header-logo { display: flex; align-items: center; gap: 8px; }
+        .header-logo svg { width: 28px; height: 28px; fill: var(--primary); }
+        .header-logo h1 { font-size: 1.2rem; font-weight: 900; font-style: italic; }
+        
         .mode-toggle { background: var(--surface-light); border-radius: 20px; padding: 4px; display: flex; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
-        .mode-toggle span { padding: 6px 12px; border-radius: 16px; transition: 0.2s; }
+        .mode-toggle span { padding: 8px 16px; border-radius: 16px; transition: 0.2s; }
         .mode-toggle span.active { background: var(--primary); color: #000; }
 
         #main-content {
@@ -102,18 +118,20 @@
             background-color: var(--bg); border-top: 1px solid var(--surface); display: flex;
             justify-content: space-around; align-items: center; padding-bottom: env(safe-area-inset-bottom); z-index: 100;
         }
-        .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--text-muted); font-size: 0.7rem; font-weight: 500; gap: 4px; cursor: pointer; transition: color 0.2s; width: 33%; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--text-muted); font-size: 0.7rem; font-weight: 500; gap: 4px; cursor: pointer; transition: color 0.2s; width: 25%; }
         .nav-item svg { width: 24px; height: 24px; fill: currentColor; }
         .nav-item.active { color: var(--primary); }
 
+        /* Auth */
         .auth-container { display: flex; flex-direction: column; justify-content: center; min-height: 100%; padding: 20px; }
         .auth-tabs { display: flex; margin-bottom: 24px; border-bottom: 1px solid var(--surface-light); }
         .auth-tab { flex: 1; padding: 12px; text-align: center; color: var(--text-muted); cursor: pointer; font-weight: 600; border-bottom: 2px solid transparent; }
         .auth-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
         .form-group { margin-bottom: 16px; }
 
+        /* Toasts & Loaders */
         #toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 10000; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 400px; pointer-events: none; }
-        .toast { background: var(--surface-light); color: white; padding: 12px 20px; border-radius: var(--radius); font-size: 0.9rem; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.5); animation: slideDown 0.3s ease, fadeOut 0.3s ease 2.7s forwards; border-left: 4px solid var(--primary); }
+        .toast { background: var(--surface-light); color: white; padding: 12px 20px; border-radius: var(--radius); font-size: 0.9rem; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.5); animation: slideDown 0.3s ease, fadeOut 0.3s ease 3.7s forwards; border-left: 4px solid var(--primary); }
         .toast.error { border-left-color: var(--danger); }
         @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         @keyframes fadeOut { to { opacity: 0; } }
@@ -125,19 +143,28 @@
 </head>
 <body>
 
+    <!-- Splash Screen -->
     <div id="splash-screen">
-        <div class="flash-logo">
-            <svg viewBox="0 0 24 24"><path d="M13 2L3 14H12L11 22L21 10H12L13 2Z"/></svg> FLASH
+        <div class="logo-container">
+            <!-- Recreated FLASH Logo (Horse + Lightning) -->
+            <svg class="logo-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                <path d="M130 10 L60 110 L100 110 L70 190 L150 80 L110 80 Z" fill="#FFD700"/>
+                <circle cx="120" cy="70" r="12" fill="#000"/>
+                <path d="M120 82 C100 90 80 100 60 90 C50 85 30 80 20 90 C40 95 60 100 70 110 C80 120 100 115 120 105 Z" fill="#000"/>
+                <path d="M110 105 L130 95 L140 105 L120 115 Z" fill="#000"/>
+            </svg>
+            <div class="logo-text">FLASH</div>
         </div>
         <p class="mt-2 text-muted text-sm">Fast rides. Fair for everyone.</p>
     </div>
 
     <div id="toast-container"></div>
 
+    <!-- Main App Container -->
     <div id="app" class="hidden">
         <header class="app-header">
-            <div class="flex items-center" style="gap: 8px;">
-                <svg style="width:24px;height:24px;fill:var(--primary);" viewBox="0 0 24 24"><path d="M13 2L3 14H12L11 22L21 10H12L13 2Z"/></svg>
+            <div class="header-logo">
+                <svg viewBox="0 0 24 24"><path d="M13 2L3 14H12L11 22L21 10H12L13 2Z"/></svg>
                 <h1>FLASH</h1>
             </div>
             <div class="mode-toggle" id="mode-toggle">
@@ -145,7 +172,9 @@
                 <span data-mode="driver">Driver</span>
             </div>
         </header>
+        
         <main id="main-content"></main>
+        
         <nav class="bottom-nav" id="bottom-nav">
             <div class="nav-item active" data-view="home">
                 <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
@@ -159,17 +188,21 @@
                 <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
                 <span>History</span>
             </div>
+            <div class="nav-item" data-view="profile">
+                <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                <span>Profile</span>
+            </div>
         </nav>
     </div>
 
+    <!-- Firebase SDK -->
     <script type="module">
-        // Import Firebase SDK
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, addDoc, collection, query, where, onSnapshot, updateDoc, serverTimestamp, runTransaction, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         // ==========================================
-        // 1. FIREBASE CONFIGURATION (Aapki Config)
+        // 1. FIREBASE CONFIGURATION
         // ==========================================
         const firebaseConfig = {
             apiKey: "AIzaSyBCzsWEbfQRWlGQIsY7z_BP_xQoiYqdeDI",
@@ -181,21 +214,12 @@
             measurementId: "G-D6L3KDZQRG"
         };
 
-        let app, auth, db;
-        let isFirebaseConfigured = false;
-
-        try {
-            app = initializeApp(firebaseConfig);
-            auth = getAuth(app);
-            db = getFirestore(app);
-            isFirebaseConfigured = true;
-            console.log("Firebase initialized successfully.");
-        } catch (e) {
-            console.error("Firebase Init Error:", e);
-        }
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
 
         // ==========================================
-        // 2. GLOBAL STATE & DOM ELEMENTS
+        // 2. STATE MANAGEMENT
         // ==========================================
         let currentUser = null;
         let userProfile = null;
@@ -210,7 +234,7 @@
         const modeToggle = document.getElementById('mode-toggle');
 
         // ==========================================
-        // 3. HELPER UTILITIES
+        // 3. UTILITIES
         // ==========================================
         function showToast(msg, isError = false) {
             const container = document.getElementById('toast-container');
@@ -218,7 +242,7 @@
             toast.className = `toast ${isError ? 'error' : ''}`;
             toast.textContent = msg;
             container.appendChild(toast);
-            setTimeout(() => toast.remove(), 3000);
+            setTimeout(() => toast.remove(), 4000);
         }
 
         function setLoading(btn, isLoading) {
@@ -233,55 +257,63 @@
             }
         }
 
-        function cleanupListeners() {
-            listeners.forEach(unsub => unsub());
-            listeners = [];
+        function cleanupListeners() { 
+            listeners.forEach(unsub => unsub()); 
+            listeners = []; 
         }
-
-        function formatDate(timestamp) {
-            if (!timestamp) return 'N/A';
-            const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-            return date.toLocaleString();
+        
+        function formatDate(ts) { 
+            if(!ts) return 'N/A'; 
+            const d = ts.toDate ? ts.toDate() : new Date(ts); 
+            return d.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }); 
         }
-
-        function generatePIN() {
-            return Math.floor(1000 + Math.random() * 9000).toString();
+        
+        function generatePIN() { 
+            return Math.floor(1000 + Math.random() * 9000).toString(); 
         }
 
         // ==========================================
-        // 4. AUTHENTICATION & PROFILE FLOW
+        // 4. AUTHENTICATION
         // ==========================================
         function renderAuth() {
-            cleanupListeners();
-            appEl.classList.add('hidden');
+            cleanupListeners(); 
+            appEl.classList.add('hidden'); 
             splashEl.classList.add('hidden');
             
             let authOverlay = document.getElementById('auth-overlay');
             if (!authOverlay) {
-                authOverlay = document.createElement('div');
-                authOverlay.id = 'auth-overlay';
-                authOverlay.className = 'auth-container';
+                authOverlay = document.createElement('div'); 
+                authOverlay.id = 'auth-overlay'; 
+                authOverlay.className = 'auth-container'; 
                 document.body.appendChild(authOverlay);
             }
             authOverlay.classList.remove('hidden');
-
+            
             authOverlay.innerHTML = `
                 <div class="text-center mb-3">
-                    <div class="flash-logo justify-center mb-1">
-                        <svg viewBox="0 0 24 24"><path d="M13 2L3 14H12L11 22L21 10H12L13 2Z"/></svg> FLASH
+                    <div class="logo-container" style="transform: scale(0.7); margin-bottom: -20px;">
+                        <svg class="logo-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M130 10 L60 110 L100 110 L70 190 L150 80 L110 80 Z" fill="#FFD700"/>
+                            <circle cx="120" cy="70" r="12" fill="#000"/>
+                            <path d="M120 82 C100 90 80 100 60 90 C50 85 30 80 20 90 C40 95 60 100 70 110 C80 120 100 115 120 105 Z" fill="#000"/>
+                            <path d="M110 105 L130 95 L140 105 L120 115 Z" fill="#000"/>
+                        </svg>
                     </div>
-                    <p class="text-muted">Fast rides. Fair for everyone.</p>
+                    <p class="text-muted text-sm">Fast rides. Fair for everyone.</p>
                 </div>
+                
                 <div class="auth-tabs">
                     <div class="auth-tab active" id="tab-login">Login</div>
                     <div class="auth-tab" id="tab-signup">Sign Up</div>
                 </div>
+                
                 <form id="form-login">
                     <div class="form-group"><label>Email</label><input type="email" id="login-email" required placeholder="you@example.com"></div>
                     <div class="form-group"><label>Password</label><input type="password" id="login-password" required placeholder="••••••••"></div>
                     <button type="submit" class="btn-primary w-full mt-2" id="btn-login">Sign In</button>
                     <p class="text-center mt-2 text-sm text-muted" id="link-forgot" style="cursor:pointer;">Forgot Password?</p>
                 </form>
+                
                 <form id="form-signup" class="hidden">
                     <div class="form-group"><label>Full Name</label><input type="text" id="signup-name" required placeholder="John Doe"></div>
                     <div class="form-group"><label>Phone Number</label><input type="tel" id="signup-phone" required placeholder="+91 9876543210"></div>
@@ -291,87 +323,95 @@
                 </form>
             `;
 
-            document.getElementById('tab-login').onclick = () => {
-                document.getElementById('tab-login').classList.add('active'); document.getElementById('tab-signup').classList.remove('active');
-                document.getElementById('form-login').classList.remove('hidden'); document.getElementById('form-signup').classList.add('hidden');
+            document.getElementById('tab-login').onclick = () => { 
+                document.getElementById('tab-login').classList.add('active'); 
+                document.getElementById('tab-signup').classList.remove('active'); 
+                document.getElementById('form-login').classList.remove('hidden'); 
+                document.getElementById('form-signup').classList.add('hidden'); 
             };
-            document.getElementById('tab-signup').onclick = () => {
-                document.getElementById('tab-signup').classList.add('active'); document.getElementById('tab-login').classList.remove('active');
-                document.getElementById('form-signup').classList.remove('hidden'); document.getElementById('form-login').classList.add('hidden');
+            document.getElementById('tab-signup').onclick = () => { 
+                document.getElementById('tab-signup').classList.add('active'); 
+                document.getElementById('tab-login').classList.remove('active'); 
+                document.getElementById('form-signup').classList.remove('hidden'); 
+                document.getElementById('form-login').classList.add('hidden'); 
             };
 
             document.getElementById('form-login').onsubmit = async (e) => {
-                e.preventDefault();
+                e.preventDefault(); 
                 const btn = document.getElementById('btn-login'); setLoading(btn, true);
-                try { await signInWithEmailAndPassword(auth, document.getElementById('login-email').value, document.getElementById('login-password').value); } 
-                catch (error) { showToast(error.message, true); } finally { setLoading(btn, false); }
+                try { 
+                    await signInWithEmailAndPassword(auth, document.getElementById('login-email').value, document.getElementById('login-password').value); 
+                } catch (error) { 
+                    showToast(error.message.replace('Firebase: ', ''), true); 
+                } finally { 
+                    setLoading(btn, false); 
+                }
             };
 
             document.getElementById('form-signup').onsubmit = async (e) => {
-                e.preventDefault();
+                e.preventDefault(); 
                 const btn = document.getElementById('btn-signup'); setLoading(btn, true);
                 try {
-                    const userCredential = await createUserWithEmailAndPassword(auth, document.getElementById('signup-email').value, document.getElementById('signup-password').value);
-                    await setDoc(doc(db, "users", userCredential.user.uid), {
-                        uid: userCredential.user.uid, name: document.getElementById('signup-name').value,
-                        email: document.getElementById('signup-email').value, phone: document.getElementById('signup-phone').value, createdAt: serverTimestamp()
+                    const uc = await createUserWithEmailAndPassword(auth, document.getElementById('signup-email').value, document.getElementById('signup-password').value);
+                    await setDoc(doc(db, "users", uc.user.uid), { 
+                        uid: uc.user.uid, 
+                        name: document.getElementById('signup-name').value, 
+                        email: document.getElementById('signup-email').value, 
+                        phone: document.getElementById('signup-phone').value, 
+                        createdAt: serverTimestamp() 
                     });
-                } catch (error) { showToast(error.message, true); } finally { setLoading(btn, false); }
+                } catch (error) { 
+                    showToast(error.message.replace('Firebase: ', ''), true); 
+                } finally { 
+                    setLoading(btn, false); 
+                }
             };
 
             document.getElementById('link-forgot').onclick = async () => {
-                const email = document.getElementById('login-email').value;
+                const email = document.getElementById('login-email').value; 
                 if (!email) return showToast("Enter your email first", true);
-                try { await sendPasswordResetEmail(auth, email); showToast("Reset link sent!"); } catch (error) { showToast(error.message, true); }
+                try { 
+                    await sendPasswordResetEmail(auth, email); 
+                    showToast("Reset link sent!"); 
+                } catch (error) { 
+                    showToast(error.message.replace('Firebase: ', ''), true); 
+                }
             };
         }
 
-        if (isFirebaseConfigured) {
-    onAuthStateChanged(auth, async (user) => {
-        const authOverlay = document.getElementById('auth-overlay');
-        if (user) {
-            currentUser = user;
-            if (authOverlay) authOverlay.remove();
-            
-            try {
-                const docRef = doc(db, "users", user.uid);
-                const docSnap = await getDoc(docRef);
-                
-                if (docSnap.exists()) {
-                    userProfile = docSnap.data();
-                } else {
-                    // Profile nahi mili, toh naya banao
-                    const newProfile = {
-                        uid: user.uid, 
-                        name: user.displayName || "Flash User", 
-                        email: user.email,
-                        phone: "0000000000", 
-                        createdAt: serverTimestamp()
-                    };
-                    await setDoc(docRef, newProfile);
-                    userProfile = newProfile;
+        onAuthStateChanged(auth, async (user) => {
+            const authOverlay = document.getElementById('auth-overlay');
+            if (user) {
+                currentUser = user; 
+                if (authOverlay) authOverlay.remove();
+                try {
+                    const docRef = doc(db, "users", user.uid); 
+                    const docSnap = await getDoc(docRef);
+                    if (docSnap.exists()) { 
+                        userProfile = docSnap.data(); 
+                    } else {
+                        // Auto-create profile if missing
+                        const newProfile = { uid: user.uid, name: "Flash User", email: user.email, phone: "0000000000", createdAt: serverTimestamp() };
+                        await setDoc(docRef, newProfile); 
+                        userProfile = newProfile;
+                    }
+                    splashEl.classList.add('hidden'); 
+                    appEl.classList.remove('hidden'); 
+                    renderApp();
+                } catch (error) { 
+                    showToast("Database Error: " + error.message, true); 
+                    setTimeout(() => renderAuth(), 4000); 
                 }
-                
-                // Agar sab theek raha toh App khol do
-                splashEl.classList.add('hidden'); 
-                appEl.classList.remove('hidden'); 
-                renderApp();
-                
-            } catch (error) {
-                // AGAR ERROR AAYA TOH SCREEN PAR DIKHAO
-                console.error("Firebase Error:", error);
-                showToast("Error: " + error.message, true);
-                setTimeout(() => renderAuth(), 4000); // 4 second baad wapas login par bhej do
+            } else {
+                currentUser = null; userProfile = null; activeRideId = null; 
+                cleanupListeners(); 
+                appEl.classList.add('hidden'); 
+                renderAuth();
             }
-        } else {
-            currentUser = null; userProfile = null; activeRideId = null; cleanupListeners();
-            appEl.classList.add('hidden'); renderAuth();
-        }
-    });
-        }
+        });
 
         // ==========================================
-        // 5. APP NAVIGATION & MODE SWITCH
+        // 5. NAVIGATION & MODE SWITCHING
         // ==========================================
         function switchMode(mode) {
             if (mode === currentMode) return;
@@ -384,31 +424,29 @@
         modeToggle.onclick = (e) => { if (e.target.dataset.mode) switchMode(e.target.dataset.mode); };
 
         bottomNav.onclick = (e) => {
-            const navItem = e.target.closest('.nav-item'); if (!navItem) return;
-            bottomNav.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            const navItem = e.target.closest('.nav-item'); 
+            if (!navItem) return;
+            bottomNav.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active')); 
             navItem.classList.add('active');
             if (navItem.dataset.view === 'home') renderCustomerHome();
             if (navItem.dataset.view === 'active') renderActiveRide();
             if (navItem.dataset.view === 'history') renderRideHistory();
+            if (navItem.dataset.view === 'profile') renderProfile();
         };
 
         function renderApp() {
             bottomNav.querySelector('[data-view="home"]').classList.add('active');
-            bottomNav.querySelector('[data-view="active"]').classList.remove('active');
-            bottomNav.querySelector('[data-view="history"]').classList.remove('active');
-            if (currentMode === 'customer') renderCustomerHome(); else renderDriverDashboard();
+            if (currentMode === 'customer') renderCustomerHome(); 
+            else renderDriverDashboard();
         }
 
         // ==========================================
-        // 6. CUSTOMER VIEWS
+        // 6. CUSTOMER FLOW
         // ==========================================
         function renderCustomerHome() {
             cleanupListeners(); bottomNav.style.display = 'flex';
             mainContent.innerHTML = `
-                <div class="mb-2">
-                    <h2 class="font-bold text-primary">Welcome, ${userProfile.name.split(' ')[0]}!</h2>
-                    <p class="text-muted text-sm">Where are you going today?</p>
-                </div>
+                <div class="mb-2"><h2 class="font-bold text-primary">Welcome, ${userProfile.name.split(' ')[0]}!</h2><p class="text-muted text-sm">Where are you going today?</p></div>
                 <div class="card">
                     <form id="form-book-ride">
                         <div class="form-group"><label>Pickup Location</label><input type="text" id="pickup" required placeholder="Enter pickup address"></div>
@@ -416,30 +454,26 @@
                         <div class="form-group"><label>Contact Number</label><input type="tel" id="contact-phone" required value="${userProfile.phone || ''}"></div>
                         <div class="form-group"><label>Ride Type</label><select id="ride-type"><option value="bike">Bike (Fastest)</option></select></div>
                         <div class="form-group"><label>Instructions (Optional)</label><textarea id="instructions" rows="2" placeholder="e.g. I'm at the main gate"></textarea></div>
-                        <div style="background: var(--surface-light); border: 1px dashed var(--text-muted); padding: 10px; border-radius: 8px; text-align: center; margin-bottom: 16px;">
-                            <span class="text-muted text-sm">Advertisement Space</span>
-                        </div>
                         <button type="submit" class="btn-primary w-full" id="btn-book">Confirm Booking</button>
                     </form>
                 </div>
             `;
             document.getElementById('form-book-ride').onsubmit = async (e) => {
-                e.preventDefault();
+                e.preventDefault(); 
                 const btn = document.getElementById('btn-book'); setLoading(btn, true);
-                const pickup = document.getElementById('pickup').value.trim(); const destination = document.getElementById('destination').value.trim();
-                const phone = document.getElementById('contact-phone').value.trim(); const instructions = document.getElementById('instructions').value.trim();
-                const rideType = document.getElementById('ride-type').value; const pin = generatePIN();
-
                 try {
                     const docRef = await addDoc(collection(db, "rides"), {
-                        customerUid: currentUser.uid, customerName: userProfile.name, phone, pickup, destination, rideType, instructions,
-                        status: 'requested', pin, createdAt: serverTimestamp(), driverUid: null, driverName: null
+                        customerUid: currentUser.uid, customerName: userProfile.name, phone: document.getElementById('contact-phone').value,
+                        pickup: document.getElementById('pickup').value, destination: document.getElementById('destination').value,
+                        rideType: document.getElementById('ride-type').value, instructions: document.getElementById('instructions').value,
+                        status: 'requested', pin: generatePIN(), createdAt: serverTimestamp(), driverUid: null
                     });
                     showToast("Ride requested!");
-                    bottomNav.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-                    bottomNav.querySelector('[data-view="active"]').classList.add('active');
-                    activeRideId = docRef.id; renderActiveRide();
-                } catch (error) { showToast("Failed: " + error.message, true); setLoading(btn, false); }
+                    bottomNav.querySelector('[data-view="active"]').click();
+                } catch (error) { 
+                    showToast("Failed: " + error.message, true); 
+                    setLoading(btn, false); 
+                }
             };
         }
 
@@ -447,94 +481,95 @@
             cleanupListeners();
             mainContent.innerHTML = `<div class="text-center mt-3"><div class="loader" style="margin: 0 auto;"></div></div>`;
             const q = query(collection(db, "rides"), where("customerUid", "==", currentUser.uid), where("status", "in", ["requested", "accepted", "arrived", "in_progress"]));
+            
             const unsub = onSnapshot(q, (snapshot) => {
                 if (snapshot.empty) {
                     mainContent.innerHTML = `<div class="text-center mt-3"><p class="text-muted">No active rides.</p><button class="btn-primary mt-2" onclick="document.querySelector('[data-view=\\'home\\']').click()">Book a Ride</button></div>`;
                     return;
                 }
-                const rideDoc = snapshot.docs[0]; activeRideId = rideDoc.id; renderCustomerRideUI(rideDoc.data());
+                const rideDoc = snapshot.docs[0]; activeRideId = rideDoc.id; 
+                const ride = rideDoc.data();
+                
+                let driverInfo = ''; let pinSection = '';
+                if (ride.status === 'requested') pinSection = `<div class="card mt-2 text-center"><p class="text-muted text-sm mb-1">Share this PIN with driver</p><div class="pin-display">${ride.pin}</div></div>`;
+                else if (['accepted', 'arrived', 'in_progress'].includes(ride.status)) {
+                    driverInfo = `<div class="card mt-2" style="border-color: var(--primary);"><h3 class="font-bold mb-1">Driver Details</h3><p>Name: ${ride.driverName}</p><p>Phone: ${ride.driverPhone}</p></div>`;
+                    if (ride.status === 'accepted' || ride.status === 'arrived') pinSection = `<div class="card mt-2 text-center"><p class="text-muted text-sm mb-1">Ride Start PIN</p><div class="pin-display">${ride.pin}</div></div>`;
+                }
+                const waText = encodeURIComponent(`FLASH Ride Request:\nFrom: ${ride.pickup}\nTo: ${ride.destination}`);
+                
+                mainContent.innerHTML = `
+                    <div class="flex justify-between items-center mb-2"><h2 class="font-bold">Active Ride</h2><span class="badge badge-${ride.status}">${ride.status.replace('_', ' ')}</span></div>
+                    <div class="card"><div class="flex flex-col" style="gap: 12px;"><div><p class="text-sm text-muted">Pickup</p><p class="font-bold">${ride.pickup}</p></div><div><p class="text-sm text-muted">Destination</p><p class="font-bold">${ride.destination}</p></div></div></div>
+                    ${driverInfo} ${pinSection}
+                    ${ride.status === 'requested' ? `
+                        <div class="flex w-full" style="gap: 10px; margin-top: 16px;">
+                            <a href="https://wa.me/?text=${waText}" target="_blank" class="btn-outline w-full" style="text-decoration: none; padding: 14px; border-radius: 12px; text-align: center; font-weight: bold;">WhatsApp</a>
+                            <button class="btn-danger w-full" id="btn-cancel-ride">Cancel</button>
+                        </div>` : ''}
+                `;
+                const cBtn = document.getElementById('btn-cancel-ride');
+                if (cBtn) cBtn.onclick = async () => { if (confirm("Cancel?")) { try { await updateDoc(doc(db, "rides", activeRideId), { status: 'cancelled' }); showToast("Cancelled"); } catch (e) { showToast(e.message, true); } } };
             });
             listeners.push(unsub);
         }
 
-        function renderCustomerRideUI(ride) {
-            let driverInfo = ''; let pinSection = '';
-            if (ride.status === 'requested') {
-                pinSection = `<div class="card mt-2 text-center"><p class="text-muted text-sm mb-1">Share this PIN with driver</p><div class="pin-display">${ride.pin}</div></div>`;
-            } else if (['accepted', 'arrived', 'in_progress'].includes(ride.status)) {
-                driverInfo = `<div class="card mt-2" style="border-color: var(--primary);"><h3 class="font-bold mb-1">Driver Details</h3><p>Name: ${ride.driverName}</p><p>Phone: ${ride.driverPhone}</p></div>`;
-                if (ride.status === 'accepted' || ride.status === 'arrived') pinSection = `<div class="card mt-2 text-center"><p class="text-muted text-sm mb-1">Ride Start PIN</p><div class="pin-display">${ride.pin}</div></div>`;
-            }
-            const waText = encodeURIComponent(`FLASH Ride Request:\nFrom: ${ride.pickup}\nTo: ${ride.destination}\nStatus: ${ride.status}`);
-            
-            mainContent.innerHTML = `
-                <div class="flex justify-between items-center mb-2"><h2 class="font-bold">Active Ride</h2><span class="badge badge-${ride.status}">${ride.status.replace('_', ' ')}</span></div>
-                <div class="card">
-                    <div class="flex flex-col" style="gap: 12px;">
-                        <div><p class="text-sm text-muted">Pickup</p><p class="font-bold">${ride.pickup}</p></div>
-                        <div><p class="text-sm text-muted">Destination</p><p class="font-bold">${ride.destination}</p></div>
-                    </div>
-                    <hr style="border-color: var(--surface-light); margin: 16px 0;">
-                    <p class="text-sm text-muted">Ride Type: <span class="text-primary font-bold uppercase">${ride.rideType}</span></p>
-                    ${ride.instructions ? `<p class="text-sm text-muted mt-1">Note: ${ride.instructions}</p>` : ''}
-                </div>
-                ${driverInfo} ${pinSection}
-                ${ride.status === 'requested' ? `
-                    <div class="flex w-full" style="gap: 10px; margin-top: 16px;">
-                        <a href="https://wa.me/?text=${waText}" target="_blank" class="btn-outline w-full" style="text-decoration: none; padding: 14px; border-radius: 12px; text-align: center; font-weight: bold;">WhatsApp Share</a>
-                        <button class="btn-danger w-full" id="btn-cancel-ride">Cancel</button>
-                    </div>` : ''}
-            `;
-            const cancelBtn = document.getElementById('btn-cancel-ride');
-            if (cancelBtn) {
-                cancelBtn.onclick = async () => {
-                    if (confirm("Cancel this ride?")) {
-                        try { await updateDoc(doc(db, "rides", activeRideId), { status: 'cancelled' }); showToast("Ride cancelled"); } 
-                        catch (e) { showToast("Error: " + e.message, true); }
-                    }
-                };
-            }
-        }
-
         function renderRideHistory() {
             cleanupListeners();
-            mainContent.innerHTML = `<h2 class="font-bold mb-2">Ride History</h2><div class="text-center mt-3"><div class="loader" style="margin: 0 auto;"></div></div>`;
+            mainContent.innerHTML = `<h2 class="font-bold mb-2">History</h2><div class="text-center mt-3"><div class="loader" style="margin: 0 auto;"></div></div>`;
             const q = query(collection(db, "rides"), where("customerUid", "==", currentUser.uid), where("status", "in", ["completed", "cancelled"]), orderBy("createdAt", "desc"), limit(20));
             const unsub = onSnapshot(q, (snapshot) => {
-                if (snapshot.empty) { mainContent.innerHTML = `<h2 class="font-bold mb-2">Ride History</h2><p class="text-muted text-center mt-3">No past rides.</p>`; return; }
-                let html = `<h2 class="font-bold mb-2">Ride History</h2>`;
-                snapshot.forEach(doc => {
-                    const ride = doc.data();
-                    html += `<div class="card"><div class="flex justify-between items-center mb-1"><span class="badge badge-${ride.status}">${ride.status}</span><span class="text-sm text-muted">${formatDate(ride.createdAt)}</span></div><p class="text-sm"><span class="text-muted">From:</span> ${ride.pickup}</p><p class="text-sm"><span class="text-muted">To:</span> ${ride.destination}</p></div>`;
-                });
+                if (snapshot.empty) { mainContent.innerHTML = `<h2 class="font-bold mb-2">History</h2><p class="text-muted text-center mt-3">No past rides.</p>`; return; }
+                let html = `<h2 class="font-bold mb-2">History</h2>`;
+                snapshot.forEach(doc => { const r = doc.data(); html += `<div class="card"><div class="flex justify-between mb-1"><span class="badge badge-${r.status}">${r.status}</span><span class="text-sm text-muted">${formatDate(r.createdAt)}</span></div><p class="text-sm">From: ${r.pickup}</p><p class="text-sm">To: ${r.destination}</p></div>`; });
                 mainContent.innerHTML = html;
             });
             listeners.push(unsub);
         }
 
+        function renderProfile() {
+            cleanupListeners();
+            mainContent.innerHTML = `
+                <h2 class="font-bold mb-2">Profile</h2>
+                <div class="card">
+                    <p class="text-sm text-muted">Name</p><p class="font-bold text-lg mb-2">${userProfile.name}</p>
+                    <p class="text-sm text-muted">Email</p><p class="font-bold mb-2">${userProfile.email}</p>
+                    <p class="text-sm text-muted">Phone</p><p class="font-bold">${userProfile.phone}</p>
+                </div>
+                <button class="btn-danger w-full" id="btn-logout">Logout</button>
+            `;
+            document.getElementById('btn-logout').onclick = () => { signOut(auth); };
+        }
+
         // ==========================================
-        // 7. DRIVER VIEWS
+        // 7. DRIVER FLOW
         // ==========================================
         function renderDriverDashboard() {
             cleanupListeners();
             mainContent.innerHTML = `<div class="text-center mt-3"><div class="loader" style="margin: 0 auto;"></div></div>`;
             const qActive = query(collection(db, "rides"), where("driverUid", "==", currentUser.uid), where("status", "in", ["accepted", "arrived", "in_progress"]));
+            
             const unsubActive = onSnapshot(qActive, (snapshot) => {
                 if (!snapshot.empty) {
                     const rideDoc = snapshot.docs[0]; renderDriverActiveRideUI(rideDoc.id, rideDoc.data());
                 } else {
                     renderAvailableRides();
                 }
+            }, (error) => {
+                showToast("Error loading rides. Check console.", true);
+                console.error(error);
             });
             listeners.push(unsubActive);
         }
 
         function renderAvailableRides() {
             mainContent.innerHTML = `<div class="mb-2"><h2 class="font-bold text-primary">Available Rides</h2><p class="text-muted text-sm">Accept a ride to start earning.</p></div><div id="rides-list"><div class="loader" style="margin: 20px auto;"></div></div>`;
+            
             const q = query(collection(db, "rides"), where("status", "==", "requested"), orderBy("createdAt", "desc"));
+            
             const unsub = onSnapshot(q, (snapshot) => {
                 const listEl = document.getElementById('rides-list'); if (!listEl) return;
-                if (snapshot.empty) { listEl.innerHTML = `<p class="text-muted text-center mt-3">No rides available.</p>`; return; }
+                if (snapshot.empty) { listEl.innerHTML = `<p class="text-muted text-center mt-3">No rides available right now.</p>`; return; }
                 let html = '';
                 snapshot.forEach(doc => {
                     const ride = doc.data();
@@ -542,6 +577,7 @@
                     html += `<div class="card"><div class="flex justify-between items-center mb-1"><span class="text-xs text-muted">${formatDate(ride.createdAt)}</span><span class="badge badge-requested">${ride.rideType}</span></div><p class="text-sm"><span class="text-muted">From:</span> <span class="font-bold">${ride.pickup}</span></p><p class="text-sm mb-2"><span class="text-muted">To:</span> <span class="font-bold">${ride.destination}</span></p><button class="btn-primary w-full accept-btn" data-id="${doc.id}">Accept Ride</button></div>`;
                 });
                 listEl.innerHTML = html || `<p class="text-muted text-center mt-3">No rides available.</p>`;
+                
                 listEl.querySelectorAll('.accept-btn').forEach(btn => {
                     btn.onclick = async (e) => {
                         const rideId = e.target.dataset.id; setLoading(e.target, true);
@@ -556,19 +592,24 @@
                         } catch (error) { showToast(error.message, true); setLoading(e.target, false); }
                     };
                 });
+            }, (error) => {
+                const listEl = document.getElementById('rides-list');
+                if (listEl) {
+                    if (error.message.includes("index")) {
+                        listEl.innerHTML = `<div class="card" style="border-color: var(--danger);"><p class="text-danger font-bold">Database Index Required</p><p class="text-sm mt-1">Firebase needs to create an index to sort rides by time.</p><p class="text-xs mt-2">Go to your Firebase Console > Firestore > Indexes, and click "Create Index" for the error link provided in the browser console.</p></div>`;
+                    } else {
+                        listEl.innerHTML = `<p class="text-danger">Error: ${error.message}</p>`;
+                    }
+                }
             });
             listeners.push(unsub);
         }
 
         function renderDriverActiveRideUI(rideId, ride) {
             let actionSection = '';
-            if (ride.status === 'accepted') {
-                actionSection = `<button class="btn-primary w-full mt-2" id="btn-arrived">I've Arrived at Pickup</button>`;
-            } else if (ride.status === 'arrived') {
-                actionSection = `<div class="card mt-2"><label>Enter Customer's PIN to Start</label><input type="number" id="start-pin" placeholder="4-digit PIN" style="text-align: center; font-size: 1.5rem; letter-spacing: 5px; margin-bottom: 10px;"><button class="btn-primary w-full" id="btn-start-ride">Start Ride</button></div>`;
-            } else if (ride.status === 'in_progress') {
-                actionSection = `<button class="btn-primary w-full mt-2" id="btn-complete-ride">Complete Ride</button>`;
-            }
+            if (ride.status === 'accepted') actionSection = `<button class="btn-primary w-full mt-2" id="btn-arrived">I've Arrived at Pickup</button>`;
+            else if (ride.status === 'arrived') actionSection = `<div class="card mt-2"><label>Enter Customer's PIN</label><input type="number" id="start-pin" placeholder="4-digit PIN" style="text-align: center; font-size: 1.5rem; letter-spacing: 5px; margin-bottom: 10px;"><button class="btn-primary w-full" id="btn-start-ride">Start Ride</button></div>`;
+            else if (ride.status === 'in_progress') actionSection = `<button class="btn-primary w-full mt-2" id="btn-complete-ride">Complete Ride</button>`;
 
             mainContent.innerHTML = `
                 <div class="flex justify-between items-center mb-2"><h2 class="font-bold text-primary">Active Ride</h2><span class="badge badge-${ride.status}">${ride.status.replace('_', ' ')}</span></div>
@@ -578,19 +619,13 @@
                         <div><p class="text-sm text-muted">Pickup</p><p class="font-bold">${ride.pickup}</p></div>
                         <div><p class="text-sm text-muted">Destination</p><p class="font-bold">${ride.destination}</p></div>
                     </div>
-                    ${ride.instructions ? `<p class="text-sm text-muted mt-2">Note: ${ride.instructions}</p>` : ''}
                 </div>
                 ${actionSection}
             `;
 
             const btnArrived = document.getElementById('btn-arrived');
-            if (btnArrived) {
-                btnArrived.onclick = async () => {
-                    setLoading(btnArrived, true);
-                    try { await updateDoc(doc(db, "rides", rideId), { status: 'arrived', arrivedAt: serverTimestamp() }); showToast("Arrived!"); } 
-                    catch (e) { showToast(e.message, true); setLoading(btnArrived, false); }
-                };
-            }
+            if (btnArrived) btnArrived.onclick = async () => { setLoading(btnArrived, true); try { await updateDoc(doc(db, "rides", rideId), { status: 'arrived', arrivedAt: serverTimestamp() }); showToast("Arrived!"); } catch (e) { showToast(e.message, true); setLoading(btnArrived, false); } };
+
             const btnStart = document.getElementById('btn-start-ride');
             if (btnStart) {
                 btnStart.onclick = async () => {
@@ -600,23 +635,16 @@
                     try {
                         await runTransaction(db, async (transaction) => {
                             const rideRef = doc(db, "rides", rideId); const rideDoc = await transaction.get(rideRef);
-                            if (!rideDoc.exists()) throw new Error("Ride not found");
                             if (rideDoc.data().pin !== enteredPin) throw new Error("Incorrect PIN");
-                            if (rideDoc.data().status !== 'arrived') throw new Error("Invalid ride state");
                             transaction.update(rideRef, { status: 'in_progress', startedAt: serverTimestamp() });
                         });
                         showToast("Ride Started!");
                     } catch (e) { showToast(e.message, true); setLoading(btnStart, false); }
                 };
             }
+
             const btnComplete = document.getElementById('btn-complete-ride');
-            if (btnComplete) {
-                btnComplete.onclick = async () => {
-                    setLoading(btnComplete, true);
-                    try { await updateDoc(doc(db, "rides", rideId), { status: 'completed', completedAt: serverTimestamp() }); showToast("Ride Completed!"); } 
-                    catch (e) { showToast(e.message, true); setLoading(btnComplete, false); }
-                };
-            }
+            if (btnComplete) btnComplete.onclick = async () => { setLoading(btnComplete, true); try { await updateDoc(doc(db, "rides", rideId), { status: 'completed', completedAt: serverTimestamp() }); showToast("Ride Completed!"); } catch (e) { showToast(e.message, true); setLoading(btnComplete, false); } };
         }
     </script>
 </body>

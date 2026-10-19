@@ -10,7 +10,7 @@
             --bg: #000000;
             --surface: #121212;
             --surface-light: #222222;
-            --primary: #FFD700; /* Electric Yellow */
+            --primary: #FFD700;
             --primary-dark: #ccac00;
             --text: #ffffff;
             --text-muted: #888888;
@@ -30,7 +30,6 @@
             overflow: hidden; display: flex; flex-direction: column; user-select: none;
         }
 
-        /* Utility Classes */
         .hidden { display: none !important; }
         .flex { display: flex; }
         .flex-col { flex-direction: column; }
@@ -51,7 +50,6 @@
         .mb-1 { margin-bottom: 0.5rem; }
         .mb-2 { margin-bottom: 1rem; }
 
-        /* UI Elements */
         button {
             font-family: inherit; border: none; border-radius: var(--radius); font-weight: 600;
             font-size: 1rem; cursor: pointer; transition: opacity 0.2s, transform 0.1s;
@@ -80,7 +78,6 @@
         .badge-in_progress { background: rgba(255, 215, 0, 0.2); color: var(--primary); }
         .badge-completed { background: rgba(136, 136, 136, 0.2); color: var(--text-muted); }
 
-        /* Layout */
         #app { display: flex; flex-direction: column; height: 100%; position: relative; }
         
         #splash-screen {
@@ -89,7 +86,6 @@
             transition: opacity 0.4s ease;
         }
         
-        /* Custom Logo Container */
         .logo-container { display: flex; flex-direction: column; align-items: center; gap: 12px; }
         .logo-svg { width: 140px; height: 140px; }
         .logo-text { font-size: 3rem; font-weight: 900; font-style: italic; color: var(--primary); letter-spacing: -2px; }
@@ -122,14 +118,12 @@
         .nav-item svg { width: 24px; height: 24px; fill: currentColor; }
         .nav-item.active { color: var(--primary); }
 
-        /* Auth */
         .auth-container { display: flex; flex-direction: column; justify-content: center; min-height: 100%; padding: 20px; }
         .auth-tabs { display: flex; margin-bottom: 24px; border-bottom: 1px solid var(--surface-light); }
         .auth-tab { flex: 1; padding: 12px; text-align: center; color: var(--text-muted); cursor: pointer; font-weight: 600; border-bottom: 2px solid transparent; }
         .auth-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
         .form-group { margin-bottom: 16px; }
 
-        /* Toasts & Loaders */
         #toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 10000; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 400px; pointer-events: none; }
         .toast { background: var(--surface-light); color: white; padding: 12px 20px; border-radius: var(--radius); font-size: 0.9rem; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.5); animation: slideDown 0.3s ease, fadeOut 0.3s ease 3.7s forwards; border-left: 4px solid var(--primary); }
         .toast.error { border-left-color: var(--danger); }
@@ -143,10 +137,8 @@
 </head>
 <body>
 
-    <!-- Splash Screen -->
     <div id="splash-screen">
         <div class="logo-container">
-            <!-- Recreated FLASH Logo (Horse + Lightning) -->
             <svg class="logo-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
                 <path d="M130 10 L60 110 L100 110 L70 190 L150 80 L110 80 Z" fill="#FFD700"/>
                 <circle cx="120" cy="70" r="12" fill="#000"/>
@@ -160,7 +152,6 @@
 
     <div id="toast-container"></div>
 
-    <!-- Main App Container -->
     <div id="app" class="hidden">
         <header class="app-header">
             <div class="header-logo">
@@ -195,15 +186,11 @@
         </nav>
     </div>
 
-    <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, addDoc, collection, query, where, onSnapshot, updateDoc, serverTimestamp, runTransaction, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // ==========================================
-        // 1. FIREBASE CONFIGURATION
-        // ==========================================
         const firebaseConfig = {
             apiKey: "AIzaSyBCzsWEbfQRWlGQIsY7z_BP_xQoiYqdeDI",
             authDomain: "flash-254cb.firebaseapp.com",
@@ -218,9 +205,6 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // ==========================================
-        // 2. STATE MANAGEMENT
-        // ==========================================
         let currentUser = null;
         let userProfile = null;
         let currentMode = 'customer';
@@ -233,9 +217,6 @@
         const bottomNav = document.getElementById('bottom-nav');
         const modeToggle = document.getElementById('mode-toggle');
 
-        // ==========================================
-        // 3. UTILITIES
-        // ==========================================
         function showToast(msg, isError = false) {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
@@ -272,9 +253,6 @@
             return Math.floor(1000 + Math.random() * 9000).toString(); 
         }
 
-        // ==========================================
-        // 4. AUTHENTICATION
-        // ==========================================
         function renderAuth() {
             cleanupListeners(); 
             appEl.classList.add('hidden'); 
@@ -390,7 +368,6 @@
                     if (docSnap.exists()) { 
                         userProfile = docSnap.data(); 
                     } else {
-                        // Auto-create profile if missing
                         const newProfile = { uid: user.uid, name: "Flash User", email: user.email, phone: "0000000000", createdAt: serverTimestamp() };
                         await setDoc(docRef, newProfile); 
                         userProfile = newProfile;
@@ -410,9 +387,6 @@
             }
         });
 
-        // ==========================================
-        // 5. NAVIGATION & MODE SWITCHING
-        // ==========================================
         function switchMode(mode) {
             if (mode === currentMode) return;
             currentMode = mode; activeRideId = null; cleanupListeners();
@@ -440,9 +414,6 @@
             else renderDriverDashboard();
         }
 
-        // ==========================================
-        // 6. CUSTOMER FLOW
-        // ==========================================
         function renderCustomerHome() {
             cleanupListeners(); bottomNav.style.display = 'flex';
             mainContent.innerHTML = `
@@ -542,7 +513,7 @@
         }
 
         // ==========================================
-        // 7. DRIVER FLOW
+        // DRIVER FLOW
         // ==========================================
         function renderDriverDashboard() {
             cleanupListeners();
@@ -607,9 +578,18 @@
 
         function renderDriverActiveRideUI(rideId, ride) {
             let actionSection = '';
-            if (ride.status === 'accepted') actionSection = `<button class="btn-primary w-full mt-2" id="btn-arrived">I've Arrived at Pickup</button>`;
-            else if (ride.status === 'arrived') actionSection = `<div class="card mt-2"><label>Enter Customer's PIN</label><input type="number" id="start-pin" placeholder="4-digit PIN" style="text-align: center; font-size: 1.5rem; letter-spacing: 5px; margin-bottom: 10px;"><button class="btn-primary w-full" id="btn-start-ride">Start Ride</button></div>`;
-            else if (ride.status === 'in_progress') actionSection = `<button class="btn-primary w-full mt-2" id="btn-complete-ride">Complete Ride</button>`;
+            let cancelBtnSection = '';
+
+            if (ride.status === 'accepted') {
+                actionSection = `<button class="btn-primary w-full mt-2" id="btn-arrived">I've Arrived at Pickup</button>`;
+                // Cancel & Release button
+                cancelBtnSection = `<button class="btn-danger w-full mt-2" id="btn-release-ride">Cancel & Release Ride</button>`;
+            } else if (ride.status === 'arrived') {
+                actionSection = `<div class="card mt-2"><label>Enter Customer's PIN</label><input type="number" id="start-pin" placeholder="4-digit PIN" style="text-align: center; font-size: 1.5rem; letter-spacing: 5px; margin-bottom: 10px;"><button class="btn-primary w-full" id="btn-start-ride">Start Ride</button></div>`;
+                cancelBtnSection = `<button class="btn-danger w-full mt-2" id="btn-release-ride">Cancel & Release Ride</button>`;
+            } else if (ride.status === 'in_progress') {
+                actionSection = `<button class="btn-primary w-full mt-2" id="btn-complete-ride">Complete Ride</button>`;
+            }
 
             mainContent.innerHTML = `
                 <div class="flex justify-between items-center mb-2"><h2 class="font-bold text-primary">Active Ride</h2><span class="badge badge-${ride.status}">${ride.status.replace('_', ' ')}</span></div>
@@ -621,6 +601,7 @@
                     </div>
                 </div>
                 ${actionSection}
+                ${cancelBtnSection}
             `;
 
             const btnArrived = document.getElementById('btn-arrived');
@@ -645,6 +626,26 @@
 
             const btnComplete = document.getElementById('btn-complete-ride');
             if (btnComplete) btnComplete.onclick = async () => { setLoading(btnComplete, true); try { await updateDoc(doc(db, "rides", rideId), { status: 'completed', completedAt: serverTimestamp() }); showToast("Ride Completed!"); } catch (e) { showToast(e.message, true); setLoading(btnComplete, false); } };
+
+            const btnRelease = document.getElementById('btn-release-ride');
+            if (btnRelease) {
+                btnRelease.onclick = async () => {
+                    if (confirm("Are you sure? This ride will be given to another driver.")) {
+                        setLoading(btnRelease, true);
+                        try {
+                            await updateDoc(doc(db, "rides", rideId), { 
+                                status: 'requested', 
+                                driverUid: null, 
+                                driverName: null, 
+                                driverPhone: null, 
+                                acceptedAt: null, 
+                                arrivedAt: null 
+                            });
+                            showToast("Ride released back to pool.");
+                        } catch (e) { showToast(e.message, true); setLoading(btnRelease, false); }
+                    }
+                };
+            }
         }
     </script>
 </body>

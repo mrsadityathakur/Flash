@@ -16,7 +16,7 @@
             --text-muted: #888888;
             --danger: #ff4444;
             --success: #00C851;
-            --radius: 12px;
+            --radius: 16px;
             --header-height: 60px;
             --nav-height: 70px;
         }
@@ -50,28 +50,33 @@
         .mb-1 { margin-bottom: 0.5rem; }
         .mb-2 { margin-bottom: 1rem; }
 
+        /* Modern Buttons */
         button {
-            font-family: inherit; border: none; border-radius: var(--radius); font-weight: 600;
-            font-size: 1rem; cursor: pointer; transition: opacity 0.2s, transform 0.1s;
-            display: flex; align-items: center; justify-content: center; padding: 14px 20px;
+            font-family: inherit; border: none; border-radius: var(--radius); font-weight: 700;
+            font-size: 1rem; cursor: pointer; transition: all 0.2s;
+            display: flex; align-items: center; justify-content: center; padding: 16px 20px;
         }
-        button:active { transform: scale(0.98); }
+        button:active { transform: scale(0.96); }
         button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
         
-        .btn-primary { background-color: var(--primary); color: #000; }
+        .btn-primary { background-color: var(--primary); color: #000; box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2); }
         .btn-outline { background-color: transparent; border: 1px solid var(--surface-light); color: var(--text); }
         .btn-danger { background-color: rgba(255, 68, 68, 0.1); color: var(--danger); border: 1px solid rgba(255, 68, 68, 0.3); }
+        .btn-sm { padding: 8px 16px; font-size: 0.85rem; border-radius: 10px; }
 
+        /* Inputs */
         input, select, textarea {
             width: 100%; background-color: var(--surface); border: 1px solid var(--surface-light);
-            color: var(--text); padding: 14px; border-radius: var(--radius); font-family: inherit;
-            font-size: 1rem; outline: none; transition: border-color 0.2s; appearance: none;
+            color: var(--text); padding: 16px; border-radius: var(--radius); font-family: inherit;
+            font-size: 1rem; outline: none; transition: border-color 0.3s;
         }
-        input:focus, select:focus, textarea:focus { border-color: var(--primary); }
-        label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px; font-weight: 500; }
-        .card { background-color: var(--surface); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; border: 1px solid var(--surface-light); }
+        input:focus, select:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(255,215,0,0.1); }
+        label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;}
         
-        .badge { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .card { background-color: var(--surface); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; border: 1px solid var(--surface-light); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        
+        /* Badges */
+        .badge { padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
         .badge-requested { background: rgba(255, 215, 0, 0.15); color: var(--primary); }
         .badge-accepted { background: rgba(0, 200, 81, 0.15); color: var(--success); }
         .badge-arrived { background: rgba(0, 150, 255, 0.15); color: #0096FF; }
@@ -80,59 +85,94 @@
 
         #app { display: flex; flex-direction: column; height: 100%; position: relative; }
         
+        /* Splash Screen */
         #splash-screen {
             position: absolute; inset: 0; background-color: var(--bg); z-index: 9999;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            transition: opacity 0.4s ease;
+            transition: opacity 0.5s ease;
         }
-        
-        .logo-container { display: flex; flex-direction: column; align-items: center; gap: 12px; }
-        .logo-svg { width: 140px; height: 140px; }
+        .logo-container { display: flex; flex-direction: column; align-items: center; gap: 12px; animation: pulse 2s infinite; }
+        .logo-svg { width: 120px; height: 120px; }
         .logo-text { font-size: 3rem; font-weight: 900; font-style: italic; color: var(--primary); letter-spacing: -2px; }
+        @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.05); opacity: 0.8; } 100% { transform: scale(1); opacity: 1; } }
 
+        /* Header */
         .app-header {
             height: var(--header-height); display: flex; align-items: center; justify-content: space-between;
             padding: 0 20px; background-color: var(--bg); border-bottom: 1px solid var(--surface);
-            flex-shrink: 0; padding-top: env(safe-area-inset-top);
+            flex-shrink: 0; padding-top: env(safe-area-inset-top); z-index: 10;
         }
         .header-logo { display: flex; align-items: center; gap: 8px; }
         .header-logo svg { width: 28px; height: 28px; fill: var(--primary); }
-        .header-logo h1 { font-size: 1.2rem; font-weight: 900; font-style: italic; }
+        .header-logo h1 { font-size: 1.3rem; font-weight: 900; font-style: italic; letter-spacing: -1px;}
         
+        /* Main Content */
         #main-content {
             flex: 1; overflow-y: auto; overflow-x: hidden; padding: 20px;
             padding-bottom: calc(var(--nav-height) + 20px + env(safe-area-inset-bottom));
             -webkit-overflow-scrolling: touch;
         }
 
+        /* Bottom Nav */
         .bottom-nav {
             position: absolute; bottom: 0; left: 0; right: 0; height: var(--nav-height);
-            background-color: var(--bg); border-top: 1px solid var(--surface); display: flex;
+            background-color: rgba(18, 18, 18, 0.95); backdrop-filter: blur(10px);
+            border-top: 1px solid var(--surface-light); display: flex;
             justify-content: space-around; align-items: center; padding-bottom: env(safe-area-inset-bottom); z-index: 100;
         }
-        .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--text-muted); font-size: 0.7rem; font-weight: 500; gap: 4px; cursor: pointer; transition: color 0.2s; width: 25%; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--text-muted); font-size: 0.7rem; font-weight: 600; gap: 4px; cursor: pointer; transition: color 0.2s; width: 25%; }
         .nav-item svg { width: 24px; height: 24px; fill: currentColor; }
-        .nav-item.active { color: var(--primary); }
+        .nav-item.active { color: var(--primary); transform: translateY(-2px); }
 
-        .auth-container { display: flex; flex-direction: column; justify-content: center; min-height: 100%; padding: 20px; }
-        .auth-tabs { display: flex; margin-bottom: 24px; border-bottom: 1px solid var(--surface-light); }
-        .auth-tab { flex: 1; padding: 12px; text-align: center; color: var(--text-muted); cursor: pointer; font-weight: 600; border-bottom: 2px solid transparent; }
-        .auth-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
-        .form-group { margin-bottom: 16px; }
+        /* Auth Screens */
+        .auth-container { display: flex; flex-direction: column; justify-content: center; min-height: 100%; padding: 20px; z-index: 50; background: var(--bg); position: absolute; inset: 0; }
+        .auth-tabs { display: flex; margin-bottom: 30px; background: var(--surface); border-radius: var(--radius); padding: 4px; }
+        .auth-tab { flex: 1; padding: 12px; text-align: center; color: var(--text-muted); cursor: pointer; font-weight: 700; border-radius: 10px; transition: 0.3s; }
+        .auth-tab.active { background: var(--primary); color: #000; box-shadow: 0 2px 10px rgba(255, 215, 0, 0.3); }
+        .form-group { margin-bottom: 20px; }
 
+        /* Toasts */
         #toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 10000; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 400px; pointer-events: none; }
-        .toast { background: var(--surface-light); color: white; padding: 12px 20px; border-radius: var(--radius); font-size: 0.9rem; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.5); animation: slideDown 0.3s ease, fadeOut 0.3s ease 3.7s forwards; border-left: 4px solid var(--primary); }
+        .toast { background: var(--surface-light); color: white; padding: 16px 20px; border-radius: var(--radius); font-size: 0.9rem; font-weight: 600; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); animation: slideDown 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), fadeOut 0.4s ease 3.6s forwards; border-left: 4px solid var(--primary); backdrop-filter: blur(10px); }
         .toast.error { border-left-color: var(--danger); }
-        @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        @keyframes fadeOut { to { opacity: 0; } }
+        @keyframes slideDown { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes fadeOut { to { opacity: 0; transform: translateY(-20px); } }
 
-        .pin-display { font-size: 2.5rem; font-weight: 900; letter-spacing: 8px; color: var(--primary); text-align: center; background: var(--surface-light); padding: 16px; border-radius: var(--radius); margin: 16px 0; }
-        .loader { border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid var(--primary); border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; }
+        /* Modals */
+        #modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);
+            z-index: 10001; display: flex; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s;
+        }
+        #modal-overlay.active { opacity: 1; pointer-events: all; }
+        .modal-box { background: var(--surface); width: 90%; max-width: 340px; border-radius: 20px; padding: 24px; transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); text-align: center; border: 1px solid var(--surface-light); }
+        #modal-overlay.active .modal-box { transform: scale(1); }
+
+        /* Ride Specifics */
+        .pin-display { font-size: 3rem; font-weight: 900; letter-spacing: 10px; color: var(--primary); text-align: center; background: var(--surface-light); padding: 20px; border-radius: var(--radius); margin: 16px 0; border: 2px dashed var(--primary); }
+        .loader { border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid var(--primary); border-radius: 50%; width: 24px; height: 24px; animation: spin 0.8s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .map-container { width: 100%; height: 180px; border-radius: var(--radius); overflow: hidden; margin-bottom: 16px; border: 1px solid var(--surface-light); background: #1a1a1a; }
+        .map-container iframe { width: 100%; height: 100%; border: none; filter: grayscale(80%) invert(90%) contrast(120%); }
+
+        /* Visual Timeline */
+        .timeline { display: flex; justify-content: space-between; margin: 20px 0; position: relative; padding: 0 10px; }
+        .timeline::before { content: ''; position: absolute; top: 12px; left: 30px; right: 30px; height: 2px; background: var(--surface-light); z-index: 1; }
+        .timeline-step { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+        .timeline-dot { width: 24px; height: 24px; border-radius: 50%; background: var(--surface-light); display: flex; align-items: center; justify-content: center; border: 2px solid var(--bg); transition: 0.3s; }
+        .timeline-dot.active { background: var(--primary); box-shadow: 0 0 15px rgba(255, 215, 0, 0.5); }
+        .timeline-dot svg { width: 12px; height: 12px; fill: #000; }
+        .timeline-label { font-size: 0.6rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; }
+        .timeline-step.active .timeline-label { color: var(--primary); }
+        
+        .copy-btn { background: none; border: none; color: var(--text-muted); padding: 4px; cursor: pointer; }
+        .copy-btn svg { width: 16px; height: 16px; fill: currentColor; }
     </style>
 </head>
 <body>
 
+    <!-- Splash -->
     <div id="splash-screen">
         <div class="logo-container">
             <svg class="logo-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
@@ -143,19 +183,31 @@
             </svg>
             <div class="logo-text">FLASH</div>
         </div>
-        <p class="mt-2 text-muted text-sm">Fast rides. Fair for everyone.</p>
+        <p class="mt-2 text-muted text-sm font-bold">Fast rides. Fair for everyone.</p>
+    </div>
+
+    <!-- Custom Modal -->
+    <div id="modal-overlay">
+        <div class="modal-box">
+            <h2 id="modal-title" class="font-bold text-lg mb-1">Title</h2>
+            <p id="modal-desc" class="text-muted text-sm mb-3">Description</p>
+            <div class="flex w-full" style="gap: 10px;">
+                <button class="btn-outline w-full" id="modal-cancel">Cancel</button>
+                <button class="btn-primary w-full" id="modal-confirm">Confirm</button>
+            </div>
+        </div>
     </div>
 
     <div id="toast-container"></div>
 
+    <!-- Main App -->
     <div id="app" class="hidden">
         <header class="app-header">
             <div class="header-logo">
                 <svg viewBox="0 0 24 24"><path d="M13 2L3 14H12L11 22L21 10H12L13 2Z"/></svg>
                 <h1 id="header-title">FLASH</h1>
             </div>
-            <!-- Mode toggle is gone from here! -->
-            <button class="btn-outline" id="btn-exit-driver" style="display:none; padding: 6px 12px; font-size: 0.8rem;">Exit Driver</button>
+            <button class="btn-outline btn-sm" id="btn-exit-driver" style="display:none;">Exit Driver</button>
         </header>
         
         <main id="main-content"></main>
@@ -183,7 +235,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, addDoc, collection, query, where, onSnapshot, updateDoc, serverTimestamp, runTransaction, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, addDoc, deleteDoc, collection, query, where, onSnapshot, updateDoc, serverTimestamp, runTransaction, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBCzsWEbfQRWlGQIsY7z_BP_xQoiYqdeDI",
@@ -201,7 +253,7 @@
 
         let currentUser = null;
         let userProfile = null;
-        let currentMode = 'customer'; // 'customer' or 'driver'
+        let currentMode = 'customer';
         let activeRideId = null;
         let listeners = [];
         
@@ -212,12 +264,50 @@
         const headerTitle = document.getElementById('header-title');
         const btnExitDriver = document.getElementById('btn-exit-driver');
 
+        // --- UTILITIES ---
+        function playSound(type) {
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                const ctx = new AudioContext();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                if(type === 'success') {
+                    osc.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
+                    osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1); // E5
+                } else if (type === 'alert') {
+                    osc.frequency.setValueAtTime(440, ctx.currentTime);
+                }
+                gain.gain.setValueAtTime(0.1, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.3);
+            } catch(e) { console.log("Audio not supported"); }
+        }
+
+        function showModal(title, desc, onConfirm) {
+            const overlay = document.getElementById('modal-overlay');
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-desc').innerText = desc;
+            overlay.classList.add('active');
+            
+            document.getElementById('modal-confirm').onclick = () => {
+                overlay.classList.remove('active');
+                onConfirm();
+            };
+            document.getElementById('modal-cancel').onclick = () => {
+                overlay.classList.remove('active');
+            };
+        }
+
         function showToast(msg, isError = false) {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
             toast.className = `toast ${isError ? 'error' : ''}`;
             toast.textContent = msg;
             container.appendChild(toast);
+            if(!isError) playSound('success'); else playSound('alert');
             setTimeout(() => toast.remove(), 4000);
         }
 
@@ -241,14 +331,14 @@
         function formatDate(ts) { 
             if(!ts) return 'N/A'; 
             const d = ts.toDate ? ts.toDate() : new Date(ts); 
-            return d.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }); 
+            return d.toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }); 
         }
         
         function generatePIN() { 
             return Math.floor(1000 + Math.random() * 9000).toString(); 
         }
 
-        // AUTHENTICATION
+        // --- AUTH FLOW ---
         function renderAuth() {
             cleanupListeners(); 
             appEl.classList.add('hidden'); 
@@ -265,15 +355,9 @@
             
             authOverlay.innerHTML = `
                 <div class="text-center mb-3">
-                    <div class="logo-container" style="transform: scale(0.7); margin-bottom: -20px;">
-                        <svg class="logo-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M130 10 L60 110 L100 110 L70 190 L150 80 L110 80 Z" fill="#FFD700"/>
-                            <circle cx="120" cy="70" r="12" fill="#000"/>
-                            <path d="M120 82 C100 90 80 100 60 90 C50 85 30 80 20 90 C40 95 60 100 70 110 C80 120 100 115 120 105 Z" fill="#000"/>
-                            <path d="M110 105 L130 95 L140 105 L120 115 Z" fill="#000"/>
-                        </svg>
+                    <div class="logo-container" style="animation: none;">
+                        <div class="logo-text" style="font-size: 2.5rem;">FLASH</div>
                     </div>
-                    <p class="text-muted text-sm">Fast rides. Fair for everyone.</p>
                 </div>
                 
                 <div class="auth-tabs">
@@ -285,7 +369,7 @@
                     <div class="form-group"><label>Email</label><input type="email" id="login-email" required placeholder="you@example.com"></div>
                     <div class="form-group"><label>Password</label><input type="password" id="login-password" required placeholder="••••••••"></div>
                     <button type="submit" class="btn-primary w-full mt-2" id="btn-login">Sign In</button>
-                    <p class="text-center mt-2 text-sm text-muted" id="link-forgot" style="cursor:pointer;">Forgot Password?</p>
+                    <p class="text-center mt-3 text-sm text-muted" id="link-forgot" style="cursor:pointer;">Forgot Password?</p>
                 </form>
                 
                 <form id="form-signup" class="hidden">
@@ -298,58 +382,35 @@
             `;
 
             document.getElementById('tab-login').onclick = () => { 
-                document.getElementById('tab-login').classList.add('active'); 
-                document.getElementById('tab-signup').classList.remove('active'); 
-                document.getElementById('form-login').classList.remove('hidden'); 
-                document.getElementById('form-signup').classList.add('hidden'); 
+                document.getElementById('tab-login').classList.add('active'); document.getElementById('tab-signup').classList.remove('active'); 
+                document.getElementById('form-login').classList.remove('hidden'); document.getElementById('form-signup').classList.add('hidden'); 
             };
             document.getElementById('tab-signup').onclick = () => { 
-                document.getElementById('tab-signup').classList.add('active'); 
-                document.getElementById('tab-login').classList.remove('active'); 
-                document.getElementById('form-signup').classList.remove('hidden'); 
-                document.getElementById('form-login').classList.add('hidden'); 
+                document.getElementById('tab-signup').classList.add('active'); document.getElementById('tab-login').classList.remove('active'); 
+                document.getElementById('form-signup').classList.remove('hidden'); document.getElementById('form-login').classList.add('hidden'); 
             };
 
             document.getElementById('form-login').onsubmit = async (e) => {
-                e.preventDefault(); 
-                const btn = document.getElementById('btn-login'); setLoading(btn, true);
-                try { 
-                    await signInWithEmailAndPassword(auth, document.getElementById('login-email').value, document.getElementById('login-password').value); 
-                } catch (error) { 
-                    showToast(error.message.replace('Firebase: ', ''), true); 
-                } finally { 
-                    setLoading(btn, false); 
-                }
+                e.preventDefault(); const btn = document.getElementById('btn-login'); setLoading(btn, true);
+                try { await signInWithEmailAndPassword(auth, document.getElementById('login-email').value, document.getElementById('login-password').value); } 
+                catch (error) { showToast(error.message.replace('Firebase: ', ''), true); } finally { setLoading(btn, false); }
             };
 
             document.getElementById('form-signup').onsubmit = async (e) => {
-                e.preventDefault(); 
-                const btn = document.getElementById('btn-signup'); setLoading(btn, true);
+                e.preventDefault(); const btn = document.getElementById('btn-signup'); setLoading(btn, true);
                 try {
                     const uc = await createUserWithEmailAndPassword(auth, document.getElementById('signup-email').value, document.getElementById('signup-password').value);
                     await setDoc(doc(db, "users", uc.user.uid), { 
-                        uid: uc.user.uid, 
-                        name: document.getElementById('signup-name').value, 
-                        email: document.getElementById('signup-email').value, 
-                        phone: document.getElementById('signup-phone').value, 
-                        createdAt: serverTimestamp() 
+                        uid: uc.user.uid, name: document.getElementById('signup-name').value, 
+                        email: document.getElementById('signup-email').value, phone: document.getElementById('signup-phone').value, createdAt: serverTimestamp() 
                     });
-                } catch (error) { 
-                    showToast(error.message.replace('Firebase: ', ''), true); 
-                } finally { 
-                    setLoading(btn, false); 
-                }
+                } catch (error) { showToast(error.message.replace('Firebase: ', ''), true); } finally { setLoading(btn, false); }
             };
 
             document.getElementById('link-forgot').onclick = async () => {
                 const email = document.getElementById('login-email').value; 
                 if (!email) return showToast("Enter your email first", true);
-                try { 
-                    await sendPasswordResetEmail(auth, email); 
-                    showToast("Reset link sent!"); 
-                } catch (error) { 
-                    showToast(error.message.replace('Firebase: ', ''), true); 
-                }
+                try { await sendPasswordResetEmail(auth, email); showToast("Reset link sent!"); } catch (error) { showToast(error.message.replace('Firebase: ', ''), true); }
             };
         }
 
@@ -359,88 +420,63 @@
                 currentUser = user; 
                 if (authOverlay) authOverlay.remove();
                 try {
-                    const docRef = doc(db, "users", user.uid); 
-                    const docSnap = await getDoc(docRef);
-                    if (docSnap.exists()) { 
-                        userProfile = docSnap.data(); 
-                    } else {
+                    const docRef = doc(db, "users", user.uid); const docSnap = await getDoc(docRef);
+                    if (docSnap.exists()) { userProfile = docSnap.data(); } 
+                    else {
                         const newProfile = { uid: user.uid, name: "Flash User", email: user.email, phone: "0000000000", createdAt: serverTimestamp() };
-                        await setDoc(docRef, newProfile); 
-                        userProfile = newProfile;
+                        await setDoc(docRef, newProfile); userProfile = newProfile;
                     }
-                    splashEl.classList.add('hidden'); 
-                    appEl.classList.remove('hidden'); 
-                    switchMode('customer'); // Default mode
-                } catch (error) { 
-                    showToast("Database Error: " + error.message, true); 
-                    setTimeout(() => renderAuth(), 4000); 
-                }
+                    splashEl.classList.add('hidden'); appEl.classList.remove('hidden'); switchMode('customer');
+                } catch (error) { showToast("DB Error: " + error.message, true); setTimeout(() => renderAuth(), 4000); }
             } else {
-                currentUser = null; userProfile = null; activeRideId = null; 
-                cleanupListeners(); 
-                appEl.classList.add('hidden'); 
-                renderAuth();
+                currentUser = null; userProfile = null; activeRideId = null; cleanupListeners(); appEl.classList.add('hidden'); renderAuth();
             }
         });
 
-        // MODE SWITCHING
+        // --- NAVIGATION ---
         function switchMode(mode) {
-            currentMode = mode; 
-            activeRideId = null; 
-            cleanupListeners();
-            
+            currentMode = mode; activeRideId = null; cleanupListeners();
             if (mode === 'customer') {
-                headerTitle.innerText = "FLASH";
-                btnExitDriver.style.display = 'none';
-                bottomNav.style.display = 'flex'; 
-                renderCustomerHome(); 
+                headerTitle.innerText = "FLASH"; btnExitDriver.style.display = 'none';
+                bottomNav.style.display = 'flex'; renderCustomerHome(); 
             } else {
-                headerTitle.innerText = "Driver Dashboard";
-                btnExitDriver.style.display = 'block';
-                bottomNav.style.display = 'none'; 
-                renderDriverDashboard(); 
+                headerTitle.innerText = "Driver Dashboard"; btnExitDriver.style.display = 'block';
+                bottomNav.style.display = 'none'; renderDriverDashboard(); 
             }
         }
 
         btnExitDriver.onclick = () => { switchMode('customer'); };
 
-        // NAVIGATION (Customer Only)
         bottomNav.onclick = (e) => {
-            const navItem = e.target.closest('.nav-item'); 
-            if (!navItem) return;
-            bottomNav.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active')); 
-            navItem.classList.add('active');
+            const navItem = e.target.closest('.nav-item'); if (!navItem) return;
+            bottomNav.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active')); navItem.classList.add('active');
             if (navItem.dataset.view === 'home') renderCustomerHome();
             if (navItem.dataset.view === 'active') renderActiveRide();
             if (navItem.dataset.view === 'history') renderRideHistory();
             if (navItem.dataset.view === 'profile') renderProfile();
         };
 
-        // ==========================================
-        // CUSTOMER FLOW
-        // ==========================================
+        // --- CUSTOMER FLOW ---
         function renderCustomerHome() {
-            cleanupListeners(); 
-            bottomNav.style.display = 'flex';
+            cleanupListeners(); bottomNav.style.display = 'flex';
             bottomNav.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             bottomNav.querySelector('[data-view="home"]').classList.add('active');
 
             mainContent.innerHTML = `
-                <div class="mb-2"><h2 class="font-bold text-primary">Welcome, ${userProfile.name.split(' ')[0]}!</h2><p class="text-muted text-sm">Where are you going today?</p></div>
+                <div class="mb-2"><h2 class="font-bold text-lg">Hey, ${userProfile.name.split(' ')[0]}!</h2><p class="text-muted text-sm">Ready to flash to your destination?</p></div>
                 <div class="card">
                     <form id="form-book-ride">
                         <div class="form-group"><label>Pickup Location</label><input type="text" id="pickup" required placeholder="Enter pickup address"></div>
-                        <div class="form-group"><label>Destination</label><input type="text" id="destination" required placeholder="Enter destination"></div>
+                        <div class="form-group"><label>Where to?</label><input type="text" id="destination" required placeholder="Enter destination"></div>
                         <div class="form-group"><label>Contact Number</label><input type="tel" id="contact-phone" required value="${userProfile.phone || ''}"></div>
-                        <div class="form-group"><label>Ride Type</label><select id="ride-type"><option value="bike">Bike (Fastest)</option></select></div>
-                        <div class="form-group"><label>Instructions (Optional)</label><textarea id="instructions" rows="2" placeholder="e.g. I'm at the main gate"></textarea></div>
-                        <button type="submit" class="btn-primary w-full" id="btn-book">Confirm Booking</button>
+                        <div class="form-group"><label>Vehicle Type</label><select id="ride-type"><option value="bike">Bike (Fastest)</option></select></div>
+                        <div class="form-group"><label>Note for Driver (Optional)</label><textarea id="instructions" rows="2" placeholder="e.g. I'm at the main gate"></textarea></div>
+                        <button type="submit" class="btn-primary w-full mt-2" id="btn-book">Confirm Booking</button>
                     </form>
                 </div>
             `;
             document.getElementById('form-book-ride').onsubmit = async (e) => {
-                e.preventDefault(); 
-                const btn = document.getElementById('btn-book'); setLoading(btn, true);
+                e.preventDefault(); const btn = document.getElementById('btn-book'); setLoading(btn, true);
                 try {
                     const docRef = await addDoc(collection(db, "rides"), {
                         customerUid: currentUser.uid, customerName: userProfile.name, phone: document.getElementById('contact-phone').value,
@@ -450,11 +486,26 @@
                     });
                     showToast("Ride requested!");
                     bottomNav.querySelector('[data-view="active"]').click();
-                } catch (error) { 
-                    showToast("Failed: " + error.message, true); 
-                    setLoading(btn, false); 
-                }
+                } catch (error) { showToast("Failed: " + error.message, true); setLoading(btn, false); }
             };
+        }
+
+        function renderTimeline(status) {
+            const steps = ['requested', 'accepted', 'arrived', 'in_progress'];
+            let idx = steps.indexOf(status);
+            if(status === 'completed') idx = 4;
+
+            return `
+            <div class="timeline">
+                ${steps.map((s, i) => `
+                    <div class="timeline-step ${i <= idx ? 'active' : ''}">
+                        <div class="timeline-dot ${i <= idx ? 'active' : ''}">
+                            ${i <= idx ? '<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>' : ''}
+                        </div>
+                        <span class="timeline-label">${s.replace('_',' ')}</span>
+                    </div>
+                `).join('')}
+            </div>`;
         }
 
         function renderActiveRide() {
@@ -464,7 +515,7 @@
             
             const unsub = onSnapshot(q, (snapshot) => {
                 if (snapshot.empty) {
-                    mainContent.innerHTML = `<div class="text-center mt-3"><p class="text-muted">No active rides.</p><button class="btn-primary mt-2" onclick="document.querySelector('[data-view=\\'home\\']').click()">Book a Ride</button></div>`;
+                    mainContent.innerHTML = `<div class="text-center mt-3"><p class="text-muted">No active rides right now.</p><button class="btn-primary mt-2" onclick="document.querySelector('[data-view=\\'home\\']').click()">Book a Ride</button></div>`;
                     return;
                 }
                 const rideDoc = snapshot.docs[0]; activeRideId = rideDoc.id; 
@@ -473,35 +524,67 @@
                 let driverInfo = ''; let pinSection = '';
                 if (ride.status === 'requested') pinSection = `<div class="card mt-2 text-center"><p class="text-muted text-sm mb-1">Share this PIN with driver</p><div class="pin-display">${ride.pin}</div></div>`;
                 else if (['accepted', 'arrived', 'in_progress'].includes(ride.status)) {
-                    driverInfo = `<div class="card mt-2" style="border-color: var(--primary);"><h3 class="font-bold mb-1">Driver Details</h3><p>Name: ${ride.driverName}</p><p>Phone: ${ride.driverPhone}</p></div>`;
+                    driverInfo = `<div class="card mt-2" style="border-color: var(--primary); background: rgba(255,215,0,0.05);"><h3 class="font-bold mb-1 text-primary">Driver Details</h3><p>Name: ${ride.driverName}</p><p>Phone: ${ride.driverPhone}</p></div>`;
                     if (ride.status === 'accepted' || ride.status === 'arrived') pinSection = `<div class="card mt-2 text-center"><p class="text-muted text-sm mb-1">Ride Start PIN</p><div class="pin-display">${ride.pin}</div></div>`;
                 }
-                const waText = encodeURIComponent(`FLASH Ride Request:\nFrom: ${ride.pickup}\nTo: ${ride.destination}`);
+                const waText = encodeURIComponent(`FLASH Ride:\nFrom: ${ride.pickup}\nTo: ${ride.destination}`);
                 
+                // Map Embed
+                const mapEmbed = `<div class="map-container mt-2"><iframe src="https://maps.google.com/maps?q=${encodeURIComponent(ride.pickup)}&output=embed"></iframe></div>`;
+
                 mainContent.innerHTML = `
-                    <div class="flex justify-between items-center mb-2"><h2 class="font-bold">Active Ride</h2><span class="badge badge-${ride.status}">${ride.status.replace('_', ' ')}</span></div>
-                    <div class="card"><div class="flex flex-col" style="gap: 12px;"><div><p class="text-sm text-muted">Pickup</p><p class="font-bold">${ride.pickup}</p></div><div><p class="text-sm text-muted">Destination</p><p class="font-bold">${ride.destination}</p></div></div></div>
+                    <div class="flex justify-between items-center mb-1"><h2 class="font-bold text-lg">Active Ride</h2><span class="badge badge-${ride.status}">${ride.status.replace('_', ' ')}</span></div>
+                    ${renderTimeline(ride.status)}
+                    ${mapEmbed}
+                    <div class="card">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs text-muted font-bold">RIDE ID: ${ride.pin}</span>
+                            <button class="copy-btn" onclick="navigator.clipboard.writeText('${ride.pin}');showToast('Ride ID Copied!')">
+                                <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+                            </button>
+                        </div>
+                        <div class="flex flex-col" style="gap: 12px;">
+                            <div><p class="text-sm text-muted">Pickup</p><p class="font-bold">${ride.pickup}</p></div>
+                            <div><p class="text-sm text-muted">Destination</p><p class="font-bold">${ride.destination}</p></div>
+                        </div>
+                    </div>
                     ${driverInfo} ${pinSection}
                     ${ride.status === 'requested' ? `
                         <div class="flex w-full" style="gap: 10px; margin-top: 16px;">
-                            <a href="https://wa.me/?text=${waText}" target="_blank" class="btn-outline w-full" style="text-decoration: none; padding: 14px; border-radius: 12px; text-align: center; font-weight: bold;">WhatsApp</a>
-                            <button class="btn-danger w-full" id="btn-cancel-ride">Cancel</button>
+                            <a href="https://wa.me/?text=${waText}" target="_blank" class="btn-outline w-full" style="text-decoration: none;">Share via WhatsApp</a>
+                            <button class="btn-danger w-full" id="btn-cancel-ride">Cancel Ride</button>
                         </div>` : ''}
                 `;
                 const cBtn = document.getElementById('btn-cancel-ride');
-                if (cBtn) cBtn.onclick = async () => { if (confirm("Cancel?")) { try { await updateDoc(doc(db, "rides", activeRideId), { status: 'cancelled' }); showToast("Cancelled"); } catch (e) { showToast(e.message, true); } } };
+                if (cBtn) {
+                    cBtn.onclick = () => { 
+                        showModal("Cancel Ride?", "Are you sure? This ride will be completely removed.", async () => {
+                            setLoading(cBtn, true);
+                            try { await deleteDoc(doc(db, "rides", activeRideId)); showToast("Ride cancelled."); } 
+                            catch (e) { showToast(e.message, true); setLoading(cBtn, false); }
+                        });
+                    };
+                }
             });
             listeners.push(unsub);
         }
 
         function renderRideHistory() {
             cleanupListeners();
-            mainContent.innerHTML = `<h2 class="font-bold mb-2">History</h2><div class="text-center mt-3"><div class="loader" style="margin: 0 auto;"></div></div>`;
+            mainContent.innerHTML = `<h2 class="font-bold text-lg mb-2">History</h2><div class="text-center mt-3"><div class="loader" style="margin: 0 auto;"></div></div>`;
             const q = query(collection(db, "rides"), where("customerUid", "==", currentUser.uid), where("status", "in", ["completed", "cancelled"]), orderBy("createdAt", "desc"), limit(20));
             const unsub = onSnapshot(q, (snapshot) => {
-                if (snapshot.empty) { mainContent.innerHTML = `<h2 class="font-bold mb-2">History</h2><p class="text-muted text-center mt-3">No past rides.</p>`; return; }
-                let html = `<h2 class="font-bold mb-2">History</h2>`;
-                snapshot.forEach(doc => { const r = doc.data(); html += `<div class="card"><div class="flex justify-between mb-1"><span class="badge badge-${r.status}">${r.status}</span><span class="text-sm text-muted">${formatDate(r.createdAt)}</span></div><p class="text-sm">From: ${r.pickup}</p><p class="text-sm">To: ${r.destination}</p></div>`; });
+                if (snapshot.empty) { mainContent.innerHTML = `<h2 class="font-bold text-lg mb-2">History</h2><p class="text-muted text-center mt-3">No past rides.</p>`; return; }
+                let html = `<h2 class="font-bold text-lg mb-2">History</h2>`;
+                snapshot.forEach(doc => { 
+                    const r = doc.data(); 
+                    html += `
+                    <div class="card">
+                        <div class="flex justify-between mb-1"><span class="badge badge-${r.status}">${r.status}</span><span class="text-xs text-muted">${formatDate(r.createdAt)}</span></div>
+                        <p class="text-sm font-bold mt-1">${r.destination}</p>
+                        <p class="text-xs text-muted">From: ${r.pickup}</p>
+                    </div>`; 
+                });
                 mainContent.innerHTML = html;
             });
             listeners.push(unsub);
@@ -510,58 +593,74 @@
         function renderProfile() {
             cleanupListeners();
             mainContent.innerHTML = `
-                <h2 class="font-bold mb-2">Profile</h2>
-                <div class="card">
-                    <p class="text-sm text-muted">Name</p><p class="font-bold text-lg mb-2">${userProfile.name}</p>
-                    <p class="text-sm text-muted">Email</p><p class="font-bold mb-2">${userProfile.email}</p>
-                    <p class="text-sm text-muted">Phone</p><p class="font-bold mb-2">${userProfile.phone}</p>
+                <h2 class="font-bold text-lg mb-2">Profile</h2>
+                <div class="card flex items-center gap-3">
+                    <div style="width: 60px; height: 60px; border-radius: 50%; background: var(--primary); color: #000; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold;">
+                        ${userProfile.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                        <p class="font-bold text-lg">${userProfile.name}</p>
+                        <p class="text-sm text-muted">${userProfile.email}</p>
+                        <p class="text-sm text-muted">${userProfile.phone}</p>
+                    </div>
                 </div>
                 
-                <div class="card" style="border-color: var(--primary); background: rgba(255,215,0,0.05);">
-                    <h3 class="font-bold mb-1">Switch Account Type</h3>
-                    <p class="text-sm text-muted mb-2">Want to earn money by driving? Switch to Driver Mode.</p>
+                <div class="card" style="border-color: var(--primary); background: linear-gradient(145deg, rgba(255,215,0,0.1), transparent);">
+                    <h3 class="font-bold mb-1 text-primary">Become a Driver</h3>
+                    <p class="text-sm text-muted mb-2">Zero commission. Keep 100% of your earnings.</p>
                     <button class="btn-primary w-full" id="btn-become-driver">Switch to Driver Mode</button>
                 </div>
 
-                <button class="btn-danger w-full mt-2" id="btn-logout">Logout</button>
+                <button class="btn-outline w-full mt-2" id="btn-logout">Logout</button>
             `;
             document.getElementById('btn-become-driver').onclick = () => { switchMode('driver'); };
-            document.getElementById('btn-logout').onclick = () => { signOut(auth); };
+            document.getElementById('btn-logout').onclick = () => { 
+                showModal("Logout?", "You will need to login again.", () => { signOut(auth); });
+            };
         }
 
-        // ==========================================
-        // DRIVER FLOW (Completely Separated)
-        // ==========================================
+        // --- DRIVER FLOW ---
         function renderDriverDashboard() {
             cleanupListeners();
             mainContent.innerHTML = `<div class="text-center mt-3"><div class="loader" style="margin: 0 auto;"></div></div>`;
             
+            // Get driver stats (Completed rides)
+            const qStats = query(collection(db, "rides"), where("driverUid", "==", currentUser.uid), where("status", "==", "completed"));
+            getDocs(qStats).then(snap => {
+                const earnings = snap.size * 50; // Mock: ₹50 per ride
+                document.getElementById('driver-stats').innerHTML = `
+                    <div class="flex justify-between text-center w-full mb-3">
+                        <div><p class="text-lg font-bold text-primary">${snap.size}</p><p class="text-xs text-muted">Rides</p></div>
+                        <div><p class="text-lg font-bold text-success" style="color:var(--success)">₹${earnings}</p><p class="text-xs text-muted">Earned</p></div>
+                        <div><p class="text-lg font-bold">4.9★</p><p class="text-xs text-muted">Rating</p></div>
+                    </div>
+                `;
+            });
+
             const qActive = query(collection(db, "rides"), where("driverUid", "==", currentUser.uid), where("status", "in", ["accepted", "arrived", "in_progress"]));
             
             const unsubActive = onSnapshot(qActive, (snapshot) => {
                 if (!snapshot.empty) {
-                    // Active ride hai, use dikhao
                     const rideDoc = snapshot.docs[0]; 
                     renderDriverActiveRideUI(rideDoc.id, rideDoc.data());
                 } else {
-                    // Koi active ride nahi, toh Available Rides dikhao
                     renderAvailableRides();
                 }
-            }, (error) => {
-                console.error(error);
-                showToast("Error loading dashboard", true);
-            });
+            }, (error) => { showToast("Error: " + error.message, true); });
             listeners.push(unsubActive);
         }
 
         function renderAvailableRides() {
             mainContent.innerHTML = `
+                <div class="card" style="background: var(--surface-light);">
+                    <div id="driver-stats"><div class="loader" style="margin: 0 auto; width: 16px; height: 16px;"></div></div>
+                </div>
                 <div class="flex justify-between items-center mb-2">
                     <div>
-                        <h2 class="font-bold text-primary">Available Rides</h2>
+                        <h2 class="font-bold text-primary text-lg">Available Rides</h2>
                         <p class="text-muted text-sm">Accept a ride to start earning.</p>
                     </div>
-                    <button class="btn-outline" style="padding: 8px 12px; font-size: 0.8rem;" onclick="renderDriverDashboard()">Refresh</button>
+                    <button class="btn-outline btn-sm" onclick="renderDriverDashboard()">Refresh</button>
                 </div>
                 <div id="rides-list"><div class="loader" style="margin: 20px auto;"></div></div>
             `;
@@ -569,22 +668,13 @@
             const q = query(collection(db, "rides"), where("status", "==", "requested"), orderBy("createdAt", "desc"));
             
             const unsub = onSnapshot(q, (snapshot) => {
-                const listEl = document.getElementById('rides-list'); 
-                if (!listEl) return;
+                const listEl = document.getElementById('rides-list'); if (!listEl) return;
+                if (snapshot.empty) { listEl.innerHTML = `<div class="text-center mt-3 text-muted"><p>No rides available.</p></div>`; return; }
                 
-                if (snapshot.empty) { 
-                    listEl.innerHTML = `<div class="text-center mt-3 text-muted"><p>No rides available right now.</p></div>`; 
-                    return; 
-                }
-                
-                let html = '';
-                let count = 0;
-                
+                let html = ''; let count = 0;
                 snapshot.forEach(doc => {
                     const ride = doc.data();
-                    // Apni book ki hui ride ko skip karo
                     if(ride.customerUid === currentUser.uid) return; 
-                    
                     count++;
                     html += `
                     <div class="card">
@@ -598,36 +688,20 @@
                     </div>`;
                 });
                 
-                if (count === 0) {
-                     listEl.innerHTML = `<div class="text-center mt-3 text-muted"><p>No rides available.</p></div>`;
-                } else {
-                     listEl.innerHTML = html;
-                }
+                listEl.innerHTML = count === 0 ? `<div class="text-center mt-3 text-muted"><p>No rides available.</p></div>` : html;
                 
                 listEl.querySelectorAll('.accept-btn').forEach(btn => {
                     btn.onclick = async (e) => {
-                        const rideId = e.target.dataset.id; 
-                        setLoading(e.target, true);
+                        const rideId = e.target.dataset.id; setLoading(e.target, true);
                         try {
                             await runTransaction(db, async (transaction) => {
-                                const rideRef = doc(db, "rides", rideId); 
-                                const rideDoc = await transaction.get(rideRef);
+                                const rideRef = doc(db, "rides", rideId); const rideDoc = await transaction.get(rideRef);
                                 if (!rideDoc.exists()) throw new Error("Ride no longer exists.");
                                 if (rideDoc.data().status !== 'requested') throw new Error("Ride already accepted.");
-                                
-                                transaction.update(rideRef, { 
-                                    status: 'accepted', 
-                                    driverUid: currentUser.uid, 
-                                    driverName: userProfile.name, 
-                                    driverPhone: userProfile.phone, 
-                                    acceptedAt: serverTimestamp() 
-                                });
+                                transaction.update(rideRef, { status: 'accepted', driverUid: currentUser.uid, driverName: userProfile.name, driverPhone: userProfile.phone, acceptedAt: serverTimestamp() });
                             });
                             showToast("Ride accepted!");
-                        } catch (error) { 
-                            showToast(error.message, true); 
-                            setLoading(e.target, false); 
-                        }
+                        } catch (error) { showToast(error.message, true); setLoading(e.target, false); }
                     };
                 });
             });
@@ -637,29 +711,50 @@
         function renderDriverActiveRideUI(rideId, ride) {
             let actionSection = '';
             let cancelBtnSection = '';
-
+            const pickupMapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ride.pickup)}`;
+            const dropMapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ride.destination)}`;
+            
             if (ride.status === 'accepted') {
                 actionSection = `<button class="btn-primary w-full mt-2" id="btn-arrived">I've Arrived at Pickup</button>`;
                 cancelBtnSection = `<button class="btn-danger w-full mt-2" id="btn-release-ride">Cancel & Release Ride</button>`;
             } else if (ride.status === 'arrived') {
-                actionSection = `<div class="card mt-2"><label>Enter Customer's PIN</label><input type="number" id="start-pin" placeholder="4-digit PIN" style="text-align: center; font-size: 1.5rem; letter-spacing: 5px; margin-bottom: 10px;"><button class="btn-primary w-full" id="btn-start-ride">Start Ride</button></div>`;
+                actionSection = `<div class="card mt-2"><label>Enter Customer's PIN</label><input type="number" id="start-pin" placeholder="0000" style="text-align: center; font-size: 1.5rem; letter-spacing: 5px; margin-bottom: 10px;"><button class="btn-primary w-full" id="btn-start-ride">Start Ride</button></div>`;
                 cancelBtnSection = `<button class="btn-danger w-full mt-2" id="btn-release-ride">Cancel & Release Ride</button>`;
             } else if (ride.status === 'in_progress') {
                 actionSection = `<button class="btn-primary w-full mt-2" id="btn-complete-ride">Complete Ride</button>`;
             }
 
             mainContent.innerHTML = `
-                <div class="flex justify-between items-center mb-2"><h2 class="font-bold text-primary">Active Ride</h2><span class="badge badge-${ride.status}">${ride.status.replace('_', ' ')}</span></div>
+                <div class="flex justify-between items-center mb-1"><h2 class="font-bold text-primary text-lg">Active Ride</h2><span class="badge badge-${ride.status}">${ride.status.replace('_', ' ')}</span></div>
+                ${renderTimeline(ride.status)}
                 <div class="card" style="border-color: var(--primary);">
-                    <div class="flex flex-col" style="gap: 12px;">
-                        <div><p class="text-sm text-muted">Customer</p><p class="font-bold">${ride.customerName}</p><p class="text-sm">${ride.phone}</p></div>
-                        <div><p class="text-sm text-muted">Pickup</p><p class="font-bold">${ride.pickup}</p></div>
-                        <div><p class="text-sm text-muted">Destination</p><p class="font-bold">${ride.destination}</p></div>
+                    <div class="flex justify-between items-center mb-3">
+                        <div>
+                            <p class="text-xs text-muted">CUSTOMER</p>
+                            <p class="font-bold">${ride.customerName}</p>
+                            <p class="text-sm">${ride.phone}</p>
+                        </div>
+                        <button class="btn-outline btn-sm" id="btn-copy-details">Copy Info</button>
+                    </div>
+                    
+                    <div class="map-container"><iframe src="https://maps.google.com/maps?q=${encodeURIComponent(ride.pickup)}&output=embed"></iframe></div>
+                    
+                    <div class="flex justify-between items-center mb-2">
+                        <div><p class="text-xs text-muted">PICKUP</p><p class="font-bold text-sm">${ride.pickup}</p></div>
+                        <a href="${pickupMapUrl}" target="_blank" class="btn-primary btn-sm" style="text-decoration:none;">Open Map</a>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <div><p class="text-xs text-muted">DROP</p><p class="font-bold text-sm">${ride.destination}</p></div>
+                        <a href="${dropMapUrl}" target="_blank" class="btn-primary btn-sm" style="text-decoration:none;">Open Map</a>
                     </div>
                 </div>
-                ${actionSection}
-                ${cancelBtnSection}
+                ${actionSection} ${cancelBtnSection}
             `;
+
+            document.getElementById('btn-copy-details').onclick = () => {
+                const text = `FLASH Ride:\nCustomer: ${ride.customerName}\nPhone: ${ride.phone}\nPickup: ${ride.pickup}\nDrop: ${ride.destination}`;
+                navigator.clipboard.writeText(text).then(() => { showToast("Details copied!"); });
+            };
 
             const btnArrived = document.getElementById('btn-arrived');
             if (btnArrived) btnArrived.onclick = async () => { setLoading(btnArrived, true); try { await updateDoc(doc(db, "rides", rideId), { status: 'arrived', arrivedAt: serverTimestamp() }); showToast("Arrived!"); } catch (e) { showToast(e.message, true); setLoading(btnArrived, false); } };
@@ -686,21 +781,14 @@
 
             const btnRelease = document.getElementById('btn-release-ride');
             if (btnRelease) {
-                btnRelease.onclick = async () => {
-                    if (confirm("Are you sure? This ride will go back to the pool.")) {
+                btnRelease.onclick = () => {
+                    showModal("Release Ride?", "This ride will go back to the pool for other drivers.", async () => {
                         setLoading(btnRelease, true);
                         try {
-                            await updateDoc(doc(db, "rides", rideId), { 
-                                status: 'requested', 
-                                driverUid: null, 
-                                driverName: null, 
-                                driverPhone: null, 
-                                acceptedAt: null, 
-                                arrivedAt: null 
-                            });
-                            showToast("Ride released back to pool.");
+                            await updateDoc(doc(db, "rides", rideId), { status: 'requested', driverUid: null, driverName: null, driverPhone: null, acceptedAt: null, arrivedAt: null });
+                            showToast("Ride released.");
                         } catch (e) { showToast(e.message, true); setLoading(btnRelease, false); }
-                    }
+                    });
                 };
             }
         }

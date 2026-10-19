@@ -99,10 +99,6 @@
         .header-logo svg { width: 28px; height: 28px; fill: var(--primary); }
         .header-logo h1 { font-size: 1.2rem; font-weight: 900; font-style: italic; }
         
-        .mode-toggle { background: var(--surface-light); border-radius: 20px; padding: 4px; display: flex; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
-        .mode-toggle span { padding: 8px 16px; border-radius: 16px; transition: 0.2s; }
-        .mode-toggle span.active { background: var(--primary); color: #000; }
-
         #main-content {
             flex: 1; overflow-y: auto; overflow-x: hidden; padding: 20px;
             padding-bottom: calc(var(--nav-height) + 20px + env(safe-area-inset-bottom));
@@ -156,12 +152,10 @@
         <header class="app-header">
             <div class="header-logo">
                 <svg viewBox="0 0 24 24"><path d="M13 2L3 14H12L11 22L21 10H12L13 2Z"/></svg>
-                <h1>FLASH</h1>
+                <h1 id="header-title">FLASH</h1>
             </div>
-            <div class="mode-toggle" id="mode-toggle">
-                <span class="active" data-mode="customer">Rider</span>
-                <span data-mode="driver">Driver</span>
-            </div>
+            <!-- Mode toggle is gone from here! -->
+            <button class="btn-outline" id="btn-exit-driver" style="display:none; padding: 6px 12px; font-size: 0.8rem;">Exit Driver</button>
         </header>
         
         <main id="main-content"></main>
@@ -207,7 +201,7 @@
 
         let currentUser = null;
         let userProfile = null;
-        let currentMode = 'customer';
+        let currentMode = 'customer'; // 'customer' or 'driver'
         let activeRideId = null;
         let listeners = [];
         
@@ -215,7 +209,8 @@
         const splashEl = document.getElementById('splash-screen');
         const mainContent = document.getElementById('main-content');
         const bottomNav = document.getElementById('bottom-nav');
-        const modeToggle = document.getElementById('mode-toggle');
+        const headerTitle = document.getElementById('header-title');
+        const btnExitDriver = document.getElementById('btn-exit-driver');
 
         function showToast(msg, isError = false) {
             const container = document.getElementById('toast-container');
@@ -253,6 +248,7 @@
             return Math.floor(1000 + Math.random() * 9000).toString(); 
         }
 
+        // AUTHENTICATION
         function renderAuth() {
             cleanupListeners(); 
             appEl.classList.add('hidden'); 
@@ -374,7 +370,7 @@
                     }
                     splashEl.classList.add('hidden'); 
                     appEl.classList.remove('hidden'); 
-                    renderApp();
+                    switchMode('customer'); // Default mode
                 } catch (error) { 
                     showToast("Database Error: " + error.message, true); 
                     setTimeout(() => renderAuth(), 4000); 
@@ -387,16 +383,28 @@
             }
         });
 
+        // MODE SWITCHING
         function switchMode(mode) {
-            if (mode === currentMode) return;
-            currentMode = mode; activeRideId = null; cleanupListeners();
-            modeToggle.querySelectorAll('span').forEach(el => el.classList.toggle('active', el.dataset.mode === mode));
-            if (mode === 'customer') { bottomNav.style.display = 'flex'; renderCustomerHome(); } 
-            else { bottomNav.style.display = 'none'; renderDriverDashboard(); }
+            currentMode = mode; 
+            activeRideId = null; 
+            cleanupListeners();
+            
+            if (mode === 'customer') {
+                headerTitle.innerText = "FLASH";
+                btnExitDriver.style.display = 'none';
+                bottomNav.style.display = 'flex'; 
+                renderCustomerHome(); 
+            } else {
+                headerTitle.innerText = "Driver Dashboard";
+                btnExitDriver.style.display = 'block';
+                bottomNav.style.display = 'none'; 
+                renderDriverDashboard(); 
+            }
         }
 
-        modeToggle.onclick = (e) => { if (e.target.dataset.mode) switchMode(e.target.dataset.mode); };
+        btnExitDriver.onclick = () => { switchMode('customer'); };
 
+        // NAVIGATION (Customer Only)
         bottomNav.onclick = (e) => {
             const navItem = e.target.closest('.nav-item'); 
             if (!navItem) return;
@@ -408,14 +416,15 @@
             if (navItem.dataset.view === 'profile') renderProfile();
         };
 
-        function renderApp() {
-            bottomNav.querySelector('[data-view="home"]').classList.add('active');
-            if (currentMode === 'customer') renderCustomerHome(); 
-            else renderDriverDashboard();
-        }
-
+        // ==========================================
+        // CUSTOMER FLOW
+        // ==========================================
         function renderCustomerHome() {
-            cleanupListeners(); bottomNav.style.display = 'flex';
+            cleanupListeners(); 
+            bottomNav.style.display = 'flex';
+            bottomNav.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            bottomNav.querySelector('[data-view="home"]').classList.add('active');
+
             mainContent.innerHTML = `
                 <div class="mb-2"><h2 class="font-bold text-primary">Welcome, ${userProfile.name.split(' ')[0]}!</h2><p class="text-muted text-sm">Where are you going today?</p></div>
                 <div class="card">
@@ -505,73 +514,122 @@
                 <div class="card">
                     <p class="text-sm text-muted">Name</p><p class="font-bold text-lg mb-2">${userProfile.name}</p>
                     <p class="text-sm text-muted">Email</p><p class="font-bold mb-2">${userProfile.email}</p>
-                    <p class="text-sm text-muted">Phone</p><p class="font-bold">${userProfile.phone}</p>
+                    <p class="text-sm text-muted">Phone</p><p class="font-bold mb-2">${userProfile.phone}</p>
                 </div>
-                <button class="btn-danger w-full" id="btn-logout">Logout</button>
+                
+                <div class="card" style="border-color: var(--primary); background: rgba(255,215,0,0.05);">
+                    <h3 class="font-bold mb-1">Switch Account Type</h3>
+                    <p class="text-sm text-muted mb-2">Want to earn money by driving? Switch to Driver Mode.</p>
+                    <button class="btn-primary w-full" id="btn-become-driver">Switch to Driver Mode</button>
+                </div>
+
+                <button class="btn-danger w-full mt-2" id="btn-logout">Logout</button>
             `;
+            document.getElementById('btn-become-driver').onclick = () => { switchMode('driver'); };
             document.getElementById('btn-logout').onclick = () => { signOut(auth); };
         }
 
         // ==========================================
-        // DRIVER FLOW
+        // DRIVER FLOW (Completely Separated)
         // ==========================================
         function renderDriverDashboard() {
             cleanupListeners();
             mainContent.innerHTML = `<div class="text-center mt-3"><div class="loader" style="margin: 0 auto;"></div></div>`;
+            
             const qActive = query(collection(db, "rides"), where("driverUid", "==", currentUser.uid), where("status", "in", ["accepted", "arrived", "in_progress"]));
             
             const unsubActive = onSnapshot(qActive, (snapshot) => {
                 if (!snapshot.empty) {
-                    const rideDoc = snapshot.docs[0]; renderDriverActiveRideUI(rideDoc.id, rideDoc.data());
+                    // Active ride hai, use dikhao
+                    const rideDoc = snapshot.docs[0]; 
+                    renderDriverActiveRideUI(rideDoc.id, rideDoc.data());
                 } else {
+                    // Koi active ride nahi, toh Available Rides dikhao
                     renderAvailableRides();
                 }
             }, (error) => {
-                showToast("Error loading rides. Check console.", true);
                 console.error(error);
+                showToast("Error loading dashboard", true);
             });
             listeners.push(unsubActive);
         }
 
         function renderAvailableRides() {
-            mainContent.innerHTML = `<div class="mb-2"><h2 class="font-bold text-primary">Available Rides</h2><p class="text-muted text-sm">Accept a ride to start earning.</p></div><div id="rides-list"><div class="loader" style="margin: 20px auto;"></div></div>`;
+            mainContent.innerHTML = `
+                <div class="flex justify-between items-center mb-2">
+                    <div>
+                        <h2 class="font-bold text-primary">Available Rides</h2>
+                        <p class="text-muted text-sm">Accept a ride to start earning.</p>
+                    </div>
+                    <button class="btn-outline" style="padding: 8px 12px; font-size: 0.8rem;" onclick="renderDriverDashboard()">Refresh</button>
+                </div>
+                <div id="rides-list"><div class="loader" style="margin: 20px auto;"></div></div>
+            `;
             
             const q = query(collection(db, "rides"), where("status", "==", "requested"), orderBy("createdAt", "desc"));
             
             const unsub = onSnapshot(q, (snapshot) => {
-                const listEl = document.getElementById('rides-list'); if (!listEl) return;
-                if (snapshot.empty) { listEl.innerHTML = `<p class="text-muted text-center mt-3">No rides available right now.</p>`; return; }
+                const listEl = document.getElementById('rides-list'); 
+                if (!listEl) return;
+                
+                if (snapshot.empty) { 
+                    listEl.innerHTML = `<div class="text-center mt-3 text-muted"><p>No rides available right now.</p></div>`; 
+                    return; 
+                }
+                
                 let html = '';
+                let count = 0;
+                
                 snapshot.forEach(doc => {
                     const ride = doc.data();
+                    // Apni book ki hui ride ko skip karo
                     if(ride.customerUid === currentUser.uid) return; 
-                    html += `<div class="card"><div class="flex justify-between items-center mb-1"><span class="text-xs text-muted">${formatDate(ride.createdAt)}</span><span class="badge badge-requested">${ride.rideType}</span></div><p class="text-sm"><span class="text-muted">From:</span> <span class="font-bold">${ride.pickup}</span></p><p class="text-sm mb-2"><span class="text-muted">To:</span> <span class="font-bold">${ride.destination}</span></p><button class="btn-primary w-full accept-btn" data-id="${doc.id}">Accept Ride</button></div>`;
+                    
+                    count++;
+                    html += `
+                    <div class="card">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-xs text-muted">${formatDate(ride.createdAt)}</span>
+                            <span class="badge badge-requested">${ride.rideType}</span>
+                        </div>
+                        <p class="text-sm"><span class="text-muted">From:</span> <span class="font-bold">${ride.pickup}</span></p>
+                        <p class="text-sm mb-2"><span class="text-muted">To:</span> <span class="font-bold">${ride.destination}</span></p>
+                        <button class="btn-primary w-full accept-btn" data-id="${doc.id}">Accept Ride</button>
+                    </div>`;
                 });
-                listEl.innerHTML = html || `<p class="text-muted text-center mt-3">No rides available.</p>`;
+                
+                if (count === 0) {
+                     listEl.innerHTML = `<div class="text-center mt-3 text-muted"><p>No rides available.</p></div>`;
+                } else {
+                     listEl.innerHTML = html;
+                }
                 
                 listEl.querySelectorAll('.accept-btn').forEach(btn => {
                     btn.onclick = async (e) => {
-                        const rideId = e.target.dataset.id; setLoading(e.target, true);
+                        const rideId = e.target.dataset.id; 
+                        setLoading(e.target, true);
                         try {
                             await runTransaction(db, async (transaction) => {
-                                const rideRef = doc(db, "rides", rideId); const rideDoc = await transaction.get(rideRef);
+                                const rideRef = doc(db, "rides", rideId); 
+                                const rideDoc = await transaction.get(rideRef);
                                 if (!rideDoc.exists()) throw new Error("Ride no longer exists.");
                                 if (rideDoc.data().status !== 'requested') throw new Error("Ride already accepted.");
-                                transaction.update(rideRef, { status: 'accepted', driverUid: currentUser.uid, driverName: userProfile.name, driverPhone: userProfile.phone, acceptedAt: serverTimestamp() });
+                                
+                                transaction.update(rideRef, { 
+                                    status: 'accepted', 
+                                    driverUid: currentUser.uid, 
+                                    driverName: userProfile.name, 
+                                    driverPhone: userProfile.phone, 
+                                    acceptedAt: serverTimestamp() 
+                                });
                             });
                             showToast("Ride accepted!");
-                        } catch (error) { showToast(error.message, true); setLoading(e.target, false); }
+                        } catch (error) { 
+                            showToast(error.message, true); 
+                            setLoading(e.target, false); 
+                        }
                     };
                 });
-            }, (error) => {
-                const listEl = document.getElementById('rides-list');
-                if (listEl) {
-                    if (error.message.includes("index")) {
-                        listEl.innerHTML = `<div class="card" style="border-color: var(--danger);"><p class="text-danger font-bold">Database Index Required</p><p class="text-sm mt-1">Firebase needs to create an index to sort rides by time.</p><p class="text-xs mt-2">Go to your Firebase Console > Firestore > Indexes, and click "Create Index" for the error link provided in the browser console.</p></div>`;
-                    } else {
-                        listEl.innerHTML = `<p class="text-danger">Error: ${error.message}</p>`;
-                    }
-                }
             });
             listeners.push(unsub);
         }
@@ -582,7 +640,6 @@
 
             if (ride.status === 'accepted') {
                 actionSection = `<button class="btn-primary w-full mt-2" id="btn-arrived">I've Arrived at Pickup</button>`;
-                // Cancel & Release button
                 cancelBtnSection = `<button class="btn-danger w-full mt-2" id="btn-release-ride">Cancel & Release Ride</button>`;
             } else if (ride.status === 'arrived') {
                 actionSection = `<div class="card mt-2"><label>Enter Customer's PIN</label><input type="number" id="start-pin" placeholder="4-digit PIN" style="text-align: center; font-size: 1.5rem; letter-spacing: 5px; margin-bottom: 10px;"><button class="btn-primary w-full" id="btn-start-ride">Start Ride</button></div>`;
@@ -630,7 +687,7 @@
             const btnRelease = document.getElementById('btn-release-ride');
             if (btnRelease) {
                 btnRelease.onclick = async () => {
-                    if (confirm("Are you sure? This ride will be given to another driver.")) {
+                    if (confirm("Are you sure? This ride will go back to the pool.")) {
                         setLoading(btnRelease, true);
                         try {
                             await updateDoc(doc(db, "rides", rideId), { 

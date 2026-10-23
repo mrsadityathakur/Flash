@@ -9,28 +9,12 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/users/$(uid)).data;
     }
 
-    function approvedDriver(uid) {
+    function driverAccount(uid) {
       return signedIn()
-        && profile(uid).role == 'driver'
-        && profile(uid).driverStatus == 'approved';
+        && profile(uid).role == 'driver';
     }
 
     match /users/{uid} {
-      function submittingDriverApplication() {
-        let application =
-          getAfter(/databases/$(database)/documents/driverApplications/$(uid)).data;
-        return request.resource.data.diff(resource.data).affectedKeys()
-            .hasOnly(['driverStatus'])
-          && request.resource.data.driverStatus == 'pending'
-          && (!('driverStatus' in resource.data)
-            || resource.data.driverStatus == 'none')
-          && application.uid == uid
-          && application.status == 'pending'
-          && application.name == resource.data.name
-          && application.phone == resource.data.phone
-          && application.submittedAt == request.time;
-      }
-
       allow get: if signedIn() && request.auth.uid == uid;
       allow list: if false;
 
@@ -49,7 +33,7 @@ service cloud.firestore {
         && request.resource.data.email == request.auth.token.email
         && request.resource.data.phone is string
         && request.resource.data.phone.size() <= 30
-        && request.resource.data.role == 'customer'
+        && request.resource.data.role in ['customer', 'driver']
         && request.resource.data.driverStatus == 'none'
         && request.resource.data.createdAt == request.time;
 
@@ -60,7 +44,6 @@ service cloud.firestore {
             request.resource.data.uid == resource.data.uid
             && request.resource.data.email == resource.data.email
             && request.resource.data.role == resource.data.role
-            && request.resource.data.driverStatus == resource.data.driverStatus
             && request.resource.data.createdAt == resource.data.createdAt
             && request.resource.data.diff(resource.data).affectedKeys()
               .hasOnly(['name', 'phone'])
@@ -70,38 +53,9 @@ service cloud.firestore {
             && request.resource.data.phone is string
             && request.resource.data.phone.size() <= 30
           )
-          || submittingDriverApplication()
         );
 
       allow delete: if false;
-    }
-
-    match /driverApplications/{uid} {
-      allow get: if signedIn() && request.auth.uid == uid;
-      allow list: if false;
-
-      allow create: if signedIn()
-        && request.auth.uid == uid
-        && (profile(uid).role == 'customer' || !('role' in profile(uid)))
-        && (
-          !('driverStatus' in profile(uid))
-          || profile(uid).driverStatus == 'none'
-        )
-        && getAfter(/databases/$(database)/documents/users/$(uid)).data.driverStatus
-          == 'pending'
-        && request.resource.data.keys().hasAll([
-          'uid', 'name', 'phone', 'status', 'submittedAt'
-        ])
-        && request.resource.data.keys().hasOnly([
-          'uid', 'name', 'phone', 'status', 'submittedAt'
-        ])
-        && request.resource.data.uid == uid
-        && request.resource.data.name == profile(uid).name
-        && request.resource.data.phone == profile(uid).phone
-        && request.resource.data.status == 'pending'
-        && request.resource.data.submittedAt == request.time;
-
-      allow update, delete: if false;
     }
 
     match /rides/{rideId} {
@@ -110,7 +64,7 @@ service cloud.firestore {
       }
 
       function driverOwnsRide() {
-        return approvedDriver(request.auth.uid)
+        return driverAccount(request.auth.uid)
           && resource.data.driverUid == request.auth.uid;
       }
 
@@ -276,7 +230,7 @@ service cloud.firestore {
         && (
           resource.data.customerUid == request.auth.uid
           || (
-            approvedDriver(request.auth.uid)
+            driverAccount(request.auth.uid)
             && resource.data.driverUid == request.auth.uid
           )
         );
@@ -299,7 +253,7 @@ service cloud.firestore {
               ride().customerUid == request.auth.uid
               || (
                 ride().driverUid == request.auth.uid
-                && approvedDriver(request.auth.uid)
+                && driverAccount(request.auth.uid)
               )
             )
             && ride().status in ['accepted', 'arrived', 'in_progress'];
@@ -329,7 +283,7 @@ service cloud.firestore {
       }
 
       function driverOwnsRequest() {
-        return approvedDriver(request.auth.uid)
+        return driverAccount(request.auth.uid)
           && resource.data.driverUid == request.auth.uid;
       }
 
@@ -435,7 +389,7 @@ service cloud.firestore {
       }
 
       allow get: if customerOwnsRequest() || driverOwnsRequest();
-      allow list: if approvedDriver(request.auth.uid)
+      allow list: if driverAccount(request.auth.uid)
         && resource.data.status == 'requested';
       allow create: if validNewRequest();
       allow update: if customerCancel() || driverProgress() || driverRelease();

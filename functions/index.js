@@ -29,12 +29,10 @@ exports.acceptRide = onCall({ region: "us-central1" }, async event => {
       transaction.get(requestRef)
     ]);
 
-    if (!userSnapshot.exists
-        || userSnapshot.get("role") !== "driver"
-        || userSnapshot.get("driverStatus") !== "approved") {
+    if (!userSnapshot.exists || userSnapshot.get("role") !== "driver") {
       throw new HttpsError(
         "permission-denied",
-        "Only approved driver accounts can accept rides."
+        "Switch to driver mode before accepting rides."
       );
     }
     if (!rideSnapshot.exists || !requestSnapshot.exists) {
@@ -87,73 +85,51 @@ exports.acceptRide = onCall({ region: "us-central1" }, async event => {
   });
 });
 
-exports.reviewDriverApplication = onCall(
-  { region: "us-central1" },
-  async event => {
-    const reviewerUid = event.auth?.uid;
-    if (!reviewerUid) {
-      throw new HttpsError(
-        "unauthenticated",
-        "Sign in before reviewing applications."
-      );
-    }
-    if (event.auth.token.admin !== true) {
-      throw new HttpsError(
-        "permission-denied",
-        "Only a trusted reviewer can approve driver applications."
-      );
-    }
-
-    const applicantUid = event.data?.applicantUid;
-    const decision = event.data?.decision;
-    const reason = typeof event.data?.reason === "string"
-      ? event.data.reason.trim()
-      : "";
-
-    if (typeof applicantUid !== "string"
-        || !/^[A-Za-z0-9_-]{1,128}$/.test(applicantUid)
-        || !["approved", "rejected"].includes(decision)
-        || reason.length > 500) {
-      throw new HttpsError("invalid-argument", "Invalid review details.");
-    }
-
-    const applicationRef = db.doc(`driverApplications/${applicantUid}`);
-    const userRef = db.doc(`users/${applicantUid}`);
-
-    return db.runTransaction(async transaction => {
-      const [applicationSnapshot, userSnapshot] = await Promise.all([
-        transaction.get(applicationRef),
-        transaction.get(userRef)
-      ]);
-
-      if (!applicationSnapshot.exists || !userSnapshot.exists) {
-        throw new HttpsError("not-found", "Driver application not found.");
-      }
-      const applicantRole = userSnapshot.get("role");
-      if (applicationSnapshot.get("status") !== "pending"
-          || (applicantRole !== undefined && applicantRole !== "customer")
-          || userSnapshot.get("driverStatus") !== "pending") {
-        throw new HttpsError(
-          "failed-precondition",
-          "This application is no longer pending review."
-        );
-      }
-
-      const reviewedAt = FieldValue.serverTimestamp();
-      const approved = decision === "approved";
-      transaction.update(userRef, {
-        role: approved ? "driver" : "customer",
-        driverStatus: decision,
-        driverReviewedAt: reviewedAt
-      });
-      transaction.update(applicationRef, {
-        status: decision,
-        reviewerUid,
-        reviewedAt,
-        reviewReason: reason
-      });
-
-      return { applicantUid, status: decision };
-    });
+exports.switchUserRole = onCall({ region: "us-central1" }, async event => {
+  const uid = event.auth?.uid;
+  if (!uid) {
+    throw new HttpsError("unauthenticated", "Sign in before switching modes.");
   }
-);
+
+  const role = event.data?.role;
+  if (role !== "customer" && role !== "driver") {
+    throw new HttpsError(
+      "invalid-argument",
+      "Choose either customer or driver mode."
+    );
+  }
+
+  const profileRef = db.doc(`users/${uid}`);
+  const activeStatuses = ["requested", "accepted", "arrived", "in_progress"];
+  const customerRidesQuery = db.collection("rides")
+    .where("customerUid", "==", uid);
+  const driverRidesQuery = db.collection("rides")
+    .where("driverUid", "==", uid);
+
+  return db.runTransaction(async transaction => {
+    const [profileSnapshot, customerRides, driverRides] = await Promise.all([
+      transaction.get(profileRef),
+      transaction.get(customerRidesQuery),
+      transaction.get(driverRidesQuery)
+    ]);
+
+    if (!profileSnapshot.exists) {
+      throw new HttpsError("not-found", "Your user profile was not found.");
+    }
+    if (profileSnapshot.get("role") === role) {
+      return { role };
+    }
+
+    const hasActiveRide = [...customerRides.docs, ...driverRides.docs]
+      .some(ride => activeStatuses.includes(ride.get("status")));
+    if (hasActiveRide) {
+      throw new HttpsError(
+        "failed-precondition",
+        "Finish or cancel your active ride before switching modes."
+      );
+    }
+
+    transaction.update(profileRef, { role });
+    return { role };
+  });
+});

@@ -106,6 +106,7 @@
             padding: 0 20px; background-color: var(--bg); border-bottom: 1px solid var(--surface);
             flex-shrink: 0; padding-top: max(0px, env(safe-area-inset-top)); z-index: 10;
         }
+        .header-actions { display: flex; align-items: center; gap: 8px; }
         .header-logo { display: flex; align-items: center; gap: 8px; }
         .header-logo svg { width: 28px; height: 28px; fill: var(--primary); }
         .header-logo h1 { font-size: 1.3rem; font-weight: 900; font-style: italic; letter-spacing: -1px;}
@@ -228,7 +229,10 @@
                 <svg viewBox="0 0 24 24"><path d="M13 2L3 14H12L11 22L21 10H12L13 2Z"/></svg>
                 <h1 id="header-title">FLASH</h1>
             </div>
-            <button type="button" class="btn-outline btn-sm" id="btn-exit-driver" style="display:none;">Exit Driver</button>
+            <div class="header-actions">
+                <button type="button" class="btn-outline btn-sm" id="btn-driver-account" style="display:none;">My Account</button>
+                <button type="button" class="btn-outline btn-sm" id="btn-exit-driver" style="display:none;">Switch to Customer</button>
+            </div>
         </header>
         
         <main id="main-content"></main>
@@ -256,7 +260,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, addDoc, collection, query, where, onSnapshot, orderBy, limit, serverTimestamp, runTransaction } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, updateDoc, addDoc, collection, query, where, onSnapshot, orderBy, limit, serverTimestamp, runTransaction, writeBatch } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-functions.js";
 
         const firebaseConfig = {
@@ -274,6 +278,7 @@
         const db = getFirestore(app);
         const functions = getFunctions(app, "us-central1");
         const acceptRideCallable = httpsCallable(functions, "acceptRide");
+        const switchUserRoleCallable = httpsCallable(functions, "switchUserRole");
 
         let currentUser = null;
         let userProfile = null;
@@ -285,6 +290,8 @@
         let chatRideId = null;
         let modalReturnFocus = null;
         let signupProfileSetup = null;
+        let selectedAuthRole = 'customer';
+        let requestedLoginRole = null;
         
         const appEl = document.getElementById('app');
         const splashEl = document.getElementById('splash-screen');
@@ -292,6 +299,7 @@
         const bottomNav = document.getElementById('bottom-nav');
         const headerTitle = document.getElementById('header-title');
         const btnExitDriver = document.getElementById('btn-exit-driver');
+        const btnDriverAccount = document.getElementById('btn-driver-account');
 
         document.addEventListener('keydown', event => {
             const overlay = document.getElementById('modal-overlay');
@@ -393,11 +401,17 @@
         }
 
         function getErrorMessage(error) {
+            if (error?.code === 'functions/internal') {
+                return 'Firebase could not switch modes. Deploy the latest Cloud Functions with: firebase deploy --only functions';
+            }
+            if (error?.code === 'functions/failed-precondition') {
+                return error.message || 'Finish or cancel your active ride before switching modes.';
+            }
             if (error?.code === 'functions/not-found' || error?.code === 'functions/unavailable') {
-                return 'Secure ride acceptance is not available yet. The Firebase acceptRide function must be deployed before drivers can accept rides.';
+                return 'A required Firebase function is unavailable. Deploy the latest Cloud Functions and try again.';
             }
             if (error?.code === 'permission-denied' || error?.code === 'firestore/permission-denied') {
-                return 'Firebase denied this action. Check the Firestore security rules and your account permissions.';
+                return 'Firebase rejected this request under the deployed Firestore rules. Deploy the latest rules with: firebase deploy --only firestore:rules, then sign in with the correct customer or driver account.';
             }
             if (error?.code === 'unavailable' || error?.code === 'firestore/unavailable') {
                 return 'Firebase is temporarily unreachable. Check your connection and try again.';
@@ -559,25 +573,45 @@
             
             authOverlay.innerHTML = `
                 <div class="text-center mb-3"><div class="logo-container" style="animation: none;"><div class="logo-text" style="font-size: 2.5rem;">FLASH</div></div></div>
+                <p class="text-center text-muted mb-1">Choose how you want to use FLASH</p>
+                <div class="auth-tabs" role="tablist" aria-label="Account role">
+                    <button type="button" class="auth-tab active" id="tab-customer-role" role="tab" aria-selected="true">Customer</button>
+                    <button type="button" class="auth-tab" id="tab-driver-role" role="tab" aria-selected="false">Driver</button>
+                </div>
                 <div class="auth-tabs" role="tablist" aria-label="Account access">
                     <button type="button" class="auth-tab active" id="tab-login" role="tab" aria-selected="true" aria-controls="form-login">Login</button>
                     <button type="button" class="auth-tab" id="tab-signup" role="tab" aria-selected="false" aria-controls="form-signup">Sign Up</button>
                 </div>
+                <h2 class="text-center mb-2" id="auth-role-title">Customer account</h2>
                 <form id="form-login">
-                    <div class="form-group"><label for="login-email">Email</label><input type="email" id="login-email" name="email" autocomplete="email" required placeholder="you@example.com"></div>
+                    <div class="form-group"><label for="login-email" id="login-email-label">Customer email</label><input type="email" id="login-email" name="email" autocomplete="email" required placeholder="you@example.com"></div>
                     <div class="form-group"><label for="login-password">Password</label><input type="password" id="login-password" name="password" autocomplete="current-password" required placeholder="••••••••"></div>
-                    <button type="submit" class="btn-primary w-full mt-2" id="btn-login">Sign In</button>
+                    <button type="submit" class="btn-primary w-full mt-2" id="btn-login">Customer Login</button>
                     <button type="button" class="text-center mt-3 text-sm text-muted" id="link-forgot" style="background:transparent; border:0; width:100%; font-weight:600;">Forgot Password?</button>
                 </form>
                 <form id="form-signup" class="hidden" aria-hidden="true">
                     <div class="form-group"><label for="signup-name">Full Name</label><input type="text" id="signup-name" name="name" autocomplete="name" maxlength="80" required placeholder="Your name"></div>
                     <div class="form-group"><label for="signup-phone">Phone Number</label><input type="tel" id="signup-phone" name="phone" autocomplete="tel" maxlength="30" required placeholder="+1 555 123 4567"></div>
                     <div class="form-group"><label for="signup-email">Email</label><input type="email" id="signup-email" name="email" autocomplete="email" required placeholder="you@example.com"></div>
-                    <div class="form-group"><label>Account type</label><p class="card text-sm">USER / CUSTOMER</p><p class="text-sm text-muted mt-1">Driver access is enabled only after secure verification and approval.</p></div>
                     <div class="form-group"><label for="signup-password">Password (min 6 chars)</label><input type="password" id="signup-password" name="password" autocomplete="new-password" required minlength="6" placeholder="••••••••"></div>
-                    <button type="submit" class="btn-primary w-full mt-2" id="btn-signup">Create Account</button>
+                    <button type="submit" class="btn-primary w-full mt-2" id="btn-signup">Create Customer Account</button>
                 </form>
             `;
+
+            const selectAuthRole = role => {
+                selectedAuthRole = role;
+                const isDriver = role === 'driver';
+                document.getElementById('tab-customer-role').classList.toggle('active', !isDriver);
+                document.getElementById('tab-customer-role').setAttribute('aria-selected', String(!isDriver));
+                document.getElementById('tab-driver-role').classList.toggle('active', isDriver);
+                document.getElementById('tab-driver-role').setAttribute('aria-selected', String(isDriver));
+                document.getElementById('auth-role-title').textContent = `${isDriver ? 'Driver' : 'Customer'} account`;
+                document.getElementById('login-email-label').textContent = `${isDriver ? 'Driver' : 'Customer'} email`;
+                document.getElementById('btn-login').textContent = `${isDriver ? 'Driver' : 'Customer'} Login`;
+                document.getElementById('btn-signup').textContent = `Create ${isDriver ? 'Driver' : 'Customer'} Account`;
+            };
+            document.getElementById('tab-customer-role').onclick = () => selectAuthRole('customer');
+            document.getElementById('tab-driver-role').onclick = () => selectAuthRole('driver');
 
             const selectAuthTab = showSignup => {
                 document.getElementById('tab-login').classList.toggle('active', !showSignup);
@@ -594,8 +628,12 @@
 
             document.getElementById('form-login').onsubmit = async (e) => {
                 e.preventDefault(); const btn = document.getElementById('btn-login'); setLoading(btn, true);
+                requestedLoginRole = selectedAuthRole;
                 try { await signInWithEmailAndPassword(auth, document.getElementById('login-email').value.trim(), document.getElementById('login-password').value); }
-                catch (error) { showToast(getErrorMessage(error), true); } finally { setLoading(btn, false); }
+                catch (error) {
+                    requestedLoginRole = null;
+                    showToast(getErrorMessage(error), true);
+                } finally { setLoading(btn, false); }
             };
 
             document.getElementById('form-signup').onsubmit = async (e) => {
@@ -607,17 +645,18 @@
                     const phone = document.getElementById('signup-phone').value.trim();
                     const email = document.getElementById('signup-email').value.trim();
                     if (!name || !phone) throw new Error('Enter your name and phone number.');
+                    const accountRole = selectedAuthRole;
                     const uc = await createUserWithEmailAndPassword(auth, email, document.getElementById('signup-password').value);
                     await setDoc(doc(db, "users", uc.user.uid), {
                         uid: uc.user.uid,
                         name,
                         email,
                         phone,
-                        role: 'customer',
+                        role: accountRole,
                         driverStatus: 'none',
                         createdAt: serverTimestamp()
                     });
-                    showToast('Your FLASH account is ready.');
+                    showToast(`Your FLASH ${accountRole} account is ready.`);
                 } catch (error) { showToast(getErrorMessage(error), true); } finally {
                     completeProfileSetup();
                     signupProfileSetup = null;
@@ -643,43 +682,67 @@
                         userProfile.name = String(userProfile.name || user.displayName || user.email?.split('@')[0] || 'FLASH User');
                         userProfile.email = String(userProfile.email || user.email || '');
                         userProfile.phone = String(userProfile.phone || '');
-                        userProfile.driverStatus = String(userProfile.driverStatus || 'none');
-                        userProfile.role = userProfile.role === 'driver' && userProfile.driverStatus === 'approved' ? 'driver' : 'customer';
+                        userProfile.role = userProfile.role === 'driver' ? 'driver' : 'customer';
                     } else {
                         const newProfile = {
                             uid: user.uid,
                             name: user.displayName || user.email?.split('@')[0] || 'FLASH User',
                             email: user.email || '',
                             phone: '',
-                            role: 'customer',
+                            role: requestedLoginRole || 'customer',
                             driverStatus: 'none',
                             createdAt: serverTimestamp()
                         };
                         await setDoc(docRef, newProfile);
                         userProfile = newProfile;
                     }
-                    splashEl.classList.add('hidden'); appEl.classList.remove('hidden'); switchMode('customer');
+                    if (requestedLoginRole && requestedLoginRole !== userProfile.role) {
+                        requestedLoginRole = null;
+                        await signOut(auth);
+                        showToast(`This email belongs to a ${userProfile.role} account. Choose ${userProfile.role} login instead.`, true);
+                        return;
+                    }
+                    requestedLoginRole = null;
+                    splashEl.classList.add('hidden'); appEl.classList.remove('hidden'); switchMode(userProfile.role);
                 } catch (error) { showToast("DB Error: " + getErrorMessage(error), true); setTimeout(() => renderAuth(), 4000); }
             } else { currentUser = null; userProfile = null; activeRideId = null; cleanupListeners(); appEl.classList.add('hidden'); renderAuth(); }
         });
 
         function switchMode(mode) {
-            if (mode === 'driver') {
-                if (userProfile?.role !== 'driver' || userProfile?.driverStatus !== 'approved') {
-                    showToast('Driver access requires verified approval.', true);
-                    return;
-                }
-            }
             if (mode !== 'customer' && mode !== 'driver') {
                 showToast('That app mode is unavailable.', true);
                 return;
             }
+            if (userProfile?.role !== mode) {
+                showToast(`Switch your account to ${mode} mode first.`, true);
+                return;
+            }
             currentMode = mode; activeRideId = null; cleanupListeners();
-            if (mode === 'customer') { headerTitle.innerText = "FLASH"; btnExitDriver.style.display = 'none'; bottomNav.style.display = 'flex'; renderCustomerHome(); } 
-            else { headerTitle.innerText = "Driver Dashboard"; btnExitDriver.style.display = 'block'; bottomNav.style.display = 'none'; renderDriverDashboard(); }
+            if (mode === 'customer') { headerTitle.innerText = "FLASH"; btnExitDriver.style.display = 'none'; btnDriverAccount.style.display = 'none'; bottomNav.style.display = 'flex'; renderCustomerHome(); }
+            else { headerTitle.innerText = "Driver Dashboard"; btnExitDriver.style.display = 'block'; btnDriverAccount.style.display = 'block'; bottomNav.style.display = 'none'; renderDriverDashboard(); }
         }
 
-        btnExitDriver.onclick = () => { switchMode('customer'); };
+        async function changeUserRole(role, button) {
+            if (role !== 'customer' && role !== 'driver') return;
+            if (userProfile?.role === role) {
+                switchMode(role);
+                return;
+            }
+
+            setLoading(button, true);
+            try {
+                await switchUserRoleCallable({ role });
+                userProfile.role = role;
+                showToast(role === 'driver' ? 'Driver mode is ready.' : 'Switched to customer mode.');
+                switchMode(role);
+            } catch (error) {
+                showToast(getErrorMessage(error), true);
+                setLoading(button, false);
+            }
+        }
+
+        btnExitDriver.onclick = () => changeUserRole('customer', btnExitDriver);
+        btnDriverAccount.onclick = renderProfile;
 
         bottomNav.onclick = (e) => {
             const navItem = e.target.closest('.nav-item'); if (!navItem) return;
@@ -732,48 +795,42 @@
                     const rideRef = doc(db, "rides", pendingRideId);
                     const requestRef = doc(db, "rideRequests", pendingRideId);
                     const rideType = document.getElementById('ride-type').value;
-                    await runTransaction(db, async transaction => {
-                        const [existingRide, existingRequest] = await Promise.all([
-                            transaction.get(rideRef),
-                            transaction.get(requestRef)
-                        ]);
-                        if (existingRide.exists() || existingRequest.exists()) {
-                            if (existingRide.exists() && existingRequest.exists()
-                                && existingRide.data().customerUid === currentUser.uid
-                                && existingRide.data().status === 'requested'
-                                && existingRequest.data().customerUid === currentUser.uid
-                                && existingRequest.data().status === 'requested') return;
-                            throw new Error('This booking could not be confirmed. Open your active ride screen before trying again.');
-                        }
-                        const createdAt = serverTimestamp();
-                        transaction.set(rideRef, {
-                            customerUid: currentUser.uid,
-                            customerName: userProfile.name,
-                            phone,
-                            pickup,
-                            destination,
-                            rideType,
-                            instructions,
-                            status: 'requested',
-                            createdAt,
-                            driverUid: null,
-                            driverName: null,
-                            driverPhone: null
-                        });
-                        transaction.set(requestRef, {
-                            customerUid: currentUser.uid,
-                            pickup,
-                            destination,
-                            rideType,
-                            status: 'requested',
-                            createdAt,
-                            driverUid: null
-                        });
+                    const batch = writeBatch(db);
+                    const createdAt = serverTimestamp();
+                    batch.set(rideRef, {
+                        customerUid: currentUser.uid,
+                        customerName: userProfile.name,
+                        phone,
+                        pickup,
+                        destination,
+                        rideType,
+                        instructions,
+                        status: 'requested',
+                        createdAt,
+                        driverUid: null,
+                        driverName: null,
+                        driverPhone: null
                     });
+                    batch.set(requestRef, {
+                        customerUid: currentUser.uid,
+                        pickup,
+                        destination,
+                        rideType,
+                        status: 'requested',
+                        createdAt,
+                        driverUid: null
+                    });
+                    await batch.commit();
                     pendingRideId = null;
                     showToast("Ride requested!");
                     bottomNav.querySelector('[data-view="active"]').click();
-                } catch (error) { showToast("Failed: " + getErrorMessage(error), true); setLoading(btn, false); }
+                } catch (error) {
+                    const message = error?.code === 'permission-denied' || error?.code === 'firestore/permission-denied'
+                        ? 'Firestore blocked this booking. Deploy the current rules with: firebase deploy --only firestore:rules. Also confirm this account is in Customer mode.'
+                        : getErrorMessage(error);
+                    showToast(`Failed: ${message}`, true);
+                    setLoading(btn, false);
+                }
             };
         }
 
@@ -906,54 +963,47 @@
                     <div aria-hidden="true" style="width: 60px; height: 60px; flex: 0 0 60px; border-radius: 50%; background: var(--primary); color: #000; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold;">${initial}</div>
                     <div class="status-message profile-info"><p class="font-bold text-lg">${escapeHTML(displayName)}</p><p class="text-sm text-muted">${escapeHTML(userProfile.email)}</p><p class="text-sm text-muted">${escapeHTML(userProfile.phone || 'Phone not provided')}</p></div>
                 </div>
-                ${userProfile.role === 'driver' && userProfile.driverStatus === 'approved'
-                    ? `<div class="card"><h3 class="font-bold mb-1 text-primary">Approved driver account</h3><p class="text-sm text-muted mb-2">Your driver access is approved.</p><button type="button" class="btn-primary w-full" id="btn-open-driver">Open Driver Dashboard</button></div>`
-                    : userProfile.driverStatus === 'pending'
-                        ? `<div class="card"><h3 class="font-bold mb-1">Driver application pending</h3><p class="text-sm text-muted">Driver features remain unavailable until an authorized reviewer approves your application.</p></div>`
-                        : userProfile.driverStatus === 'rejected'
-                            ? `<div class="card"><h3 class="font-bold mb-1">Driver application not approved</h3><p class="text-sm text-muted">Driver access is unavailable for this account.</p></div>`
-                            : `<div class="card"><h3 class="font-bold mb-1">Become a driver</h3><p class="text-sm text-muted mb-2">Submit a driver application. Access stays locked until an authorized reviewer approves it.</p><button type="button" class="btn-outline w-full" id="btn-apply-driver">Apply to drive</button></div>`}
+                <form id="form-edit-profile" class="card">
+                    <h3 class="font-bold mb-2">Account details</h3>
+                    <div class="form-group"><label for="profile-name">Full name</label><input id="profile-name" name="name" maxlength="80" required value="${escapeHTML(userProfile.name)}"></div>
+                    <div class="form-group"><label for="profile-phone">Phone number</label><input id="profile-phone" name="phone" type="tel" maxlength="30" value="${escapeHTML(userProfile.phone || '')}"></div>
+                    <p class="text-sm text-muted mb-1">Email: ${escapeHTML(userProfile.email)} (managed by Firebase sign-in)</p>
+                    <button type="submit" class="btn-primary w-full mt-2" id="btn-save-profile">Save account details</button>
+                </form>
+                ${userProfile.role === 'driver'
+                    ? `<div class="card"><h3 class="font-bold mb-1 text-primary">Driver account</h3><div class="flex flex-col gap-2"><button type="button" class="btn-primary w-full" id="btn-open-driver">Back to Driver Dashboard</button><button type="button" class="btn-outline w-full" id="btn-driver-history">My Ride History</button><button type="button" class="btn-outline w-full" id="btn-switch-customer">Switch to Customer</button></div></div>`
+                    : `<div class="card"><h3 class="font-bold mb-1">Become a driver</h3><p class="text-sm text-muted mb-2">Switch to driver mode instantly. No admin approval is required.</p><button type="button" class="btn-outline w-full" id="btn-become-driver">Switch to Driver</button></div>`}
                 <button class="btn-outline w-full mt-2" id="btn-logout">Logout</button>
             `;
-            const driverButton = document.getElementById('btn-open-driver');
-            if (driverButton) driverButton.onclick = () => switchMode('driver');
-            const applyDriverButton = document.getElementById('btn-apply-driver');
-            if (applyDriverButton) applyDriverButton.onclick = async () => {
-                setLoading(applyDriverButton, true);
+            document.getElementById('form-edit-profile').onsubmit = async event => {
+                event.preventDefault();
+                const button = document.getElementById('btn-save-profile');
+                const name = document.getElementById('profile-name').value.trim();
+                const phone = document.getElementById('profile-phone').value.trim();
+                if (!name || name.length > 80 || phone.length > 30) {
+                    showToast('Enter a name (1–80 characters) and a phone number up to 30 characters.', true);
+                    return;
+                }
+                setLoading(button, true);
                 try {
-                    await runTransaction(db, async transaction => {
-                        const applicationRef = doc(db, "driverApplications", currentUser.uid);
-                        const profileRef = doc(db, "users", currentUser.uid);
-                        const [applicationSnapshot, profileSnapshot] = await Promise.all([
-                            transaction.get(applicationRef),
-                            transaction.get(profileRef)
-                        ]);
-                        if (applicationSnapshot.exists()) {
-                            throw new Error('A driver application already exists for this account.');
-                        }
-                        if (!profileSnapshot.exists()
-                            || !['customer', undefined].includes(profileSnapshot.data().role)
-                            || !['none', undefined].includes(profileSnapshot.data().driverStatus)) {
-                            throw new Error('This account is not eligible to submit a driver application.');
-                        }
-                        const submittedAt = serverTimestamp();
-                        transaction.set(applicationRef, {
-                            uid: currentUser.uid,
-                            name: userProfile.name,
-                            phone: userProfile.phone,
-                            status: 'pending',
-                            submittedAt
-                        });
-                        transaction.update(profileRef, { driverStatus: 'pending' });
-                    });
-                    userProfile.driverStatus = 'pending';
-                    showToast('Driver application submitted.');
+                    await updateDoc(doc(db, "users", currentUser.uid), { name, phone });
+                    userProfile.name = name;
+                    userProfile.phone = phone;
+                    showToast('Account details saved.');
                     renderProfile();
                 } catch (error) {
-                    showToast(`Application could not be submitted: ${getErrorMessage(error)}`, true);
-                    setLoading(applyDriverButton, false);
+                    showToast(`Could not save account details: ${getErrorMessage(error)}`, true);
+                    setLoading(button, false);
                 }
             };
+            const driverButton = document.getElementById('btn-open-driver');
+            if (driverButton) driverButton.onclick = () => switchMode('driver');
+            const driverHistoryButton = document.getElementById('btn-driver-history');
+            if (driverHistoryButton) driverHistoryButton.onclick = renderDriverHistory;
+            const switchCustomerButton = document.getElementById('btn-switch-customer');
+            if (switchCustomerButton) switchCustomerButton.onclick = () => changeUserRole('customer', switchCustomerButton);
+            const becomeDriverButton = document.getElementById('btn-become-driver');
+            if (becomeDriverButton) becomeDriverButton.onclick = () => changeUserRole('driver', becomeDriverButton);
             document.getElementById('btn-logout').onclick = () => {
                 showModal("Logout?", "You will need to sign in again.", async () => {
                     try { await signOut(auth); }

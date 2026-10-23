@@ -564,6 +564,10 @@
             "sb_publishable_J-cORO6pStpYcJWBuOPjvQ_zR1nU5PK",
             { global: { fetch: fetchWithTimeout } }
         );
+        const passwordRecoveryRedirectUrl = () =>
+            ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname)
+                ? 'https://mrsadityathakur.github.io/Flash/'
+                : `${window.location.origin}${window.location.pathname}`;
 
         let currentUser = null;
         let userProfile = null;
@@ -1003,7 +1007,7 @@
                 const email = document.getElementById('login-email').value; if (!email) return showToast("Enter your email first", true);
                 try {
                     const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-                        redirectTo: `${window.location.origin}${window.location.pathname}`
+                        redirectTo: passwordRecoveryRedirectUrl()
                     });
                     if (error) throw error;
                     showToast("Password reset link sent.");

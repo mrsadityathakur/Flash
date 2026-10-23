@@ -92,14 +92,35 @@
         #app { display: flex; flex-direction: column; height: 100%; position: relative; }
         
         #splash-screen {
-            position: absolute; inset: 0; background-color: var(--bg); z-index: 9999;
+            position: absolute; inset: 0; overflow: hidden; isolation: isolate;
+            background: radial-gradient(ellipse at 50% 42%, rgba(255, 215, 0, 0.09), transparent 34%), linear-gradient(160deg, #111 0%, #050505 48%, #0c0a00 100%); z-index: 9999;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             transition: opacity 0.5s ease;
         }
-        .logo-container { display: flex; flex-direction: column; align-items: center; gap: 12px; animation: pulse 2s infinite; }
-        .logo-svg { width: 120px; height: 120px; }
-        .logo-text { font-size: 3rem; font-weight: 900; font-style: italic; color: var(--primary); letter-spacing: -2px; }
-        @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.05); opacity: 0.8; } 100% { transform: scale(1); opacity: 1; } }
+        #splash-screen::before, #splash-screen::after { position: absolute; z-index: -1; border: 1px solid rgba(255, 215, 0, 0.06); border-radius: 50%; content: ""; pointer-events: none; }
+        #splash-screen::before { width: min(92vw, 620px); aspect-ratio: 1; }
+        #splash-screen::after { width: min(76vw, 500px); aspect-ratio: 1; border-color: rgba(255, 255, 255, 0.035); }
+        .splash-brand { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 30px 24px; }
+        .splash-eyebrow { display: flex; align-items: center; gap: 9px; color: #bcb8a2; font-size: 0.65rem; font-weight: 800; letter-spacing: 0.24em; text-transform: uppercase; }
+        .splash-eyebrow::before, .splash-eyebrow::after { width: 22px; height: 1px; background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.7)); content: ""; }
+        .splash-eyebrow::after { transform: rotate(180deg); }
+        .splash-emblem { position: relative; display: grid; place-items: center; width: clamp(220px, 61vw, 310px); aspect-ratio: 1; margin: 25px 0 18px; border: 1px solid rgba(255, 215, 0, 0.3); border-radius: 50%; background: radial-gradient(circle, rgba(255, 215, 0, 0.14), rgba(255, 215, 0, 0.025) 58%, transparent 70%); box-shadow: 0 0 60px rgba(255, 215, 0, 0.08), inset 0 0 35px rgba(255, 215, 0, 0.05); }
+        .splash-emblem::before, .splash-emblem::after { position: absolute; border: 1px solid rgba(255, 215, 0, 0.17); border-radius: 50%; content: ""; pointer-events: none; }
+        .splash-emblem::before { inset: 9px; }
+        .splash-emblem::after { inset: -12px; border-color: rgba(255, 255, 255, 0.09); border-style: dashed; animation: splash-orbit 36s linear infinite; }
+        .splash-logo { width: 82%; height: 82%; border-radius: 50%; object-fit: contain; filter: drop-shadow(0 0 22px rgba(255, 215, 0, 0.26)); animation: splash-float 3.4s ease-in-out infinite; }
+        .splash-wordmark { color: #ffe45c; font-size: clamp(3.3rem, 14vw, 5.2rem); font-weight: 950; font-style: italic; letter-spacing: -0.095em; line-height: 0.95; padding-right: 0.095em; text-shadow: 0 4px 32px rgba(255, 215, 0, 0.2); }
+        .splash-tagline { margin-top: 15px; color: #e4e1d4; font-size: clamp(0.68rem, 2.5vw, 0.82rem); font-weight: 650; letter-spacing: 0.17em; text-transform: uppercase; }
+        .splash-loading { display: flex; flex-direction: column; align-items: center; gap: 13px; margin-top: 42px; color: #aaa797; font-size: 0.64rem; font-weight: 750; letter-spacing: 0.22em; text-transform: uppercase; }
+        .splash-loading::before { width: 128px; height: 2px; border-radius: 2px; background: linear-gradient(90deg, transparent, var(--primary), transparent); background-size: 200% 100%; box-shadow: 0 0 12px rgba(255, 215, 0, 0.4); content: ""; animation: splash-progress 1.5s ease-in-out infinite; }
+        @keyframes splash-float { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-5px) scale(1.02); } }
+        @keyframes splash-progress { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+        @keyframes splash-orbit { to { transform: rotate(360deg); } }
+        @media (max-height: 620px) {
+            .splash-brand { padding-top: 12px; padding-bottom: 12px; }
+            .splash-emblem { width: min(42vh, 220px); margin: 12px 0; }
+            .splash-loading { margin-top: 22px; }
+        }
 
         .app-header {
             min-height: var(--header-height); display: flex; align-items: center; justify-content: space-between;
@@ -198,16 +219,15 @@
 <body>
 
     <div id="splash-screen">
-        <div class="logo-container">
-            <svg class="logo-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-                <path d="M130 10 L60 110 L100 110 L70 190 L150 80 L110 80 Z" fill="#FFD700"/>
-                <circle cx="120" cy="70" r="12" fill="#000"/>
-                <path d="M120 82 C100 90 80 100 60 90 C50 85 30 80 20 90 C40 95 60 100 70 110 C80 120 100 115 120 105 Z" fill="#000"/>
-                <path d="M110 105 L130 95 L140 105 L120 115 Z" fill="#000"/>
-            </svg>
-            <div class="logo-text">FLASH</div>
+        <div class="splash-brand">
+            <div class="splash-eyebrow">On-demand rides</div>
+            <div class="splash-emblem">
+                <img class="splash-logo" src="./favicon.png" alt="FLASH rider logo">
+            </div>
+            <div class="splash-wordmark">FLASH</div>
+            <p class="splash-tagline">Fast rides. Fair for everyone.</p>
+            <div class="splash-loading" role="status">Getting your ride ready</div>
         </div>
-        <p class="mt-2 text-muted text-sm font-bold">Fast rides. Fair for everyone.</p>
     </div>
 
     <div id="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-describedby="modal-desc" aria-hidden="true" inert>

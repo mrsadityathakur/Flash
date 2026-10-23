@@ -296,6 +296,7 @@
         let modalReturnFocus = null;
         let selectedAuthRole = 'customer';
         let requestedLoginRole = null;
+        let authStateUserId = undefined;
         
         const appEl = document.getElementById('app');
         const splashEl = document.getElementById('splash-screen');
@@ -642,6 +643,7 @@
                     <div class="form-group"><label for="signup-phone">Phone Number</label><input type="tel" id="signup-phone" name="phone" autocomplete="tel" maxlength="30" required placeholder="+1 555 123 4567"></div>
                     <div class="form-group"><label for="signup-email">Email</label><input type="email" id="signup-email" name="email" autocomplete="email" required placeholder="you@example.com"></div>
                     <div class="form-group"><label for="signup-password">Password (min 6 chars)</label><input type="password" id="signup-password" name="password" autocomplete="new-password" required minlength="6" placeholder="••••••••"></div>
+                    <p class="text-sm text-muted">FLASH automatically creates your permanent ride PIN. Find it in your profile after signing in.</p>
                     <button type="submit" class="btn-primary w-full mt-2" id="btn-signup">Create Customer Account</button>
                 </form>
             `;
@@ -727,6 +729,9 @@
         }
 
         async function handleAuthStateChange(user) {
+            const nextUserId = user?.id || null;
+            if (authStateUserId === nextUserId) return;
+            authStateUserId = nextUserId;
             const authOverlay = document.getElementById('auth-overlay');
             if (user) {
                 currentUser = { ...user, uid: user.id };
@@ -738,6 +743,9 @@
                         .single();
                     if (error) throw error;
                     userProfile = { ...profile, uid: profile.id };
+                    const { data: hasRidePin, error: pinError } = await supabase.rpc('has_customer_pin');
+                    if (pinError) throw pinError;
+                    userProfile.hasRidePin = hasRidePin;
                     if (requestedLoginRole && requestedLoginRole !== userProfile.role) {
                         requestedLoginRole = null;
                         await supabase.auth.signOut();
@@ -747,6 +755,10 @@
                     requestedLoginRole = null;
                     if (authOverlay) authOverlay.remove();
                     splashEl.classList.add('hidden'); appEl.classList.remove('hidden'); switchMode(userProfile.role);
+                    if (userProfile.role === 'customer' && !userProfile.hasRidePin) {
+                        bottomNav.querySelector('[data-view="profile"]').click();
+                        showToast('Set your six-digit ride PIN in Profile before booking.');
+                    }
                 } catch (error) {
                     showToast(`Could not load your Supabase profile: ${getErrorMessage(error)}`, true);
                     await supabase.auth.signOut();
@@ -779,6 +791,11 @@
 
         async function changeUserRole(role, button) {
             if (role !== 'customer' && role !== 'driver') return;
+            if (role === 'customer' && !userProfile.hasRidePin) {
+                renderProfile();
+                showToast('Set your six-digit ride PIN in Profile before switching to customer mode.', true);
+                return;
+            }
             if (userProfile?.role === role) {
                 switchMode(role);
                 return;
@@ -843,6 +860,10 @@
                     const destination = document.getElementById('destination').value.trim();
                     const phone = document.getElementById('contact-phone').value.trim();
                     const instructions = document.getElementById('instructions').value.trim();
+                    if (!userProfile.hasRidePin) {
+                        bottomNav.querySelector('[data-view="profile"]').click();
+                        throw new Error('Set your six-digit ride PIN in Profile before booking.');
+                    }
                     if (!pickup || !destination || !phone) throw new Error('Complete the pickup, destination, and contact number fields.');
                     if (pickup.length > 160 || destination.length > 160 || phone.length > 30 || instructions.length > 300) {
                         throw new Error('One or more fields are longer than allowed.');
@@ -969,8 +990,20 @@
             listeners.push(unsub);
         }
 
-        function renderProfile() {
+        async function renderProfile() {
             cleanupListeners();
+            mainContent.innerHTML = `<div class="text-center mt-3"><div class="loader" style="margin: 0 auto;" role="status" aria-label="Loading profile"></div></div>`;
+            let ridePin;
+            try {
+                const { data, error } = await supabase.rpc('get_customer_ride_pin');
+                if (error) throw error;
+                ridePin = data;
+            } catch (error) {
+                showToast(`Could not load your ride PIN: ${getErrorMessage(error)}`, true);
+                mainContent.innerHTML = `<div class="empty-state">Your account details could not be loaded. Please try again.</div><button type="button" class="btn-outline w-full mt-2" id="btn-retry-profile">Try again</button>`;
+                document.getElementById('btn-retry-profile').onclick = () => { void renderProfile(); };
+                return;
+            }
             const displayName = String(userProfile.name || 'FLASH User');
             const initial = escapeHTML(displayName.charAt(0).toUpperCase());
             mainContent.innerHTML = `
@@ -986,6 +1019,14 @@
                     <p class="text-sm text-muted mb-1">Email: ${escapeHTML(userProfile.email)} (managed by Supabase Auth)</p>
                     <button type="submit" class="btn-primary w-full mt-2" id="btn-save-profile">Save account details</button>
                 </form>
+                <div class="card">
+                    <h3 class="font-bold mb-1 text-primary">Your permanent ride PIN</h3>
+                    <p class="text-sm text-muted mb-2">This PIN was generated for your account. Give it to your driver only after you are picked up; the driver must verify it to start the ride.</p>
+                    <div class="flex items-center justify-between" style="gap: 12px; padding: 14px; background: var(--surface); border: 1px solid var(--surface-light); border-radius: 12px;">
+                        <strong id="profile-ride-pin" style="font-size: 1.6rem; letter-spacing: 0.3em; color: var(--primary);">${escapeHTML(ridePin)}</strong>
+                        <button type="button" class="btn-outline btn-sm" id="btn-copy-ride-pin" aria-label="Copy your ride PIN">Copy PIN</button>
+                    </div>
+                </div>
                 ${userProfile.role === 'driver'
                     ? `<div class="card"><h3 class="font-bold mb-1 text-primary">Driver account</h3><div class="flex flex-col gap-2"><button type="button" class="btn-primary w-full" id="btn-open-driver">Back to Driver Dashboard</button><button type="button" class="btn-outline w-full" id="btn-driver-history">My Ride History</button><button type="button" class="btn-outline w-full" id="btn-switch-customer">Switch to Customer</button></div></div>`
                     : `<div class="card"><h3 class="font-bold mb-1">Become a driver</h3><p class="text-sm text-muted mb-2">Switch to driver mode instantly. No admin approval is required.</p><button type="button" class="btn-outline w-full" id="btn-become-driver">Switch to Driver</button></div>`}
@@ -1011,6 +1052,15 @@
                 } catch (error) {
                     showToast(`Could not save account details: ${getErrorMessage(error)}`, true);
                     setLoading(button, false);
+                }
+            };
+            document.getElementById('btn-copy-ride-pin').onclick = async () => {
+                try {
+                    if (!navigator.clipboard?.writeText) throw new Error('Clipboard access is unavailable in this browser.');
+                    await navigator.clipboard.writeText(ridePin);
+                    showToast('Ride PIN copied. Share it only with your driver after pickup.');
+                } catch (error) {
+                    showToast(getErrorMessage(error), true);
                 }
             };
             const driverButton = document.getElementById('btn-open-driver');
@@ -1133,7 +1183,7 @@
                 cancelBtnSection = `<button class="btn-danger w-full mt-2" id="btn-release-ride">Cancel & Release Ride</button>`;
             } else if (ride.status === 'arrived') {
                 actionSection = ride.fareStatus === 'accepted'
-                    ? `<button class="btn-primary w-full mt-2" id="btn-start-ride">Start Ride</button>`
+                    ? `<form id="form-start-ride" class="card mt-2"><label for="start-ride-pin">Customer's 6-digit ride PIN</label><input id="start-ride-pin" name="startPin" type="password" inputmode="numeric" autocomplete="off" pattern="[0-9]{6}" minlength="6" maxlength="6" required placeholder="Enter PIN given by customer"><p class="text-sm text-muted mt-1">Enter the PIN the customer gives you after pickup. Five incorrect attempts lock the PIN for 15 minutes.</p><button type="submit" class="btn-primary w-full mt-2" id="btn-start-ride">Verify PIN & Start Ride</button></form>`
                     : `<p class="empty-state mt-2">Wait for the customer to agree to your fare before starting.</p>`;
                 cancelBtnSection = `<button class="btn-danger w-full mt-2" id="btn-release-ride">Cancel & Release Ride</button>`;
             } else if (ride.status === 'in_progress') {
@@ -1200,8 +1250,22 @@
             const btnArrived = document.getElementById('btn-arrived');
             if (btnArrived) btnArrived.onclick = () => transitionDriverRide(rideId, 'accepted', 'arrived', btnArrived, 'Arrived!');
 
-            const btnStart = document.getElementById('btn-start-ride');
-            if (btnStart) btnStart.onclick = () => transitionDriverRide(rideId, 'arrived', 'in_progress', btnStart, 'Ride started!');
+            const startRideForm = document.getElementById('form-start-ride');
+            if (startRideForm) startRideForm.onsubmit = async event => {
+                event.preventDefault();
+                const pinInput = document.getElementById('start-ride-pin');
+                const button = document.getElementById('btn-start-ride');
+                const pin = pinInput.value;
+                if (!/^\d{6}$/.test(pin)) {
+                    showToast('Enter the customer’s six-digit ride PIN.', true);
+                    return;
+                }
+                const started = await transitionDriverRide(rideId, 'arrived', 'in_progress', button, 'Ride started!', pin);
+                if (!started) {
+                    pinInput.value = '';
+                    pinInput.focus();
+                }
+            };
 
             const btnComplete = document.getElementById('btn-complete-ride');
             if (btnComplete) btnComplete.onclick = () => transitionDriverRide(rideId, 'in_progress', 'completed', btnComplete, 'Ride completed!');
@@ -1221,19 +1285,27 @@
             }
         }
 
-        async function transitionDriverRide(rideId, expectedStatus, nextStatus, button, successMessage) {
+        async function transitionDriverRide(rideId, expectedStatus, nextStatus, button, successMessage, startPin = null) {
             setLoading(button, true);
             try {
-                const { error } = await supabase.rpc('transition_driver_ride', {
+                const { data, error } = await supabase.rpc('transition_driver_ride', {
                     p_ride_id: rideId,
                     p_expected_status: expectedStatus,
-                    p_next_status: nextStatus
+                    p_next_status: nextStatus,
+                    p_start_pin: startPin
                 });
                 if (error) throw error;
+                if (data !== true) {
+                    showToast('PIN is incorrect or temporarily locked after five failed attempts. Confirm the PIN with the customer; if locked, try again in 15 minutes.', true);
+                    setLoading(button, false);
+                    return false;
+                }
                 showToast(successMessage);
+                return true;
             } catch (error) {
                 showToast(getErrorMessage(error), true);
                 setLoading(button, false);
+                return false;
             }
         }
 

@@ -258,27 +258,12 @@
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, updateDoc, addDoc, collection, query, where, onSnapshot, orderBy, limit, serverTimestamp, runTransaction, writeBatch } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-        import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-functions.js";
+        import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyBCzsWEbfQRWlGQIsY7z_BP_xQoiYqdeDI",
-            authDomain: "flash-254cb.firebaseapp.com",
-            projectId: "flash-254cb",
-            storageBucket: "flash-254cb.firebasestorage.app",
-            messagingSenderId: "1082981177046",
-            appId: "1:1082981177046:web:d39efebca5de8fd7d11b77",
-            measurementId: "G-D6L3KDZQRG"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const functions = getFunctions(app, "us-central1");
-        const acceptRideCallable = httpsCallable(functions, "acceptRide");
-        const switchUserRoleCallable = httpsCallable(functions, "switchUserRole");
+        const supabase = createClient(
+            "https://hzxdasxebvcunbtecbio.supabase.co",
+            "sb_publishable_J-cORO6pStpYcJWBuOPjvQ_zR1nU5PK"
+        );
 
         let currentUser = null;
         let userProfile = null;
@@ -289,7 +274,6 @@
         let chatUnsub = null;
         let chatRideId = null;
         let modalReturnFocus = null;
-        let signupProfileSetup = null;
         let selectedAuthRole = 'customer';
         let requestedLoginRole = null;
         
@@ -300,6 +284,73 @@
         const headerTitle = document.getElementById('header-title');
         const btnExitDriver = document.getElementById('btn-exit-driver');
         const btnDriverAccount = document.getElementById('btn-driver-account');
+
+        function mapRide(row) {
+            return {
+                ...row,
+                customerUid: row.customer_id,
+                customerName: row.customer_name,
+                driverUid: row.driver_id,
+                driverName: row.driver_name,
+                driverPhone: row.driver_phone,
+                rideType: row.ride_type,
+                createdAt: row.created_at,
+                acceptedAt: row.accepted_at,
+                arrivedAt: row.arrived_at,
+                startedAt: row.started_at,
+                completedAt: row.completed_at,
+                cancelledAt: row.cancelled_at,
+                releasedAt: row.released_at,
+                fareQuote: row.fare_quote,
+                fareStatus: row.fare_status,
+                fareOfferedAt: row.fare_offered_at,
+                fareRespondedAt: row.fare_responded_at
+            };
+        }
+
+        function mapMessage(row) {
+            return {
+                ...row,
+                senderUid: row.sender_id,
+                senderName: row.sender_name,
+                createdAt: row.created_at
+            };
+        }
+
+        function watchRows(table, filters, orderColumn, rowLimit, onRows, onError) {
+            let stopped = false;
+            const load = async () => {
+                try {
+                    const request = supabase.from(table).select('*');
+                    filters.forEach(([column, value]) => request.eq(column, value));
+                    if (orderColumn) request.order(orderColumn, { ascending: false });
+                    if (rowLimit) request.limit(rowLimit);
+                    const { data, error } = await request;
+                    if (stopped) return;
+                    if (error) {
+                        onError(error);
+                        return;
+                    }
+                    onRows(data || []);
+                } catch (error) {
+                    if (!stopped) onError(error);
+                }
+            };
+            const channel = supabase
+                .channel(`flash-${table}-${crypto.randomUUID()}`)
+                .on('postgres_changes', { event: '*', schema: 'public', table }, () => { void load(); })
+                .subscribe(status => {
+                    if (status === 'SUBSCRIBED') void load();
+                    if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+                        onError(new Error(`Realtime connection failed for ${table}.`));
+                    }
+                });
+            void load();
+            return () => {
+                stopped = true;
+                void supabase.removeChannel(channel);
+            };
+        }
 
         document.addEventListener('keydown', event => {
             const overlay = document.getElementById('modal-overlay');
@@ -377,7 +428,7 @@
             toast.textContent = msg;
             container.appendChild(toast);
             playSound(isError ? 'alert' : 'success');
-            setTimeout(() => toast.remove(), 4000);
+            setTimeout(() => toast.remove(), msg.length > 120 ? 10000 : 4000);
         }
 
         function setLoading(btn, isLoading) {
@@ -401,23 +452,15 @@
         }
 
         function getErrorMessage(error) {
-            if (error?.code === 'functions/internal') {
-                return 'Firebase could not switch modes. Deploy the latest Cloud Functions with: firebase deploy --only functions';
-            }
-            if (error?.code === 'functions/failed-precondition') {
+            if (error?.code === 'P0001' || error?.code === '42501') {
                 return error.message || 'Finish or cancel your active ride before switching modes.';
             }
-            if (error?.code === 'functions/not-found' || error?.code === 'functions/unavailable') {
-                return 'A required Firebase function is unavailable. Deploy the latest Cloud Functions and try again.';
-            }
-            if (error?.code === 'permission-denied' || error?.code === 'firestore/permission-denied') {
-                return 'Firebase rejected this request under the deployed Firestore rules. Deploy the latest rules with: firebase deploy --only firestore:rules, then sign in with the correct customer or driver account.';
-            }
-            if (error?.code === 'unavailable' || error?.code === 'firestore/unavailable') {
-                return 'Firebase is temporarily unreachable. Check your connection and try again.';
-            }
             const message = error?.message || 'Something went wrong. Please try again.';
-            return message.replace(/^Firebase:\s*/i, '');
+            const errorCode = String(error?.code || error?.error_code || '').toLowerCase();
+            if (errorCode === 'over_email_send_rate_limit' || /email.{0,30}rate.?limit|rate.?limit.{0,30}email/i.test(message)) {
+                return 'Supabase temporarily blocked auth emails because the email limit was reached. Please stop retrying and try again later. To prevent this, configure a custom SMTP provider or review Authentication → Rate Limits in your Supabase Dashboard. If you already have an account, use Login instead of Sign Up.';
+            }
+            return message.replace(/^(AuthApiError|PostgrestError):\s*/i, '');
         }
 
         function cleanupListeners() {
@@ -476,19 +519,14 @@
             if (chatRideId !== rideId) {
                 if (chatUnsub) chatUnsub();
                 chatRideId = rideId;
-                const messagesQuery = query(
-                    collection(db, "rides", rideId, "messages"),
-                    orderBy("createdAt", "desc"),
-                    limit(100)
-                );
-                const unsubscribe = onSnapshot(messagesQuery, snapshot => {
+                const unsubscribe = watchRows('ride_messages', [['ride_id', rideId]], 'created_at', 100, rows => {
                 const messages = document.getElementById('chat-messages');
                 if (!messages) return;
-                if (snapshot.empty) {
+                if (!rows.length) {
                     messages.innerHTML = `<p class="text-sm text-muted">No messages yet. Send a message to coordinate pickup.</p>`;
                 } else {
-                    messages.innerHTML = snapshot.docs.slice().reverse().map(messageDoc => {
-                        const message = messageDoc.data();
+                    messages.innerHTML = rows.slice().reverse().map(row => {
+                        const message = mapMessage(row);
                         const ownMessage = message.senderUid === currentUser.uid;
                         return `<div class="chat-message ${ownMessage ? 'mine' : ''}"><div class="chat-message-meta"><strong>${escapeHTML(ownMessage ? 'You' : message.senderName || 'Ride participant')}</strong><time>${escapeHTML(formatDate(message.createdAt))}</time></div><p>${escapeHTML(message.text || '')}</p></div>`;
                     }).join('');
@@ -519,12 +557,13 @@
                 }
                 setLoading(button, true);
                 try {
-                    await addDoc(collection(db, "rides", rideId, "messages"), {
-                        senderUid: currentUser.uid,
-                        senderName: userProfile.name,
+                    const { error } = await supabase.from('ride_messages').insert({
+                        ride_id: rideId,
+                        sender_id: currentUser.uid,
+                        sender_name: userProfile.name,
                         text,
-                        createdAt: serverTimestamp()
                     });
+                    if (error) throw error;
                     input.value = '';
                 } catch (error) {
                     showToast(`Message not sent: ${getErrorMessage(error)}`, true);
@@ -537,22 +576,11 @@
         async function respondToFare(rideId, accept, button) {
             setLoading(button, true);
             try {
-                await runTransaction(db, async transaction => {
-                    const rideRef = doc(db, "rides", rideId);
-                    const rideSnapshot = await transaction.get(rideRef);
-                    if (!rideSnapshot.exists() || rideSnapshot.data().customerUid !== currentUser.uid) {
-                        throw new Error('This ride is no longer yours.');
-                    }
-                    const ride = rideSnapshot.data();
-                    if (!['accepted', 'arrived'].includes(ride.status) || ride.fareStatus !== 'offered'
-                        || !Number.isSafeInteger(ride.fareQuote) || ride.fareQuote < 1) {
-                        throw new Error('This fare offer is no longer available.');
-                    }
-                    transaction.update(rideRef, {
-                        fareStatus: accept ? 'accepted' : 'declined',
-                        fareRespondedAt: serverTimestamp()
-                    });
+                const { error } = await supabase.rpc('respond_to_ride_fare', {
+                    p_ride_id: rideId,
+                    p_accept: accept
                 });
+                if (error) throw error;
                 showToast(accept ? 'Fare accepted.' : 'Fare declined. The driver can send a new quote.');
             } catch (error) {
                 showToast(getErrorMessage(error), true);
@@ -629,7 +657,13 @@
             document.getElementById('form-login').onsubmit = async (e) => {
                 e.preventDefault(); const btn = document.getElementById('btn-login'); setLoading(btn, true);
                 requestedLoginRole = selectedAuthRole;
-                try { await signInWithEmailAndPassword(auth, document.getElementById('login-email').value.trim(), document.getElementById('login-password').value); }
+                try {
+                    const { error } = await supabase.auth.signInWithPassword({
+                        email: document.getElementById('login-email').value.trim(),
+                        password: document.getElementById('login-password').value
+                    });
+                    if (error) throw error;
+                }
                 catch (error) {
                     requestedLoginRole = null;
                     showToast(getErrorMessage(error), true);
@@ -638,74 +672,75 @@
 
             document.getElementById('form-signup').onsubmit = async (e) => {
                 e.preventDefault(); const btn = document.getElementById('btn-signup'); setLoading(btn, true);
-                let completeProfileSetup;
-                signupProfileSetup = new Promise(resolve => { completeProfileSetup = resolve; });
                 try {
                     const name = document.getElementById('signup-name').value.trim();
                     const phone = document.getElementById('signup-phone').value.trim();
                     const email = document.getElementById('signup-email').value.trim();
                     if (!name || !phone) throw new Error('Enter your name and phone number.');
                     const accountRole = selectedAuthRole;
-                    const uc = await createUserWithEmailAndPassword(auth, email, document.getElementById('signup-password').value);
-                    await setDoc(doc(db, "users", uc.user.uid), {
-                        uid: uc.user.uid,
-                        name,
+                    const { data, error } = await supabase.auth.signUp({
                         email,
-                        phone,
-                        role: accountRole,
-                        driverStatus: 'none',
-                        createdAt: serverTimestamp()
+                        password: document.getElementById('signup-password').value,
+                        options: {
+                            data: { name, phone, role: accountRole }
+                        }
                     });
-                    showToast(`Your FLASH ${accountRole} account is ready.`);
-                } catch (error) { showToast(getErrorMessage(error), true); } finally {
-                    completeProfileSetup();
-                    signupProfileSetup = null;
+                    if (error) throw error;
+                    showToast(data.session
+                        ? `Your FLASH ${accountRole} account is ready.`
+                        : `Check ${email} to confirm your ${accountRole} account.`);
+                } catch (error) {
+                    showToast(getErrorMessage(error), true);
+                } finally {
                     setLoading(btn, false);
                 }
             };
 
             document.getElementById('link-forgot').onclick = async () => {
                 const email = document.getElementById('login-email').value; if (!email) return showToast("Enter your email first", true);
-                try { await sendPasswordResetEmail(auth, email.trim()); showToast("Reset link sent!"); } catch (error) { showToast(getErrorMessage(error), true); }
+                try {
+                    const { error } = await supabase.auth.resetPasswordForEmail(email.trim());
+                    if (error) throw error;
+                    showToast("Password reset link sent.");
+                } catch (error) { showToast(getErrorMessage(error), true); }
             };
         }
 
-        onAuthStateChanged(auth, async (user) => {
+        async function handleAuthStateChange(user) {
             const authOverlay = document.getElementById('auth-overlay');
             if (user) {
-                if (signupProfileSetup) await signupProfileSetup;
-                currentUser = user; if (authOverlay) authOverlay.remove();
+                currentUser = { ...user, uid: user.id };
                 try {
-                    const docRef = doc(db, "users", user.uid); const docSnap = await getDoc(docRef);
-                    if (docSnap.exists()) {
-                        userProfile = docSnap.data();
-                        userProfile.name = String(userProfile.name || user.displayName || user.email?.split('@')[0] || 'FLASH User');
-                        userProfile.email = String(userProfile.email || user.email || '');
-                        userProfile.phone = String(userProfile.phone || '');
-                        userProfile.role = userProfile.role === 'driver' ? 'driver' : 'customer';
-                    } else {
-                        const newProfile = {
-                            uid: user.uid,
-                            name: user.displayName || user.email?.split('@')[0] || 'FLASH User',
-                            email: user.email || '',
-                            phone: '',
-                            role: requestedLoginRole || 'customer',
-                            driverStatus: 'none',
-                            createdAt: serverTimestamp()
-                        };
-                        await setDoc(docRef, newProfile);
-                        userProfile = newProfile;
-                    }
+                    const { data: profile, error } = await supabase
+                        .from('profiles')
+                        .select('id,name,email,phone,role')
+                        .eq('id', user.id)
+                        .single();
+                    if (error) throw error;
+                    userProfile = { ...profile, uid: profile.id };
                     if (requestedLoginRole && requestedLoginRole !== userProfile.role) {
                         requestedLoginRole = null;
-                        await signOut(auth);
+                        await supabase.auth.signOut();
                         showToast(`This email belongs to a ${userProfile.role} account. Choose ${userProfile.role} login instead.`, true);
                         return;
                     }
                     requestedLoginRole = null;
+                    if (authOverlay) authOverlay.remove();
                     splashEl.classList.add('hidden'); appEl.classList.remove('hidden'); switchMode(userProfile.role);
-                } catch (error) { showToast("DB Error: " + getErrorMessage(error), true); setTimeout(() => renderAuth(), 4000); }
-            } else { currentUser = null; userProfile = null; activeRideId = null; cleanupListeners(); appEl.classList.add('hidden'); renderAuth(); }
+                } catch (error) {
+                    showToast(`Could not load your Supabase profile: ${getErrorMessage(error)}`, true);
+                    await supabase.auth.signOut();
+                }
+            } else {
+                currentUser = null; userProfile = null; activeRideId = null;
+                cleanupListeners(); appEl.classList.add('hidden'); renderAuth();
+            }
+        }
+
+        supabase.auth.onAuthStateChange((event, session) => {
+            if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
+                setTimeout(() => { void handleAuthStateChange(session?.user || null); }, 0);
+            }
         });
 
         function switchMode(mode) {
@@ -731,7 +766,8 @@
 
             setLoading(button, true);
             try {
-                await switchUserRoleCallable({ role });
+                const { error } = await supabase.rpc('switch_user_role', { p_role: role });
+                if (error) throw error;
                 userProfile.role = role;
                 showToast(role === 'driver' ? 'Driver mode is ready.' : 'Switched to customer mode.');
                 switchMode(role);
@@ -791,44 +827,22 @@
                     if (pickup.length > 160 || destination.length > 160 || phone.length > 30 || instructions.length > 300) {
                         throw new Error('One or more fields are longer than allowed.');
                     }
-                    if (!pendingRideId) pendingRideId = doc(collection(db, "rides")).id;
-                    const rideRef = doc(db, "rides", pendingRideId);
-                    const requestRef = doc(db, "rideRequests", pendingRideId);
+                    if (!pendingRideId) pendingRideId = crypto.randomUUID();
                     const rideType = document.getElementById('ride-type').value;
-                    const batch = writeBatch(db);
-                    const createdAt = serverTimestamp();
-                    batch.set(rideRef, {
-                        customerUid: currentUser.uid,
-                        customerName: userProfile.name,
-                        phone,
-                        pickup,
-                        destination,
-                        rideType,
-                        instructions,
-                        status: 'requested',
-                        createdAt,
-                        driverUid: null,
-                        driverName: null,
-                        driverPhone: null
+                    const { error } = await supabase.rpc('create_ride', {
+                        p_id: pendingRideId,
+                        p_phone: phone,
+                        p_pickup: pickup,
+                        p_destination: destination,
+                        p_instructions: instructions,
+                        p_ride_type: rideType
                     });
-                    batch.set(requestRef, {
-                        customerUid: currentUser.uid,
-                        pickup,
-                        destination,
-                        rideType,
-                        status: 'requested',
-                        createdAt,
-                        driverUid: null
-                    });
-                    await batch.commit();
+                    if (error) throw error;
                     pendingRideId = null;
                     showToast("Ride requested!");
                     bottomNav.querySelector('[data-view="active"]').click();
                 } catch (error) {
-                    const message = error?.code === 'permission-denied' || error?.code === 'firestore/permission-denied'
-                        ? 'Firestore blocked this booking. Deploy the current rules with: firebase deploy --only firestore:rules. Also confirm this account is in Customer mode.'
-                        : getErrorMessage(error);
-                    showToast(`Failed: ${message}`, true);
+                    showToast(`Failed: ${getErrorMessage(error)}`, true);
                     setLoading(btn, false);
                 }
             };
@@ -851,17 +865,15 @@
         function renderActiveRide() {
             cleanupListeners();
             mainContent.innerHTML = `<div class="text-center mt-3"><div class="loader" style="margin: 0 auto;"></div></div>`;
-            const q = query(collection(db, "rides"), where("customerUid", "==", currentUser.uid));
-            
-            const unsub = onSnapshot(q, (snapshot) => {
-                const rideDoc = snapshot.docs.find(item => ['requested', 'accepted', 'arrived', 'in_progress'].includes(item.data().status));
-                if (!rideDoc) {
+            const unsub = watchRows('rides', [['customer_id', currentUser.uid]], 'created_at', null, rows => {
+                const activeRide = rows.map(mapRide).find(ride => ['requested', 'accepted', 'arrived', 'in_progress'].includes(ride.status));
+                if (!activeRide) {
                     mainContent.innerHTML = `<div class="empty-state mt-3"><p>No active rides right now.</p><button type="button" class="btn-primary mt-2" id="btn-book-from-empty">Book a Ride</button></div>`;
                     document.getElementById('btn-book-from-empty').onclick = () => bottomNav.querySelector('[data-view="home"]').click();
                     return;
                 }
-                activeRideId = rideDoc.id;
-                const ride = rideDoc.data();
+                activeRideId = activeRide.id;
+                const ride = activeRide;
                 
                 let driverInfo = '';
                 if (['accepted', 'arrived', 'in_progress'].includes(ride.status)) {
@@ -892,34 +904,19 @@
                             <button class="btn-danger w-full" id="btn-cancel-ride">Cancel</button>
                         </div>` : ''}
                 `;
-                setupRideChat(rideDoc.id);
+                setupRideChat(ride.id);
                 const acceptFareButton = document.getElementById('btn-accept-fare');
-                if (acceptFareButton) acceptFareButton.onclick = () => respondToFare(rideDoc.id, true, acceptFareButton);
+                if (acceptFareButton) acceptFareButton.onclick = () => respondToFare(ride.id, true, acceptFareButton);
                 const declineFareButton = document.getElementById('btn-decline-fare');
-                if (declineFareButton) declineFareButton.onclick = () => respondToFare(rideDoc.id, false, declineFareButton);
+                if (declineFareButton) declineFareButton.onclick = () => respondToFare(ride.id, false, declineFareButton);
                 const cBtn = document.getElementById('btn-cancel-ride');
                 if (cBtn) {
                     cBtn.onclick = () => { 
                         showModal("Cancel Ride?", "Are you sure you want to cancel this ride? It will remain in your ride history.", async () => {
                             setLoading(cBtn, true);
                             try {
-                                await runTransaction(db, async transaction => {
-                                    const rideRef = doc(db, "rides", activeRideId);
-                                    const requestRef = doc(db, "rideRequests", activeRideId);
-                                    const [rideSnapshot, requestSnapshot] = await Promise.all([
-                                        transaction.get(rideRef),
-                                        transaction.get(requestRef)
-                                    ]);
-                                    if (!rideSnapshot.exists() || !requestSnapshot.exists() || rideSnapshot.data().customerUid !== currentUser.uid) {
-                                        throw new Error('This ride is no longer available to cancel.');
-                                    }
-                                    if (rideSnapshot.data().status !== 'requested' || requestSnapshot.data().status !== 'requested') {
-                                        throw new Error('A ride can only be cancelled before a driver accepts it.');
-                                    }
-                                    const cancelledAt = serverTimestamp();
-                                    transaction.update(rideRef, { status: 'cancelled', cancelledAt });
-                                    transaction.update(requestRef, { status: 'cancelled', cancelledAt });
-                                });
+                                const { error } = await supabase.rpc('cancel_ride', { p_ride_id: activeRideId });
+                                if (error) throw error;
                                 showToast("Ride cancelled.");
                             } catch (error) { showToast(getErrorMessage(error), true); setLoading(cBtn, false); }
                         });
@@ -932,10 +929,9 @@
         function renderRideHistory() {
             cleanupListeners();
             mainContent.innerHTML = `<h2 class="font-bold text-lg mb-2">History</h2><div class="text-center mt-3"><div class="loader" style="margin: 0 auto;"></div></div>`;
-            const q = query(collection(db, "rides"), where("customerUid", "==", currentUser.uid));
-            const unsub = onSnapshot(q, (snapshot) => {
-                const history = snapshot.docs
-                    .map(rideDoc => ({ id: rideDoc.id, ...rideDoc.data() }))
+            const unsub = watchRows('rides', [['customer_id', currentUser.uid]], 'created_at', null, rows => {
+                const history = rows
+                    .map(mapRide)
                     .filter(ride => ['completed', 'cancelled'].includes(ride.status))
                     .sort((a, b) => {
                         const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : new Date(a.createdAt || 0).getTime();
@@ -967,7 +963,7 @@
                     <h3 class="font-bold mb-2">Account details</h3>
                     <div class="form-group"><label for="profile-name">Full name</label><input id="profile-name" name="name" maxlength="80" required value="${escapeHTML(userProfile.name)}"></div>
                     <div class="form-group"><label for="profile-phone">Phone number</label><input id="profile-phone" name="phone" type="tel" maxlength="30" value="${escapeHTML(userProfile.phone || '')}"></div>
-                    <p class="text-sm text-muted mb-1">Email: ${escapeHTML(userProfile.email)} (managed by Firebase sign-in)</p>
+                    <p class="text-sm text-muted mb-1">Email: ${escapeHTML(userProfile.email)} (managed by Supabase Auth)</p>
                     <button type="submit" class="btn-primary w-full mt-2" id="btn-save-profile">Save account details</button>
                 </form>
                 ${userProfile.role === 'driver'
@@ -986,7 +982,8 @@
                 }
                 setLoading(button, true);
                 try {
-                    await updateDoc(doc(db, "users", currentUser.uid), { name, phone });
+                    const { error } = await supabase.from('profiles').update({ name, phone }).eq('id', currentUser.id);
+                    if (error) throw error;
                     userProfile.name = name;
                     userProfile.phone = phone;
                     showToast('Account details saved.');
@@ -1006,7 +1003,10 @@
             if (becomeDriverButton) becomeDriverButton.onclick = () => changeUserRole('driver', becomeDriverButton);
             document.getElementById('btn-logout').onclick = () => {
                 showModal("Logout?", "You will need to sign in again.", async () => {
-                    try { await signOut(auth); }
+                    try {
+                        const { error } = await supabase.auth.signOut();
+                        if (error) throw error;
+                    }
                     catch (error) { showToast(getErrorMessage(error), true); }
                 });
             };
@@ -1016,15 +1016,14 @@
         function renderDriverDashboard() {
             cleanupListeners();
             mainContent.innerHTML = `<div class="text-center mt-3"><div class="loader" style="margin: 0 auto;"></div></div>`;
-            const qActive = query(collection(db, "rides"), where("driverUid", "==", currentUser.uid));
-            const unsubActive = onSnapshot(qActive, (snapshot) => {
-                const activeRide = snapshot.docs.find(item => ['accepted', 'arrived', 'in_progress'].includes(item.data().status));
+            const unsubActive = watchRows('rides', [['driver_id', currentUser.uid]], 'created_at', null, rows => {
+                const activeRide = rows.map(mapRide).find(ride => ['accepted', 'arrived', 'in_progress'].includes(ride.status));
                 if (activeRide) {
                     if (availableRidesUnsub) {
                         availableRidesUnsub();
                         availableRidesUnsub = null;
                     }
-                    renderDriverActiveRideUI(activeRide.id, activeRide.data());
+                    renderDriverActiveRideUI(activeRide.id, activeRide);
                 }
                 else { renderAvailableRides(); }
             }, (error) => showToast(`Unable to load your active ride: ${getErrorMessage(error)}`, true));
@@ -1046,29 +1045,27 @@
             document.getElementById('btn-refresh-rides').onclick = () => renderDriverDashboard();
             document.getElementById('btn-driver-history').onclick = renderDriverHistory;
 
-            const q = query(collection(db, "rideRequests"), where("status", "==", "requested"));
             if (availableRidesUnsub) availableRidesUnsub();
-            availableRidesUnsub = onSnapshot(q, (snapshot) => {
+            availableRidesUnsub = watchRows('ride_requests', [['status', 'requested']], 'created_at', null, rows => {
                 const listEl = document.getElementById('rides-list'); if (!listEl) return;
-                if (snapshot.empty) { listEl.innerHTML = `<div class="empty-state mt-3">No rides available right now. New requests will appear here.</div>`; return; }
+                if (!rows.length) { listEl.innerHTML = `<div class="empty-state mt-3">No rides available right now. New requests will appear here.</div>`; return; }
                 
                 let html = ''; let count = 0;
                 const now = Date.now();
 
-                snapshot.docs
+                rows.map(mapRide)
                     .slice()
                     .sort((a, b) => {
-                        const timeA = a.data().createdAt?.toMillis ? a.data().createdAt.toMillis() : new Date(a.data().createdAt || 0).getTime();
-                        const timeB = b.data().createdAt?.toMillis ? b.data().createdAt.toMillis() : new Date(b.data().createdAt || 0).getTime();
+                        const timeA = new Date(a.createdAt || 0).getTime();
+                        const timeB = new Date(b.createdAt || 0).getTime();
                         return timeB - timeA;
                     })
-                    .forEach(doc => {
-                    const ride = doc.data();
+                    .forEach(ride => {
                     if(ride.customerUid === currentUser.uid) return; 
                     
                     // TIME FILTER: Skip rides older than 30 minutes
                     if (ride.createdAt) {
-                        const rideTime = typeof ride.createdAt.toDate === 'function' ? ride.createdAt.toDate().getTime() : new Date(ride.createdAt).getTime();
+                        const rideTime = new Date(ride.createdAt).getTime();
                         if (Number.isNaN(rideTime)) return;
                         if (now - rideTime > 30 * 60 * 1000) return; // Hide old rides
                     }
@@ -1082,7 +1079,7 @@
                         </div>
                         <p class="text-sm status-message"><span class="text-muted">From:</span> <span class="font-bold">${escapeHTML(ride.pickup)}</span></p>
                         <p class="text-sm mb-2 status-message"><span class="text-muted">To:</span> <span class="font-bold">${escapeHTML(ride.destination)}</span></p>
-                        <button type="button" class="btn-primary w-full accept-btn" data-id="${escapeHTML(doc.id)}">Accept Ride</button>
+                        <button type="button" class="btn-primary w-full accept-btn" data-id="${escapeHTML(ride.id)}">Accept Ride</button>
                     </div>`;
                     });
                 
@@ -1094,7 +1091,8 @@
                         const rideId = acceptButton.dataset.id;
                         setLoading(acceptButton, true);
                         try {
-                            await acceptRideCallable({ rideId });
+                            const { error } = await supabase.rpc('accept_ride', { p_ride_id: rideId });
+                            if (error) throw error;
                             showToast("Ride accepted!");
                         } catch (error) {
                             showToast(getErrorMessage(error), true);
@@ -1158,22 +1156,11 @@
                 }
                 setLoading(button, true);
                 try {
-                    await runTransaction(db, async transaction => {
-                        const rideRef = doc(db, "rides", rideId);
-                        const rideSnapshot = await transaction.get(rideRef);
-                        if (!rideSnapshot.exists() || rideSnapshot.data().driverUid !== currentUser.uid) {
-                            throw new Error('This ride is no longer assigned to you.');
-                        }
-                        const latestRide = rideSnapshot.data();
-                        if (!['accepted', 'arrived'].includes(latestRide.status) || latestRide.fareStatus === 'accepted') {
-                            throw new Error('A fare can only be offered before the ride starts and before the customer agrees.');
-                        }
-                        transaction.update(rideRef, {
-                            fareQuote: amount,
-                            fareStatus: 'offered',
-                            fareOfferedAt: serverTimestamp()
-                        });
+                    const { error } = await supabase.rpc('offer_ride_fare', {
+                        p_ride_id: rideId,
+                        p_fare_quote: amount
                     });
+                    if (error) throw error;
                     showToast('Price sent to the customer.');
                 } catch (error) {
                     showToast(getErrorMessage(error), true);
@@ -1191,13 +1178,13 @@
             };
 
             const btnArrived = document.getElementById('btn-arrived');
-            if (btnArrived) btnArrived.onclick = () => transitionDriverRide(rideId, 'accepted', 'arrived', { arrivedAt: serverTimestamp() }, btnArrived, 'Arrived!');
+            if (btnArrived) btnArrived.onclick = () => transitionDriverRide(rideId, 'accepted', 'arrived', btnArrived, 'Arrived!');
 
             const btnStart = document.getElementById('btn-start-ride');
-            if (btnStart) btnStart.onclick = () => transitionDriverRide(rideId, 'arrived', 'in_progress', { startedAt: serverTimestamp() }, btnStart, 'Ride started!');
+            if (btnStart) btnStart.onclick = () => transitionDriverRide(rideId, 'arrived', 'in_progress', btnStart, 'Ride started!');
 
             const btnComplete = document.getElementById('btn-complete-ride');
-            if (btnComplete) btnComplete.onclick = () => transitionDriverRide(rideId, 'in_progress', 'completed', { completedAt: serverTimestamp() }, btnComplete, 'Ride completed!');
+            if (btnComplete) btnComplete.onclick = () => transitionDriverRide(rideId, 'in_progress', 'completed', btnComplete, 'Ride completed!');
 
             const btnRelease = document.getElementById('btn-release-ride');
             if (btnRelease) {
@@ -1205,40 +1192,8 @@
                     showModal("Release Ride?", "This ride will go back to the pool for other drivers.", async () => {
                         setLoading(btnRelease, true);
                         try {
-                            await runTransaction(db, async transaction => {
-                                const rideRef = doc(db, "rides", rideId);
-                                const requestRef = doc(db, "rideRequests", rideId);
-                                const [rideSnapshot, requestSnapshot] = await Promise.all([
-                                    transaction.get(rideRef),
-                                    transaction.get(requestRef)
-                                ]);
-                                if (!rideSnapshot.exists() || !requestSnapshot.exists() || rideSnapshot.data().driverUid !== currentUser.uid || requestSnapshot.data().driverUid !== currentUser.uid) {
-                                    throw new Error('This ride is no longer assigned to you.');
-                                }
-                                if (!['accepted', 'arrived'].includes(rideSnapshot.data().status) || requestSnapshot.data().status !== rideSnapshot.data().status) {
-                                    throw new Error('This ride can no longer be released.');
-                                }
-                                const releasedAt = serverTimestamp();
-                                transaction.update(rideRef, {
-                                    status: 'requested',
-                                    driverUid: null,
-                                    driverName: null,
-                                    driverPhone: null,
-                                    acceptedAt: null,
-                                    arrivedAt: null,
-                                    releasedAt,
-                                    fareQuote: null,
-                                    fareStatus: null,
-                                    fareOfferedAt: null,
-                                    fareRespondedAt: null
-                                });
-                                transaction.update(requestRef, {
-                                    status: 'requested',
-                                    driverUid: null,
-                                    acceptedAt: null,
-                                    releasedAt
-                                });
-                            });
+                            const { error } = await supabase.rpc('release_ride', { p_ride_id: rideId });
+                            if (error) throw error;
                             showToast("Ride released.");
                         } catch (error) { showToast(getErrorMessage(error), true); setLoading(btnRelease, false); }
                     });
@@ -1246,30 +1201,15 @@
             }
         }
 
-        async function transitionDriverRide(rideId, expectedStatus, nextStatus, fields, button, successMessage) {
+        async function transitionDriverRide(rideId, expectedStatus, nextStatus, button, successMessage) {
             setLoading(button, true);
             try {
-                await runTransaction(db, async transaction => {
-                    const rideRef = doc(db, "rides", rideId);
-                    const requestRef = doc(db, "rideRequests", rideId);
-                    const [rideSnapshot, requestSnapshot] = await Promise.all([
-                        transaction.get(rideRef),
-                        transaction.get(requestRef)
-                    ]);
-                    if (!rideSnapshot.exists() || !requestSnapshot.exists()
-                        || rideSnapshot.data().driverUid !== currentUser.uid
-                        || requestSnapshot.data().driverUid !== currentUser.uid) {
-                        throw new Error('This ride is no longer assigned to you.');
-                    }
-                    if (rideSnapshot.data().status !== expectedStatus || requestSnapshot.data().status !== expectedStatus) {
-                        throw new Error('The ride status has changed. Please review the latest ride details.');
-                    }
-                    if (expectedStatus === 'arrived' && nextStatus === 'in_progress' && rideSnapshot.data().fareStatus !== 'accepted') {
-                        throw new Error('The customer must agree to the fare before the ride can start.');
-                    }
-                    transaction.update(rideRef, { ...fields, status: nextStatus });
-                    transaction.update(requestRef, { ...fields, status: nextStatus });
+                const { error } = await supabase.rpc('transition_driver_ride', {
+                    p_ride_id: rideId,
+                    p_expected_status: expectedStatus,
+                    p_next_status: nextStatus
                 });
+                if (error) throw error;
                 showToast(successMessage);
             } catch (error) {
                 showToast(getErrorMessage(error), true);
@@ -1287,10 +1227,9 @@
                 <div class="text-center mt-3"><div class="loader" style="margin: 0 auto;" role="status" aria-label="Loading ride history"></div></div>
             `;
             document.getElementById('btn-back-to-rides').onclick = renderDriverDashboard;
-            const historyQuery = query(collection(db, "rides"), where("driverUid", "==", currentUser.uid));
-            const unsubscribe = onSnapshot(historyQuery, snapshot => {
-                const completed = snapshot.docs
-                    .map(rideDoc => rideDoc.data())
+            const unsubscribe = watchRows('rides', [['driver_id', currentUser.uid]], 'created_at', null, rows => {
+                const completed = rows
+                    .map(mapRide)
                     .filter(ride => ['completed', 'cancelled'].includes(ride.status))
                     .sort((a, b) => {
                         const dateA = a.completedAt || a.cancelledAt || a.createdAt;

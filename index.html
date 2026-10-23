@@ -2,22 +2,25 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#000000">
+    <meta name="description" content="FLASH - Fast rides. Fair for everyone.">
+    <meta name="color-scheme" content="dark">
     <title>FLASH - Fast rides. Fair for everyone.</title>
     <style>
         :root {
             --bg: #000000;
-            --surface: #121212;
-            --surface-light: #222222;
+            --surface: #111111;
+            --surface-light: #252525;
             --primary: #FFD700;
             --text: #ffffff;
-            --text-muted: #888888;
+            --text-muted: #a0a0a0;
             --danger: #ff4444;
             --success: #00C851;
             --radius: 16px;
             --header-height: 60px;
             --nav-height: 70px;
+            --gold-glow: 0 12px 36px rgba(255, 215, 0, 0.08);
         }
         
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -26,7 +29,7 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--bg); color: var(--text); 
             height: 100vh; height: 100dvh;
-            overflow: hidden; display: flex; flex-direction: column; user-select: none;
+            overflow: hidden; display: flex; flex-direction: column;
         }
 
         .hidden { display: none !important; }
@@ -51,13 +54,18 @@
 
         button {
             font-family: inherit; border: none; border-radius: var(--radius); font-weight: 700;
-            font-size: 1rem; cursor: pointer; transition: all 0.2s;
+            font-size: 1rem; cursor: pointer; transition: transform 0.18s ease, background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
             display: flex; align-items: center; justify-content: center; padding: 16px 20px;
+            min-height: 48px; touch-action: manipulation;
         }
         button:active { transform: scale(0.96); }
         button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, [tabindex]:focus-visible {
+            outline: 2px solid var(--primary); outline-offset: 3px;
+        }
         
-        .btn-primary { background-color: var(--primary); color: #000; box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2); }
+        .btn-primary { background-color: var(--primary); color: #000; box-shadow: 0 4px 15px rgba(255, 215, 0, 0.18); }
+        .btn-primary:hover:not(:disabled) { box-shadow: 0 7px 22px rgba(255, 215, 0, 0.28); }
         .btn-outline { background-color: transparent; border: 1px solid var(--surface-light); color: var(--text); }
         .btn-danger { background-color: rgba(255, 68, 68, 0.1); color: var(--danger); border: 1px solid rgba(255, 68, 68, 0.3); }
         .btn-sm { padding: 8px 16px; font-size: 0.85rem; border-radius: 10px; }
@@ -65,12 +73,14 @@
         input, select, textarea {
             width: 100%; background-color: var(--surface); border: 1px solid var(--surface-light);
             color: var(--text); padding: 16px; border-radius: var(--radius); font-family: inherit;
-            font-size: 1rem; outline: none; transition: border-color 0.3s;
+            font-size: 1rem; outline: none; transition: border-color 0.3s, box-shadow 0.3s;
         }
         input:focus, select:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(255,215,0,0.1); }
+        input::placeholder, textarea::placeholder { color: #777; }
+        textarea { resize: vertical; min-height: 80px; }
         label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;}
         
-        .card { background-color: var(--surface); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; border: 1px solid var(--surface-light); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .card { background: linear-gradient(145deg, #151515, #101010); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; border: 1px solid var(--surface-light); box-shadow: 0 8px 24px rgba(0,0,0,0.18); }
         
         .badge { padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
         .badge-requested { background: rgba(255, 215, 0, 0.15); color: var(--primary); }
@@ -92,9 +102,9 @@
         @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.05); opacity: 0.8; } 100% { transform: scale(1); opacity: 1; } }
 
         .app-header {
-            height: var(--header-height); display: flex; align-items: center; justify-content: space-between;
+            min-height: var(--header-height); display: flex; align-items: center; justify-content: space-between;
             padding: 0 20px; background-color: var(--bg); border-bottom: 1px solid var(--surface);
-            flex-shrink: 0; padding-top: env(safe-area-inset-top); z-index: 10;
+            flex-shrink: 0; padding-top: max(0px, env(safe-area-inset-top)); z-index: 10;
         }
         .header-logo { display: flex; align-items: center; gap: 8px; }
         .header-logo svg { width: 28px; height: 28px; fill: var(--primary); }
@@ -107,22 +117,24 @@
         }
 
         .bottom-nav {
-            position: absolute; bottom: 0; left: 0; right: 0; height: var(--nav-height);
+            position: absolute; bottom: 0; left: 0; right: 0; min-height: var(--nav-height);
             background-color: rgba(18, 18, 18, 0.95); backdrop-filter: blur(10px);
             border-top: 1px solid var(--surface-light); display: flex;
             justify-content: space-around; align-items: center; padding-bottom: env(safe-area-inset-bottom); z-index: 100;
         }
-        .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--text-muted); font-size: 0.7rem; font-weight: 600; gap: 4px; cursor: pointer; transition: color 0.2s; width: 25%; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted); font-size: 0.7rem; font-weight: 600; gap: 4px; cursor: pointer; transition: color 0.2s, transform 0.2s; width: 25%; min-height: 58px; border: 0; border-radius: 12px; background: transparent; }
         .nav-item svg { width: 24px; height: 24px; fill: currentColor; }
         .nav-item.active { color: var(--primary); transform: translateY(-2px); }
 
-        .auth-container { display: flex; flex-direction: column; justify-content: center; min-height: 100%; padding: 20px; z-index: 50; background: var(--bg); position: absolute; inset: 0; }
+        .auth-container { display: flex; flex-direction: column; justify-content: center; min-height: 100%; padding: max(20px, env(safe-area-inset-top)) 20px max(20px, env(safe-area-inset-bottom)); z-index: 50; background: var(--bg); position: fixed; inset: 0; overflow-y: auto; }
+        #auth-overlay > :is(.auth-tabs, form) { width: min(100%, 480px); margin-left: auto; margin-right: auto; }
+        #auth-overlay > .text-center { width: 100%; }
         .auth-tabs { display: flex; margin-bottom: 30px; background: var(--surface); border-radius: var(--radius); padding: 4px; }
-        .auth-tab { flex: 1; padding: 12px; text-align: center; color: var(--text-muted); cursor: pointer; font-weight: 700; border-radius: 10px; transition: 0.3s; }
+        .auth-tab { flex: 1; padding: 12px; min-height: 44px; text-align: center; color: var(--text-muted); cursor: pointer; font-weight: 700; font-size: 0.95rem; border-radius: 10px; transition: 0.3s; background: transparent; box-shadow: none; }
         .auth-tab.active { background: var(--primary); color: #000; box-shadow: 0 2px 10px rgba(255, 215, 0, 0.3); }
         .form-group { margin-bottom: 20px; }
 
-        #toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 10000; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 400px; pointer-events: none; }
+        #toast-container { position: fixed; top: max(16px, env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); z-index: 10000; display: flex; flex-direction: column; gap: 10px; width: min(90%, 400px); pointer-events: none; }
         .toast { background: var(--surface-light); color: white; padding: 16px 20px; border-radius: var(--radius); font-size: 0.9rem; font-weight: 600; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); animation: slideDown 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), fadeOut 0.4s ease 3.6s forwards; border-left: 4px solid var(--primary); backdrop-filter: blur(10px); }
         .toast.error { border-left-color: var(--danger); }
         @keyframes slideDown { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
@@ -131,9 +143,9 @@
         #modal-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);
             z-index: 10001; display: flex; align-items: center; justify-content: center;
-            opacity: 0; pointer-events: none; transition: opacity 0.3s;
+            opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 0.3s, visibility 0.3s;
         }
-        #modal-overlay.active { opacity: 1; pointer-events: all; }
+        #modal-overlay.active { opacity: 1; visibility: visible; pointer-events: all; }
         .modal-box { background: var(--surface); width: 90%; max-width: 340px; border-radius: 20px; padding: 24px; transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); text-align: center; border: 1px solid var(--surface-light); }
         #modal-overlay.active .modal-box { transform: scale(1); }
 
@@ -151,6 +163,35 @@
         .timeline-dot svg { width: 12px; height: 12px; fill: #000; }
         .timeline-label { font-size: 0.6rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; }
         .timeline-step.active .timeline-label { color: var(--primary); }
+        .text-xs { font-size: 0.75rem; }
+        .gap-2 { gap: 0.5rem; }
+        .gap-3 { gap: 1rem; }
+        .empty-state { padding: 28px 18px; border: 1px dashed var(--surface-light); border-radius: var(--radius); color: var(--text-muted); text-align: center; }
+        .status-message { overflow-wrap: anywhere; }
+        .profile-card { width: min(100%, 720px); margin-inline: auto; }
+        .profile-card .profile-info { min-width: 0; overflow-wrap: anywhere; }
+        .chat-panel { margin-top: 16px; }
+        .chat-messages { display: flex; flex-direction: column; gap: 10px; max-height: 280px; min-height: 90px; overflow-y: auto; padding: 12px; background: #090909; border: 1px solid var(--surface-light); border-radius: 12px; }
+        .chat-message { max-width: 88%; align-self: flex-start; padding: 10px 12px; border-radius: 14px 14px 14px 4px; background: var(--surface-light); overflow-wrap: anywhere; }
+        .chat-message.mine { align-self: flex-end; background: rgba(255, 215, 0, 0.18); border: 1px solid rgba(255, 215, 0, 0.25); border-radius: 14px 14px 4px 14px; }
+        .chat-message-meta { display: flex; gap: 8px; margin-bottom: 4px; color: var(--text-muted); font-size: 0.7rem; }
+        .chat-compose { display: flex; gap: 8px; margin-top: 10px; align-items: stretch; }
+        .chat-compose input { min-width: 0; }
+        .fare-box { border: 1px solid rgba(255, 215, 0, 0.35); background: rgba(255, 215, 0, 0.06); border-radius: 12px; padding: 14px; margin: 12px 0; }
+        .fare-amount { font-size: 1.6rem; font-weight: 800; color: var(--primary); }
+        .map-container iframe { display: block; }
+        #link-forgot { min-height: 44px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        @media (min-width: 720px) {
+            #main-content { width: min(100%, 720px); margin: 0 auto; }
+            .app-header { padding-left: max(20px, calc((100vw - 720px) / 2)); padding-right: max(20px, calc((100vw - 720px) / 2)); }
+        }
+        @media (max-height: 650px) {
+            .auth-container { justify-content: flex-start; }
+            #main-content { padding-top: 14px; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+        }
     </style>
 </head>
 <body>
@@ -168,13 +209,13 @@
         <p class="mt-2 text-muted text-sm font-bold">Fast rides. Fair for everyone.</p>
     </div>
 
-    <div id="modal-overlay">
+    <div id="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-describedby="modal-desc" aria-hidden="true" inert>
         <div class="modal-box">
             <h2 id="modal-title" class="font-bold text-lg mb-1">Title</h2>
             <p id="modal-desc" class="text-muted text-sm mb-3">Description</p>
             <div class="flex w-full" style="gap: 10px;">
-                <button class="btn-outline w-full" id="modal-cancel">Cancel</button>
-                <button class="btn-primary w-full" id="modal-confirm">Confirm</button>
+                <button type="button" class="btn-outline w-full" id="modal-cancel">Cancel</button>
+                <button type="button" class="btn-primary w-full" id="modal-confirm">Confirm</button>
             </div>
         </div>
     </div>
@@ -187,35 +228,36 @@
                 <svg viewBox="0 0 24 24"><path d="M13 2L3 14H12L11 22L21 10H12L13 2Z"/></svg>
                 <h1 id="header-title">FLASH</h1>
             </div>
-            <button class="btn-outline btn-sm" id="btn-exit-driver" style="display:none;">Exit Driver</button>
+            <button type="button" class="btn-outline btn-sm" id="btn-exit-driver" style="display:none;">Exit Driver</button>
         </header>
         
         <main id="main-content"></main>
         
-        <nav class="bottom-nav" id="bottom-nav">
-            <div class="nav-item active" data-view="home">
+        <nav class="bottom-nav" id="bottom-nav" aria-label="Main navigation">
+            <button type="button" class="nav-item active" data-view="home" aria-current="page">
                 <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
                 <span>Home</span>
-            </div>
-            <div class="nav-item" data-view="active">
+            </button>
+            <button type="button" class="nav-item" data-view="active">
                 <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
                 <span>Ride</span>
-            </div>
-            <div class="nav-item" data-view="history">
+            </button>
+            <button type="button" class="nav-item" data-view="history">
                 <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
                 <span>History</span>
-            </div>
-            <div class="nav-item" data-view="profile">
+            </button>
+            <button type="button" class="nav-item" data-view="profile">
                 <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
                 <span>Profile</span>
-            </div>
+            </button>
         </nav>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, addDoc, deleteDoc, collection, query, where, onSnapshot, updateDoc, serverTimestamp, runTransaction, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, getDocs, addDoc, collection, query, where, onSnapshot, orderBy, limit, serverTimestamp, runTransaction } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-functions.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBCzsWEbfQRWlGQIsY7z_BP_xQoiYqdeDI",
@@ -230,12 +272,19 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        const functions = getFunctions(app, "us-central1");
+        const acceptRideCallable = httpsCallable(functions, "acceptRide");
 
         let currentUser = null;
         let userProfile = null;
         let currentMode = 'customer';
         let activeRideId = null;
         let listeners = [];
+        let availableRidesUnsub = null;
+        let chatUnsub = null;
+        let chatRideId = null;
+        let modalReturnFocus = null;
+        let signupProfileSetup = null;
         
         const appEl = document.getElementById('app');
         const splashEl = document.getElementById('splash-screen');
@@ -244,11 +293,33 @@
         const headerTitle = document.getElementById('header-title');
         const btnExitDriver = document.getElementById('btn-exit-driver');
 
+        document.addEventListener('keydown', event => {
+            const overlay = document.getElementById('modal-overlay');
+            if (!overlay.classList.contains('active')) return;
+            if (event.key === 'Escape') {
+                event.preventDefault();
+                closeModal();
+            } else if (event.key === 'Tab') {
+                const focusable = [...overlay.querySelectorAll('button:not(:disabled)')];
+                const first = focusable[0];
+                const last = focusable[focusable.length - 1];
+                if (event.shiftKey && document.activeElement === first) {
+                    event.preventDefault();
+                    last.focus();
+                } else if (!event.shiftKey && document.activeElement === last) {
+                    event.preventDefault();
+                    first.focus();
+                }
+            }
+        });
+
         // --- UTILS ---
         function playSound(type) {
+            let ctx;
             try {
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
-                const ctx = new AudioContext();
+                if (!AudioContext) return;
+                ctx = new AudioContext();
                 const osc = ctx.createOscillator();
                 const gain = ctx.createGain();
                 osc.connect(gain);
@@ -259,17 +330,36 @@
                 } else { osc.frequency.setValueAtTime(440, ctx.currentTime); }
                 gain.gain.setValueAtTime(0.1, ctx.currentTime);
                 gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+                osc.onended = () => ctx.close();
                 osc.start(); osc.stop(ctx.currentTime + 0.3);
-            } catch(e) {}
+            } catch (error) {
+                if (ctx && ctx.state !== 'closed') ctx.close().catch(() => {});
+            }
         }
 
         function showModal(title, desc, onConfirm) {
             const overlay = document.getElementById('modal-overlay');
             document.getElementById('modal-title').innerText = title;
             document.getElementById('modal-desc').innerText = desc;
+            modalReturnFocus = document.activeElement;
             overlay.classList.add('active');
-            document.getElementById('modal-confirm').onclick = () => { overlay.classList.remove('active'); onConfirm(); };
-            document.getElementById('modal-cancel').onclick = () => { overlay.classList.remove('active'); };
+            overlay.removeAttribute('inert');
+            overlay.setAttribute('aria-hidden', 'false');
+            document.getElementById('modal-cancel').focus();
+            document.getElementById('modal-confirm').onclick = async () => {
+                closeModal();
+                try { await onConfirm(); }
+                catch (error) { showToast(getErrorMessage(error), true); }
+            };
+            document.getElementById('modal-cancel').onclick = closeModal;
+        }
+
+        function closeModal() {
+            const overlay = document.getElementById('modal-overlay');
+            overlay.classList.remove('active');
+            overlay.setAttribute('aria-hidden', 'true');
+            overlay.setAttribute('inert', '');
+            if (modalReturnFocus instanceof HTMLElement && modalReturnFocus.isConnected) modalReturnFocus.focus();
         }
 
         function showToast(msg, isError = false) {
@@ -284,12 +374,177 @@
 
         function setLoading(btn, isLoading) {
             if (!btn) return;
-            if (isLoading) { btn.dataset.originalText = btn.innerHTML; btn.innerHTML = '<div class="loader"></div>'; btn.disabled = true; } 
-            else { btn.innerHTML = btn.dataset.originalText; btn.disabled = false; }
+            if (isLoading) {
+                if (!btn.disabled) btn.dataset.originalText = btn.textContent;
+                btn.textContent = 'Please wait…';
+                btn.setAttribute('aria-busy', 'true');
+                btn.disabled = true;
+            } else {
+                btn.textContent = btn.dataset.originalText || btn.textContent;
+                btn.removeAttribute('aria-busy');
+                btn.disabled = false;
+            }
         }
 
-        function cleanupListeners() { listeners.forEach(unsub => unsub()); listeners = []; }
-        function formatDate(ts) { if(!ts) return 'N/A'; const d = ts.toDate ? ts.toDate() : new Date(ts); return d.toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }); }
+        function escapeHTML(value) {
+            return String(value ?? '').replace(/[&<>"']/g, char => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            })[char]);
+        }
+
+        function getErrorMessage(error) {
+            if (error?.code === 'functions/not-found' || error?.code === 'functions/unavailable') {
+                return 'Secure ride acceptance is not available yet. The Firebase acceptRide function must be deployed before drivers can accept rides.';
+            }
+            if (error?.code === 'permission-denied' || error?.code === 'firestore/permission-denied') {
+                return 'Firebase denied this action. Check the Firestore security rules and your account permissions.';
+            }
+            if (error?.code === 'unavailable' || error?.code === 'firestore/unavailable') {
+                return 'Firebase is temporarily unreachable. Check your connection and try again.';
+            }
+            const message = error?.message || 'Something went wrong. Please try again.';
+            return message.replace(/^Firebase:\s*/i, '');
+        }
+
+        function cleanupListeners() {
+            listeners.forEach(unsub => unsub());
+            listeners = [];
+            if (availableRidesUnsub) {
+                availableRidesUnsub();
+                availableRidesUnsub = null;
+            }
+            if (chatUnsub) {
+                chatUnsub();
+                chatUnsub = null;
+                chatRideId = null;
+            }
+        }
+
+        function formatDate(ts) {
+            if (!ts) return 'N/A';
+            const date = typeof ts.toDate === 'function' ? ts.toDate() : new Date(ts);
+            return Number.isNaN(date.getTime()) ? 'N/A' : date.toLocaleString([], { dateStyle: 'short', timeStyle: 'short' });
+        }
+
+        function displayStatus(status) {
+            return escapeHTML(String(status || 'unknown').replace(/_/g, ' '));
+        }
+
+        function formatINR(amount) {
+            return new Intl.NumberFormat('en-IN', {
+                style: 'currency',
+                currency: 'INR',
+                maximumFractionDigits: 0
+            }).format(amount);
+        }
+
+        function renderFare(ride, viewer) {
+            if (!Number.isSafeInteger(ride.fareQuote) || ride.fareQuote < 1) {
+                return viewer === 'driver'
+                    ? `<div class="fare-box"><p class="font-bold">No fare proposed yet</p><p class="text-sm text-muted">Send your price to the customer. No automatic distance estimate is used.</p></div>`
+                    : `<div class="fare-box"><p class="font-bold">Fare not set yet</p><p class="text-sm text-muted">The driver will send a price for you to confirm.</p></div>`;
+            }
+            const state = ride.fareStatus === 'accepted' ? 'Agreed' : ride.fareStatus === 'declined' ? 'Declined — waiting for a new quote' : 'Waiting for customer confirmation';
+            const buttons = viewer === 'customer' && ride.fareStatus === 'offered'
+                ? `<div class="flex gap-2 mt-2"><button type="button" class="btn-primary w-full" id="btn-accept-fare">Accept fare</button><button type="button" class="btn-outline w-full" id="btn-decline-fare">Decline</button></div>`
+                : '';
+            return `<div class="fare-box"><p class="text-sm text-muted">DRIVER'S PRICE · INR</p><p class="fare-amount">${formatINR(ride.fareQuote)}</p><p class="text-sm text-muted">${state}. This is a direct fare agreement, not a payment receipt.</p>${buttons}</div>`;
+        }
+
+        function setupRideChat(rideId) {
+            const panel = document.getElementById('ride-chat');
+            if (!panel) {
+                if (chatUnsub) chatUnsub();
+                chatUnsub = null;
+                chatRideId = null;
+                return;
+            }
+            if (chatRideId !== rideId) {
+                if (chatUnsub) chatUnsub();
+                chatRideId = rideId;
+                const messagesQuery = query(
+                    collection(db, "rides", rideId, "messages"),
+                    orderBy("createdAt", "desc"),
+                    limit(100)
+                );
+                const unsubscribe = onSnapshot(messagesQuery, snapshot => {
+                const messages = document.getElementById('chat-messages');
+                if (!messages) return;
+                if (snapshot.empty) {
+                    messages.innerHTML = `<p class="text-sm text-muted">No messages yet. Send a message to coordinate pickup.</p>`;
+                } else {
+                    messages.innerHTML = snapshot.docs.slice().reverse().map(messageDoc => {
+                        const message = messageDoc.data();
+                        const ownMessage = message.senderUid === currentUser.uid;
+                        return `<div class="chat-message ${ownMessage ? 'mine' : ''}"><div class="chat-message-meta"><strong>${escapeHTML(ownMessage ? 'You' : message.senderName || 'Ride participant')}</strong><time>${escapeHTML(formatDate(message.createdAt))}</time></div><p>${escapeHTML(message.text || '')}</p></div>`;
+                    }).join('');
+                    messages.scrollTop = messages.scrollHeight;
+                }
+            }, error => {
+                const messages = document.getElementById('chat-messages');
+                if (messages) messages.innerHTML = `<p class="text-sm text-danger">Chat unavailable: ${escapeHTML(getErrorMessage(error))}</p>`;
+                });
+                chatUnsub = unsubscribe;
+                listeners.push(() => {
+                    unsubscribe();
+                    if (chatUnsub === unsubscribe) {
+                        chatUnsub = null;
+                        chatRideId = null;
+                    }
+                });
+            }
+            const form = document.getElementById('form-chat');
+            if (form) form.onsubmit = async event => {
+                event.preventDefault();
+                const input = document.getElementById('chat-input');
+                const button = document.getElementById('btn-send-chat');
+                const text = input.value.trim();
+                if (!text || text.length > 1000) {
+                    showToast('Messages must contain 1–1000 characters.', true);
+                    return;
+                }
+                setLoading(button, true);
+                try {
+                    await addDoc(collection(db, "rides", rideId, "messages"), {
+                        senderUid: currentUser.uid,
+                        senderName: userProfile.name,
+                        text,
+                        createdAt: serverTimestamp()
+                    });
+                    input.value = '';
+                } catch (error) {
+                    showToast(`Message not sent: ${getErrorMessage(error)}`, true);
+                } finally {
+                    setLoading(button, false);
+                }
+            };
+        }
+
+        async function respondToFare(rideId, accept, button) {
+            setLoading(button, true);
+            try {
+                await runTransaction(db, async transaction => {
+                    const rideRef = doc(db, "rides", rideId);
+                    const rideSnapshot = await transaction.get(rideRef);
+                    if (!rideSnapshot.exists() || rideSnapshot.data().customerUid !== currentUser.uid) {
+                        throw new Error('This ride is no longer yours.');
+                    }
+                    const ride = rideSnapshot.data();
+                    if (!['accepted', 'arrived'].includes(ride.status) || ride.fareStatus !== 'offered'
+                        || !Number.isSafeInteger(ride.fareQuote) || ride.fareQuote < 1) {
+                        throw new Error('This fare offer is no longer available.');
+                    }
+                    transaction.update(rideRef, {
+                        fareStatus: accept ? 'accepted' : 'declined',
+                        fareRespondedAt: serverTimestamp()
+                    });
+                });
+                showToast(accept ? 'Fare accepted.' : 'Fare declined. The driver can send a new quote.');
+            } catch (error) {
+                showToast(getErrorMessage(error), true);
+                setLoading(button, false);
+            }
+        }
 
         // --- AUTH ---
         function renderAuth() {
@@ -304,59 +559,114 @@
             
             authOverlay.innerHTML = `
                 <div class="text-center mb-3"><div class="logo-container" style="animation: none;"><div class="logo-text" style="font-size: 2.5rem;">FLASH</div></div></div>
-                <div class="auth-tabs"><div class="auth-tab active" id="tab-login">Login</div><div class="auth-tab" id="tab-signup">Sign Up</div></div>
+                <div class="auth-tabs" role="tablist" aria-label="Account access">
+                    <button type="button" class="auth-tab active" id="tab-login" role="tab" aria-selected="true" aria-controls="form-login">Login</button>
+                    <button type="button" class="auth-tab" id="tab-signup" role="tab" aria-selected="false" aria-controls="form-signup">Sign Up</button>
+                </div>
                 <form id="form-login">
-                    <div class="form-group"><label>Email</label><input type="email" id="login-email" required placeholder="you@example.com"></div>
-                    <div class="form-group"><label>Password</label><input type="password" id="login-password" required placeholder="••••••••"></div>
+                    <div class="form-group"><label for="login-email">Email</label><input type="email" id="login-email" name="email" autocomplete="email" required placeholder="you@example.com"></div>
+                    <div class="form-group"><label for="login-password">Password</label><input type="password" id="login-password" name="password" autocomplete="current-password" required placeholder="••••••••"></div>
                     <button type="submit" class="btn-primary w-full mt-2" id="btn-login">Sign In</button>
-                    <p class="text-center mt-3 text-sm text-muted" id="link-forgot" style="cursor:pointer;">Forgot Password?</p>
+                    <button type="button" class="text-center mt-3 text-sm text-muted" id="link-forgot" style="background:transparent; border:0; width:100%; font-weight:600;">Forgot Password?</button>
                 </form>
-                <form id="form-signup" class="hidden">
-                    <div class="form-group"><label>Full Name</label><input type="text" id="signup-name" required placeholder="John Doe"></div>
-                    <div class="form-group"><label>Phone Number</label><input type="tel" id="signup-phone" required placeholder="+91 9876543210"></div>
-                    <div class="form-group"><label>Email</label><input type="email" id="signup-email" required placeholder="you@example.com"></div>
-                    <div class="form-group"><label>Password (min 6 chars)</label><input type="password" id="signup-password" required minlength="6" placeholder="••••••••"></div>
+                <form id="form-signup" class="hidden" aria-hidden="true">
+                    <div class="form-group"><label for="signup-name">Full Name</label><input type="text" id="signup-name" name="name" autocomplete="name" maxlength="80" required placeholder="Your name"></div>
+                    <div class="form-group"><label for="signup-phone">Phone Number</label><input type="tel" id="signup-phone" name="phone" autocomplete="tel" maxlength="30" required placeholder="+1 555 123 4567"></div>
+                    <div class="form-group"><label for="signup-email">Email</label><input type="email" id="signup-email" name="email" autocomplete="email" required placeholder="you@example.com"></div>
+                    <div class="form-group"><label for="signup-role">Account type</label><select id="signup-role" name="role" required><option value="customer">USER / CUSTOMER</option><option value="driver">DRIVER</option></select><p class="text-sm text-muted mt-1">Driver accounts are self-registered; FLASH does not verify identity or professional licensing.</p></div>
+                    <div class="form-group"><label for="signup-password">Password (min 6 chars)</label><input type="password" id="signup-password" name="password" autocomplete="new-password" required minlength="6" placeholder="••••••••"></div>
                     <button type="submit" class="btn-primary w-full mt-2" id="btn-signup">Create Account</button>
                 </form>
             `;
 
-            document.getElementById('tab-login').onclick = () => { document.getElementById('tab-login').classList.add('active'); document.getElementById('tab-signup').classList.remove('active'); document.getElementById('form-login').classList.remove('hidden'); document.getElementById('form-signup').classList.add('hidden'); };
-            document.getElementById('tab-signup').onclick = () => { document.getElementById('tab-signup').classList.add('active'); document.getElementById('tab-login').classList.remove('active'); document.getElementById('form-signup').classList.remove('hidden'); document.getElementById('form-login').classList.add('hidden'); };
+            const selectAuthTab = showSignup => {
+                document.getElementById('tab-login').classList.toggle('active', !showSignup);
+                document.getElementById('tab-login').setAttribute('aria-selected', String(!showSignup));
+                document.getElementById('tab-signup').classList.toggle('active', showSignup);
+                document.getElementById('tab-signup').setAttribute('aria-selected', String(showSignup));
+                document.getElementById('form-login').classList.toggle('hidden', showSignup);
+                document.getElementById('form-login').setAttribute('aria-hidden', String(showSignup));
+                document.getElementById('form-signup').classList.toggle('hidden', !showSignup);
+                document.getElementById('form-signup').setAttribute('aria-hidden', String(!showSignup));
+            };
+            document.getElementById('tab-login').onclick = () => selectAuthTab(false);
+            document.getElementById('tab-signup').onclick = () => selectAuthTab(true);
 
             document.getElementById('form-login').onsubmit = async (e) => {
                 e.preventDefault(); const btn = document.getElementById('btn-login'); setLoading(btn, true);
-                try { await signInWithEmailAndPassword(auth, document.getElementById('login-email').value, document.getElementById('login-password').value); } 
-                catch (error) { showToast(error.message.replace('Firebase: ', ''), true); } finally { setLoading(btn, false); }
+                try { await signInWithEmailAndPassword(auth, document.getElementById('login-email').value.trim(), document.getElementById('login-password').value); }
+                catch (error) { showToast(getErrorMessage(error), true); } finally { setLoading(btn, false); }
             };
 
             document.getElementById('form-signup').onsubmit = async (e) => {
                 e.preventDefault(); const btn = document.getElementById('btn-signup'); setLoading(btn, true);
+                let completeProfileSetup;
+                signupProfileSetup = new Promise(resolve => { completeProfileSetup = resolve; });
                 try {
-                    const uc = await createUserWithEmailAndPassword(auth, document.getElementById('signup-email').value, document.getElementById('signup-password').value);
-                    await setDoc(doc(db, "users", uc.user.uid), { uid: uc.user.uid, name: document.getElementById('signup-name').value, email: document.getElementById('signup-email').value, phone: document.getElementById('signup-phone').value, createdAt: serverTimestamp() });
-                } catch (error) { showToast(error.message.replace('Firebase: ', ''), true); } finally { setLoading(btn, false); }
+                    const name = document.getElementById('signup-name').value.trim();
+                    const phone = document.getElementById('signup-phone').value.trim();
+                    const email = document.getElementById('signup-email').value.trim();
+                    const role = document.getElementById('signup-role').value;
+                    if (!name || !phone) throw new Error('Enter your name and phone number.');
+                    const uc = await createUserWithEmailAndPassword(auth, email, document.getElementById('signup-password').value);
+                    await setDoc(doc(db, "users", uc.user.uid), {
+                        uid: uc.user.uid, name, email, phone, role, createdAt: serverTimestamp()
+                    });
+                    showToast('Your FLASH account is ready.');
+                } catch (error) { showToast(getErrorMessage(error), true); } finally {
+                    completeProfileSetup();
+                    signupProfileSetup = null;
+                    setLoading(btn, false);
+                }
             };
 
             document.getElementById('link-forgot').onclick = async () => {
                 const email = document.getElementById('login-email').value; if (!email) return showToast("Enter your email first", true);
-                try { await sendPasswordResetEmail(auth, email); showToast("Reset link sent!"); } catch (error) { showToast(error.message.replace('Firebase: ', ''), true); }
+                try { await sendPasswordResetEmail(auth, email.trim()); showToast("Reset link sent!"); } catch (error) { showToast(getErrorMessage(error), true); }
             };
         }
 
         onAuthStateChanged(auth, async (user) => {
             const authOverlay = document.getElementById('auth-overlay');
             if (user) {
+                if (signupProfileSetup) await signupProfileSetup;
                 currentUser = user; if (authOverlay) authOverlay.remove();
                 try {
                     const docRef = doc(db, "users", user.uid); const docSnap = await getDoc(docRef);
-                    if (docSnap.exists()) { userProfile = docSnap.data(); } 
-                    else { const newProfile = { uid: user.uid, name: "Flash User", email: user.email, phone: "0000000000", createdAt: serverTimestamp() }; await setDoc(docRef, newProfile); userProfile = newProfile; }
+                    if (docSnap.exists()) {
+                        userProfile = docSnap.data();
+                        userProfile.name = String(userProfile.name || user.displayName || user.email?.split('@')[0] || 'FLASH User');
+                        userProfile.email = String(userProfile.email || user.email || '');
+                        userProfile.phone = String(userProfile.phone || '');
+                        userProfile.role = userProfile.role === 'driver' ? 'driver' : 'customer';
+                    } else {
+                        const newProfile = {
+                            uid: user.uid,
+                            name: user.displayName || user.email?.split('@')[0] || 'FLASH User',
+                            email: user.email || '',
+                            phone: '',
+                            role: 'customer',
+                            createdAt: serverTimestamp()
+                        };
+                        await setDoc(docRef, newProfile);
+                        userProfile = newProfile;
+                    }
                     splashEl.classList.add('hidden'); appEl.classList.remove('hidden'); switchMode('customer');
-                } catch (error) { showToast("DB Error: " + error.message, true); setTimeout(() => renderAuth(), 4000); }
+                } catch (error) { showToast("DB Error: " + getErrorMessage(error), true); setTimeout(() => renderAuth(), 4000); }
             } else { currentUser = null; userProfile = null; activeRideId = null; cleanupListeners(); appEl.classList.add('hidden'); renderAuth(); }
         });
 
         function switchMode(mode) {
+            if (mode === 'driver') {
+                if (userProfile?.role !== 'driver') {
+                    showToast('Driver access is only available to accounts registered as drivers.', true);
+                    return;
+                }
+            }
+            if (mode !== 'customer') {
+                showToast('That app mode is unavailable.', true);
+                return;
+            }
             currentMode = mode; activeRideId = null; cleanupListeners();
             if (mode === 'customer') { headerTitle.innerText = "FLASH"; btnExitDriver.style.display = 'none'; bottomNav.style.display = 'flex'; renderCustomerHome(); } 
             else { headerTitle.innerText = "Driver Dashboard"; btnExitDriver.style.display = 'block'; bottomNav.style.display = 'none'; renderDriverDashboard(); }
@@ -366,7 +676,12 @@
 
         bottomNav.onclick = (e) => {
             const navItem = e.target.closest('.nav-item'); if (!navItem) return;
-            bottomNav.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active')); navItem.classList.add('active');
+            bottomNav.querySelectorAll('.nav-item').forEach(el => {
+                el.classList.remove('active');
+                el.removeAttribute('aria-current');
+            });
+            navItem.classList.add('active');
+            navItem.setAttribute('aria-current', 'page');
             if (navItem.dataset.view === 'home') renderCustomerHome();
             if (navItem.dataset.view === 'active') renderActiveRide();
             if (navItem.dataset.view === 'history') renderRideHistory();
@@ -378,32 +693,80 @@
             cleanupListeners(); bottomNav.style.display = 'flex';
             bottomNav.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             bottomNav.querySelector('[data-view="home"]').classList.add('active');
+            bottomNav.querySelectorAll('.nav-item').forEach(el => el.removeAttribute('aria-current'));
+            bottomNav.querySelector('[data-view="home"]').setAttribute('aria-current', 'page');
 
             mainContent.innerHTML = `
-                <div class="mb-2"><h2 class="font-bold text-lg">Hey, ${userProfile.name.split(' ')[0]}!</h2><p class="text-muted text-sm">Ready to flash to your destination?</p></div>
+                <div class="mb-2"><h2 class="font-bold text-lg">Hey, ${escapeHTML(userProfile.name.split(' ')[0])}!</h2><p class="text-muted text-sm">Ready to flash to your destination?</p></div>
                 <div class="card">
                     <form id="form-book-ride">
-                        <div class="form-group"><label>Pickup Location</label><input type="text" id="pickup" required placeholder="Enter pickup address"></div>
-                        <div class="form-group"><label>Where to?</label><input type="text" id="destination" required placeholder="Enter destination"></div>
-                        <div class="form-group"><label>Contact Number</label><input type="tel" id="contact-phone" required value="${userProfile.phone || ''}"></div>
-                        <div class="form-group"><label>Vehicle Type</label><select id="ride-type"><option value="bike">Bike (Fastest)</option></select></div>
-                        <div class="form-group"><label>Note for Driver (Optional)</label><textarea id="instructions" rows="2" placeholder="e.g. I'm at the main gate"></textarea></div>
+                        <div class="form-group"><label for="pickup">Pickup Location</label><input type="text" id="pickup" name="pickup" maxlength="160" autocomplete="street-address" required placeholder="Enter pickup address"></div>
+                        <div class="form-group"><label for="destination">Where to?</label><input type="text" id="destination" name="destination" maxlength="160" required placeholder="Enter destination"></div>
+                        <div class="form-group"><label for="contact-phone">Contact Number</label><input type="tel" id="contact-phone" name="phone" maxlength="30" autocomplete="tel" required value="${escapeHTML(userProfile.phone)}"></div>
+                        <div class="form-group"><label for="ride-type">Vehicle Type</label><select id="ride-type" name="rideType"><option value="bike">Bike (Fastest)</option></select></div>
+                        <div class="form-group"><label for="instructions">Note for Driver (Optional)</label><textarea id="instructions" name="instructions" maxlength="300" rows="2" placeholder="e.g. I'm at the main gate"></textarea></div>
                         <button type="submit" class="btn-primary w-full mt-2" id="btn-book">Confirm Booking</button>
                     </form>
                 </div>
             `;
+            let pendingRideId = null;
             document.getElementById('form-book-ride').onsubmit = async (e) => {
                 e.preventDefault(); const btn = document.getElementById('btn-book'); setLoading(btn, true);
                 try {
-                    const docRef = await addDoc(collection(db, "rides"), {
-                        customerUid: currentUser.uid, customerName: userProfile.name, phone: document.getElementById('contact-phone').value,
-                        pickup: document.getElementById('pickup').value, destination: document.getElementById('destination').value,
-                        rideType: document.getElementById('ride-type').value, instructions: document.getElementById('instructions').value,
-                        status: 'requested', createdAt: serverTimestamp(), driverUid: null
+                    const pickup = document.getElementById('pickup').value.trim();
+                    const destination = document.getElementById('destination').value.trim();
+                    const phone = document.getElementById('contact-phone').value.trim();
+                    const instructions = document.getElementById('instructions').value.trim();
+                    if (!pickup || !destination || !phone) throw new Error('Complete the pickup, destination, and contact number fields.');
+                    if (pickup.length > 160 || destination.length > 160 || phone.length > 30 || instructions.length > 300) {
+                        throw new Error('One or more fields are longer than allowed.');
+                    }
+                    if (!pendingRideId) pendingRideId = doc(collection(db, "rides")).id;
+                    const rideRef = doc(db, "rides", pendingRideId);
+                    const requestRef = doc(db, "rideRequests", pendingRideId);
+                    const rideType = document.getElementById('ride-type').value;
+                    await runTransaction(db, async transaction => {
+                        const [existingRide, existingRequest] = await Promise.all([
+                            transaction.get(rideRef),
+                            transaction.get(requestRef)
+                        ]);
+                        if (existingRide.exists() || existingRequest.exists()) {
+                            if (existingRide.exists() && existingRequest.exists()
+                                && existingRide.data().customerUid === currentUser.uid
+                                && existingRide.data().status === 'requested'
+                                && existingRequest.data().customerUid === currentUser.uid
+                                && existingRequest.data().status === 'requested') return;
+                            throw new Error('This booking could not be confirmed. Open your active ride screen before trying again.');
+                        }
+                        const createdAt = serverTimestamp();
+                        transaction.set(rideRef, {
+                            customerUid: currentUser.uid,
+                            customerName: userProfile.name,
+                            phone,
+                            pickup,
+                            destination,
+                            rideType,
+                            instructions,
+                            status: 'requested',
+                            createdAt,
+                            driverUid: null,
+                            driverName: null,
+                            driverPhone: null
+                        });
+                        transaction.set(requestRef, {
+                            customerUid: currentUser.uid,
+                            pickup,
+                            destination,
+                            rideType,
+                            status: 'requested',
+                            createdAt,
+                            driverUid: null
+                        });
                     });
+                    pendingRideId = null;
                     showToast("Ride requested!");
                     bottomNav.querySelector('[data-view="active"]').click();
-                } catch (error) { showToast("Failed: " + error.message, true); setLoading(btn, false); }
+                } catch (error) { showToast("Failed: " + getErrorMessage(error), true); setLoading(btn, false); }
             };
         }
 
@@ -424,95 +787,147 @@
         function renderActiveRide() {
             cleanupListeners();
             mainContent.innerHTML = `<div class="text-center mt-3"><div class="loader" style="margin: 0 auto;"></div></div>`;
-            const q = query(collection(db, "rides"), where("customerUid", "==", currentUser.uid), where("status", "in", ["requested", "accepted", "arrived", "in_progress"]));
+            const q = query(collection(db, "rides"), where("customerUid", "==", currentUser.uid));
             
             const unsub = onSnapshot(q, (snapshot) => {
-                if (snapshot.empty) {
-                    mainContent.innerHTML = `<div class="text-center mt-3"><p class="text-muted">No active rides right now.</p><button class="btn-primary mt-2" onclick="document.querySelector('[data-view=\\'home\\']').click()">Book a Ride</button></div>`;
+                const rideDoc = snapshot.docs.find(item => ['requested', 'accepted', 'arrived', 'in_progress'].includes(item.data().status));
+                if (!rideDoc) {
+                    mainContent.innerHTML = `<div class="empty-state mt-3"><p>No active rides right now.</p><button type="button" class="btn-primary mt-2" id="btn-book-from-empty">Book a Ride</button></div>`;
+                    document.getElementById('btn-book-from-empty').onclick = () => bottomNav.querySelector('[data-view="home"]').click();
                     return;
                 }
-                const rideDoc = snapshot.docs[0]; activeRideId = rideDoc.id; 
+                activeRideId = rideDoc.id;
                 const ride = rideDoc.data();
                 
                 let driverInfo = '';
                 if (['accepted', 'arrived', 'in_progress'].includes(ride.status)) {
-                    driverInfo = `<div class="card mt-2" style="border-color: var(--primary); background: rgba(255,215,0,0.05);"><h3 class="font-bold mb-1 text-primary">Driver Details</h3><p>Name: ${ride.driverName}</p><p>Phone: ${ride.driverPhone}</p></div>`;
+                    const driverPhone = String(ride.driverPhone || '');
+                    const phoneLink = /^[+0-9() .-]{5,30}$/.test(driverPhone)
+                        ? `<a class="btn-outline btn-sm" href="tel:${encodeURIComponent(driverPhone)}">Call driver</a><a class="btn-outline btn-sm" href="https://wa.me/${driverPhone.replace(/\D/g, '')}?text=${encodeURIComponent(`FLASH ride: ${ride.pickup} to ${ride.destination}`)}" target="_blank" rel="noopener noreferrer">WhatsApp</a>`
+                        : '';
+                    driverInfo = `<div class="card mt-2" style="border-color: var(--primary); background: rgba(255,215,0,0.05);"><h3 class="font-bold mb-1 text-primary">Driver Details</h3><p>Name: ${escapeHTML(ride.driverName || 'Driver')}</p><p>Phone: ${escapeHTML(driverPhone || 'Not provided')}</p>${phoneLink ? `<div class="flex gap-2 mt-2">${phoneLink}</div>` : ''}</div>`;
                 }
                 const waText = encodeURIComponent(`FLASH Ride:\nFrom: ${ride.pickup}\nTo: ${ride.destination}`);
-                const mapEmbed = `<div class="map-container mt-2"><iframe src="https://maps.google.com/maps?q=${encodeURIComponent(ride.pickup)}&output=embed"></iframe></div>`;
+                const mapEmbed = `<div class="map-container mt-2"><iframe title="Map showing ride pickup" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://maps.google.com/maps?q=${encodeURIComponent(ride.pickup)}&output=embed"></iframe></div>`;
 
                 mainContent.innerHTML = `
-                    <div class="flex justify-between items-center mb-1"><h2 class="font-bold text-lg">Active Ride</h2><span class="badge badge-${ride.status}">${ride.status.replace('_', ' ')}</span></div>
+                    <div class="flex justify-between items-center mb-1"><h2 class="font-bold text-lg">Active Ride</h2><span class="badge badge-${escapeHTML(ride.status)}">${displayStatus(ride.status)}</span></div>
                     ${renderTimeline(ride.status)}
                     ${mapEmbed}
                     <div class="card">
                         <div class="flex flex-col" style="gap: 12px;">
-                            <div><p class="text-sm text-muted">Pickup</p><p class="font-bold">${ride.pickup}</p></div>
-                            <div><p class="text-sm text-muted">Destination</p><p class="font-bold">${ride.destination}</p></div>
+                            <div><p class="text-sm text-muted">Pickup</p><p class="font-bold status-message">${escapeHTML(ride.pickup)}</p></div>
+                            <div><p class="text-sm text-muted">Destination</p><p class="font-bold status-message">${escapeHTML(ride.destination)}</p></div>
                         </div>
                     </div>
+                    ${['accepted', 'arrived', 'in_progress'].includes(ride.status) ? `${renderFare(ride, 'customer')}<section class="card chat-panel" id="ride-chat" aria-label="Chat with your driver"><h3 class="font-bold mb-1">Ride chat</h3><div id="chat-messages" class="chat-messages" aria-live="polite"><p class="text-sm text-muted">Loading messages…</p></div><form id="form-chat" class="chat-compose"><input id="chat-input" type="text" maxlength="1000" autocomplete="off" aria-label="Message to driver" placeholder="Message your driver" required><button type="submit" class="btn-primary btn-sm" id="btn-send-chat">Send</button></form></section>` : ''}
                     ${driverInfo}
                     ${ride.status === 'requested' ? `
                         <div class="flex w-full" style="gap: 10px; margin-top: 16px;">
-                            <a href="https://wa.me/?text=${waText}" target="_blank" class="btn-outline w-full" style="text-decoration: none;">WhatsApp</a>
+                            <a href="https://wa.me/?text=${waText}" target="_blank" rel="noopener noreferrer" class="btn-outline w-full" style="text-decoration: none;">WhatsApp</a>
                             <button class="btn-danger w-full" id="btn-cancel-ride">Cancel</button>
                         </div>` : ''}
                 `;
+                setupRideChat(rideDoc.id);
+                const acceptFareButton = document.getElementById('btn-accept-fare');
+                if (acceptFareButton) acceptFareButton.onclick = () => respondToFare(rideDoc.id, true, acceptFareButton);
+                const declineFareButton = document.getElementById('btn-decline-fare');
+                if (declineFareButton) declineFareButton.onclick = () => respondToFare(rideDoc.id, false, declineFareButton);
                 const cBtn = document.getElementById('btn-cancel-ride');
                 if (cBtn) {
                     cBtn.onclick = () => { 
-                        showModal("Cancel Ride?", "Are you sure? This ride will be completely removed.", async () => {
+                        showModal("Cancel Ride?", "Are you sure you want to cancel this ride? It will remain in your ride history.", async () => {
                             setLoading(cBtn, true);
-                            try { await deleteDoc(doc(db, "rides", activeRideId)); showToast("Ride cancelled."); } 
-                            catch (e) { showToast(e.message, true); setLoading(cBtn, false); }
+                            try {
+                                await runTransaction(db, async transaction => {
+                                    const rideRef = doc(db, "rides", activeRideId);
+                                    const requestRef = doc(db, "rideRequests", activeRideId);
+                                    const [rideSnapshot, requestSnapshot] = await Promise.all([
+                                        transaction.get(rideRef),
+                                        transaction.get(requestRef)
+                                    ]);
+                                    if (!rideSnapshot.exists() || !requestSnapshot.exists() || rideSnapshot.data().customerUid !== currentUser.uid) {
+                                        throw new Error('This ride is no longer available to cancel.');
+                                    }
+                                    if (rideSnapshot.data().status !== 'requested' || requestSnapshot.data().status !== 'requested') {
+                                        throw new Error('A ride can only be cancelled before a driver accepts it.');
+                                    }
+                                    const cancelledAt = serverTimestamp();
+                                    transaction.update(rideRef, { status: 'cancelled', cancelledAt });
+                                    transaction.update(requestRef, { status: 'cancelled', cancelledAt });
+                                });
+                                showToast("Ride cancelled.");
+                            } catch (error) { showToast(getErrorMessage(error), true); setLoading(cBtn, false); }
                         });
                     };
                 }
-            });
+            }, error => showToast(`Unable to load your ride: ${getErrorMessage(error)}`, true));
             listeners.push(unsub);
         }
 
         function renderRideHistory() {
             cleanupListeners();
             mainContent.innerHTML = `<h2 class="font-bold text-lg mb-2">History</h2><div class="text-center mt-3"><div class="loader" style="margin: 0 auto;"></div></div>`;
-            const q = query(collection(db, "rides"), where("customerUid", "==", currentUser.uid), where("status", "in", ["completed", "cancelled"]), orderBy("createdAt", "desc"), limit(20));
+            const q = query(collection(db, "rides"), where("customerUid", "==", currentUser.uid));
             const unsub = onSnapshot(q, (snapshot) => {
-                if (snapshot.empty) { mainContent.innerHTML = `<h2 class="font-bold text-lg mb-2">History</h2><p class="text-muted text-center mt-3">No past rides.</p>`; return; }
+                const history = snapshot.docs
+                    .map(rideDoc => ({ id: rideDoc.id, ...rideDoc.data() }))
+                    .filter(ride => ['completed', 'cancelled'].includes(ride.status))
+                    .sort((a, b) => {
+                        const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : new Date(a.createdAt || 0).getTime();
+                        const timeB = b.createdAt?.toMillis ? b.createdAt.toMillis() : new Date(b.createdAt || 0).getTime();
+                        return timeB - timeA;
+                    })
+                    .slice(0, 20);
+                if (history.length === 0) { mainContent.innerHTML = `<h2 class="font-bold text-lg mb-2">History</h2><div class="empty-state mt-3">Your completed and cancelled rides will appear here.</div>`; return; }
                 let html = `<h2 class="font-bold text-lg mb-2">History</h2>`;
-                snapshot.forEach(doc => { const r = doc.data(); html += `<div class="card"><div class="flex justify-between mb-1"><span class="badge badge-${r.status}">${r.status}</span><span class="text-xs text-muted">${formatDate(r.createdAt)}</span></div><p class="text-sm font-bold mt-1">${r.destination}</p><p class="text-xs text-muted">From: ${r.pickup}</p></div>`; });
+                history.forEach(ride => {
+                    html += `<div class="card"><div class="flex justify-between mb-1"><span class="badge badge-${ride.status}">${displayStatus(ride.status)}</span><span class="text-xs text-muted">${formatDate(ride.createdAt)}</span></div><p class="text-sm font-bold mt-1 status-message">${escapeHTML(ride.destination || 'Destination unavailable')}</p><p class="text-xs text-muted status-message">From: ${escapeHTML(ride.pickup || 'Pickup unavailable')}</p></div>`;
+                });
                 mainContent.innerHTML = html;
-            });
+            }, error => showToast(`Unable to load ride history: ${getErrorMessage(error)}`, true));
             listeners.push(unsub);
         }
 
         function renderProfile() {
             cleanupListeners();
+            const displayName = String(userProfile.name || 'FLASH User');
+            const initial = escapeHTML(displayName.charAt(0).toUpperCase());
             mainContent.innerHTML = `
                 <h2 class="font-bold text-lg mb-2">Profile</h2>
-                <div class="card flex items-center gap-3">
-                    <div style="width: 60px; height: 60px; border-radius: 50%; background: var(--primary); color: #000; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold;">${userProfile.name.charAt(0).toUpperCase()}</div>
-                    <div><p class="font-bold text-lg">${userProfile.name}</p><p class="text-sm text-muted">${userProfile.email}</p><p class="text-sm text-muted">${userProfile.phone}</p></div>
+                <div class="card profile-card flex items-center gap-3">
+                    <div aria-hidden="true" style="width: 60px; height: 60px; flex: 0 0 60px; border-radius: 50%; background: var(--primary); color: #000; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold;">${initial}</div>
+                    <div class="status-message profile-info"><p class="font-bold text-lg">${escapeHTML(displayName)}</p><p class="text-sm text-muted">${escapeHTML(userProfile.email)}</p><p class="text-sm text-muted">${escapeHTML(userProfile.phone || 'Phone not provided')}</p></div>
                 </div>
-                <div class="card" style="border-color: var(--primary); background: linear-gradient(145deg, rgba(255,215,0,0.1), transparent);">
-                    <h3 class="font-bold mb-1 text-primary">Become a Driver</h3>
-                    <p class="text-sm text-muted mb-2">Zero commission. Keep 100% of your earnings.</p>
-                    <button class="btn-primary w-full" id="btn-become-driver">Switch to Driver Mode</button>
-                </div>
+                ${userProfile.role === 'driver' ? `<div class="card"><h3 class="font-bold mb-1 text-primary">Driver account</h3><p class="text-sm text-muted mb-2">This account uses the driver role selected at signup. FLASH does not verify professional licensing or identity.</p><button type="button" class="btn-primary w-full" id="btn-open-driver">Open Driver Dashboard</button></div>` : ''}
                 <button class="btn-outline w-full mt-2" id="btn-logout">Logout</button>
             `;
-            document.getElementById('btn-become-driver').onclick = () => { switchMode('driver'); };
-            document.getElementById('btn-logout').onclick = () => { showModal("Logout?", "You will need to login again.", () => { signOut(auth); }); };
+            const driverButton = document.getElementById('btn-open-driver');
+            if (driverButton) driverButton.onclick = () => switchMode('driver');
+            document.getElementById('btn-logout').onclick = () => {
+                showModal("Logout?", "You will need to sign in again.", async () => {
+                    try { await signOut(auth); }
+                    catch (error) { showToast(getErrorMessage(error), true); }
+                });
+            };
         }
 
         // --- DRIVER ---
         function renderDriverDashboard() {
             cleanupListeners();
             mainContent.innerHTML = `<div class="text-center mt-3"><div class="loader" style="margin: 0 auto;"></div></div>`;
-            const qActive = query(collection(db, "rides"), where("driverUid", "==", currentUser.uid), where("status", "in", ["accepted", "arrived", "in_progress"]));
+            const qActive = query(collection(db, "rides"), where("driverUid", "==", currentUser.uid));
             const unsubActive = onSnapshot(qActive, (snapshot) => {
-                if (!snapshot.empty) { const rideDoc = snapshot.docs[0]; renderDriverActiveRideUI(rideDoc.id, rideDoc.data()); } 
+                const activeRide = snapshot.docs.find(item => ['accepted', 'arrived', 'in_progress'].includes(item.data().status));
+                if (activeRide) {
+                    if (availableRidesUnsub) {
+                        availableRidesUnsub();
+                        availableRidesUnsub = null;
+                    }
+                    renderDriverActiveRideUI(activeRide.id, activeRide.data());
+                }
                 else { renderAvailableRides(); }
-            }, (error) => { showToast("Error: " + error.message, true); });
+            }, (error) => showToast(`Unable to load your active ride: ${getErrorMessage(error)}`, true));
             listeners.push(unsubActive);
         }
 
@@ -521,52 +936,96 @@
                 <div class="flex justify-between items-center mb-2">
                     <div><h2 class="font-bold text-primary text-lg">Available Rides</h2><p class="text-muted text-sm">Accept a ride to start earning.</p></div>
                     <div class="flex gap-2">
-                        <button class="btn-outline btn-sm" id="btn-clear-old" style="border-color: var(--danger); color: var(--danger);">Clear Old</button>
-                        <button class="btn-outline btn-sm" onclick="renderDriverDashboard()">Refresh</button>
+                        <button type="button" class="btn-outline btn-sm" id="btn-driver-history">My History</button>
+                        <button type="button" class="btn-outline btn-sm" id="btn-clear-old" style="border-color: var(--danger); color: var(--danger);">Clean My Old</button>
+                        <button type="button" class="btn-outline btn-sm" id="btn-refresh-rides">Refresh</button>
                     </div>
                 </div>
-                <div id="rides-list"><div class="loader" style="margin: 20px auto;"></div></div>
+                <div id="rides-list" aria-live="polite"><div class="loader" style="margin: 20px auto;" role="status" aria-label="Loading available rides"></div></div>
             `;
-            
-            // Auto Cleanup Old Rides
-            document.getElementById('btn-clear-old').onclick = async () => {
-                showModal("Clear Old Rides?", "This will delete all requested rides older than 30 minutes.", async () => {
+            setupRideChat(null);
+            document.getElementById('btn-refresh-rides').onclick = () => renderDriverDashboard();
+            document.getElementById('btn-driver-history').onclick = renderDriverHistory;
+            document.getElementById('btn-clear-old').onclick = () => {
+                showModal("Clean up old requests?", "Only your own ride requests older than 30 minutes will be marked cancelled. They will remain in your history.", async () => {
+                    const button = document.getElementById('btn-clear-old');
+                    setLoading(button, true);
                     try {
-                        const qOld = query(collection(db, "rides"), where("status", "==", "requested"));
-                        const snap = await getDocs(qOld);
-                        let deleted = 0;
+                        const oldRequests = await getDocs(query(collection(db, "rideRequests"), where("status", "==", "requested")));
                         const now = Date.now();
-                        snap.forEach(async (d) => {
-                            const data = d.data();
-                            if (data.createdAt) {
-                                const rideTime = data.createdAt.toDate().getTime();
-                                if (now - rideTime > 30 * 60 * 1000) { // 30 mins
-                                    await deleteDoc(doc(db, "rides", d.id));
-                                    deleted++;
-                                }
-                            }
+                        const candidates = oldRequests.docs.filter(rideDoc => {
+                            const ride = rideDoc.data();
+                            if (!ride.createdAt) return false;
+                            const createdAt = typeof ride.createdAt.toDate === 'function' ? ride.createdAt.toDate().getTime() : new Date(ride.createdAt).getTime();
+                            return Number.isFinite(createdAt) && now - createdAt > 30 * 60 * 1000;
                         });
-                        showToast(`Cleaned up ${deleted} old rides.`);
-                    } catch (e) { showToast(e.message, true); }
+                        let cancelled = 0;
+                        const failures = [];
+                        for (const candidate of candidates) {
+                            try {
+                                const wasCancelled = await runTransaction(db, async transaction => {
+                                    const rideRef = doc(db, "rides", candidate.id);
+                                    const requestRef = doc(db, "rideRequests", candidate.id);
+                                    const [latestRide, latestRequest] = await Promise.all([
+                                        transaction.get(rideRef),
+                                        transaction.get(requestRef)
+                                    ]);
+                                    if (!latestRide.exists() || !latestRequest.exists()) return false;
+                                    const ride = latestRide.data();
+                                    const request = latestRequest.data();
+                                    const createdAt = request.createdAt && (typeof request.createdAt.toDate === 'function' ? request.createdAt.toDate().getTime() : new Date(request.createdAt).getTime());
+                                    if (ride.customerUid === currentUser.uid && request.customerUid === currentUser.uid
+                                        && ride.status === 'requested' && request.status === 'requested'
+                                        && Number.isFinite(createdAt) && now - createdAt > 30 * 60 * 1000) {
+                                        const cancelledAt = serverTimestamp();
+                                        transaction.update(rideRef, { status: 'cancelled', cancelledAt });
+                                        transaction.update(requestRef, { status: 'cancelled', cancelledAt });
+                                        return true;
+                                    }
+                                    return false;
+                                });
+                                if (wasCancelled) cancelled++;
+                            } catch (error) {
+                                failures.push(getErrorMessage(error));
+                            }
+                        }
+                        if (failures.length) {
+                            showToast(`Cancelled ${cancelled} old request(s); ${failures.length} could not be updated. ${failures[0]}`, true);
+                        } else {
+                            showToast(candidates.length ? `Cancelled ${cancelled} old request(s).` : 'No expired requests of yours to clean up.');
+                        }
+                    } catch (error) {
+                        showToast(`Could not clean up old requests: ${getErrorMessage(error)}`, true);
+                    } finally {
+                        setLoading(button, false);
+                    }
                 });
             };
 
-            const q = query(collection(db, "rides"), where("status", "==", "requested"), orderBy("createdAt", "desc"));
-            
-            const unsub = onSnapshot(q, (snapshot) => {
+            const q = query(collection(db, "rideRequests"), where("status", "==", "requested"));
+            if (availableRidesUnsub) availableRidesUnsub();
+            availableRidesUnsub = onSnapshot(q, (snapshot) => {
                 const listEl = document.getElementById('rides-list'); if (!listEl) return;
-                if (snapshot.empty) { listEl.innerHTML = `<div class="text-center mt-3 text-muted"><p>No rides available right now.</p></div>`; return; }
+                if (snapshot.empty) { listEl.innerHTML = `<div class="empty-state mt-3">No rides available right now. New requests will appear here.</div>`; return; }
                 
                 let html = ''; let count = 0;
                 const now = Date.now();
 
-                snapshot.forEach(doc => {
+                snapshot.docs
+                    .slice()
+                    .sort((a, b) => {
+                        const timeA = a.data().createdAt?.toMillis ? a.data().createdAt.toMillis() : new Date(a.data().createdAt || 0).getTime();
+                        const timeB = b.data().createdAt?.toMillis ? b.data().createdAt.toMillis() : new Date(b.data().createdAt || 0).getTime();
+                        return timeB - timeA;
+                    })
+                    .forEach(doc => {
                     const ride = doc.data();
                     if(ride.customerUid === currentUser.uid) return; 
                     
                     // TIME FILTER: Skip rides older than 30 minutes
                     if (ride.createdAt) {
-                        const rideTime = ride.createdAt.toDate().getTime();
+                        const rideTime = typeof ride.createdAt.toDate === 'function' ? ride.createdAt.toDate().getTime() : new Date(ride.createdAt).getTime();
+                        if (Number.isNaN(rideTime)) return;
                         if (now - rideTime > 30 * 60 * 1000) return; // Hide old rides
                     }
 
@@ -575,32 +1034,31 @@
                     <div class="card">
                         <div class="flex justify-between items-center mb-1">
                             <span class="text-xs text-muted">${formatDate(ride.createdAt)}</span>
-                            <span class="badge badge-requested">${ride.rideType}</span>
+                            <span class="badge badge-requested">${escapeHTML(ride.rideType || 'Ride')}</span>
                         </div>
-                        <p class="text-sm"><span class="text-muted">From:</span> <span class="font-bold">${ride.pickup}</span></p>
-                        <p class="text-sm mb-2"><span class="text-muted">To:</span> <span class="font-bold">${ride.destination}</span></p>
-                        <button class="btn-primary w-full accept-btn" data-id="${doc.id}">Accept Ride</button>
+                        <p class="text-sm status-message"><span class="text-muted">From:</span> <span class="font-bold">${escapeHTML(ride.pickup)}</span></p>
+                        <p class="text-sm mb-2 status-message"><span class="text-muted">To:</span> <span class="font-bold">${escapeHTML(ride.destination)}</span></p>
+                        <button type="button" class="btn-primary w-full accept-btn" data-id="${escapeHTML(doc.id)}">Accept Ride</button>
                     </div>`;
-                });
+                    });
                 
-                listEl.innerHTML = count === 0 ? `<div class="text-center mt-3 text-muted"><p>No rides available.</p></div>` : html;
+                listEl.innerHTML = count === 0 ? `<div class="empty-state mt-3">There are no new rides available right now.</div>` : html;
                 
                 listEl.querySelectorAll('.accept-btn').forEach(btn => {
                     btn.onclick = async (e) => {
-                        const rideId = e.target.dataset.id; setLoading(e.target, true);
+                        const acceptButton = e.currentTarget;
+                        const rideId = acceptButton.dataset.id;
+                        setLoading(acceptButton, true);
                         try {
-                            await runTransaction(db, async (transaction) => {
-                                const rideRef = doc(db, "rides", rideId); const rideDoc = await transaction.get(rideRef);
-                                if (!rideDoc.exists()) throw new Error("Ride no longer exists.");
-                                if (rideDoc.data().status !== 'requested') throw new Error("Ride already accepted.");
-                                transaction.update(rideRef, { status: 'accepted', driverUid: currentUser.uid, driverName: userProfile.name, driverPhone: userProfile.phone, acceptedAt: serverTimestamp() });
-                            });
+                            await acceptRideCallable({ rideId });
                             showToast("Ride accepted!");
-                        } catch (error) { showToast(error.message, true); setLoading(e.target, false); }
+                        } catch (error) {
+                            showToast(getErrorMessage(error), true);
+                            setLoading(acceptButton, false);
+                        }
                     };
                 });
-            });
-            listeners.push(unsub);
+            }, error => showToast(`Unable to load available rides: ${getErrorMessage(error)}`, true));
         }
 
         function renderDriverActiveRideUI(rideId, ride) {
@@ -612,59 +1070,197 @@
                 actionSection = `<button class="btn-primary w-full mt-2" id="btn-arrived">I've Arrived at Pickup</button>`;
                 cancelBtnSection = `<button class="btn-danger w-full mt-2" id="btn-release-ride">Cancel & Release Ride</button>`;
             } else if (ride.status === 'arrived') {
-                actionSection = `<button class="btn-primary w-full mt-2" id="btn-start-ride">Start Ride</button>`;
+                actionSection = ride.fareStatus === 'accepted'
+                    ? `<button class="btn-primary w-full mt-2" id="btn-start-ride">Start Ride</button>`
+                    : `<p class="empty-state mt-2">Wait for the customer to agree to your fare before starting.</p>`;
                 cancelBtnSection = `<button class="btn-danger w-full mt-2" id="btn-release-ride">Cancel & Release Ride</button>`;
             } else if (ride.status === 'in_progress') {
                 actionSection = `<button class="btn-primary w-full mt-2" id="btn-complete-ride">Complete Ride</button>`;
             }
 
             mainContent.innerHTML = `
-                <div class="flex justify-between items-center mb-1"><h2 class="font-bold text-primary text-lg">Active Ride</h2><span class="badge badge-${ride.status}">${ride.status.replace('_', ' ')}</span></div>
+                <div class="flex justify-between items-center mb-1"><h2 class="font-bold text-primary text-lg">Active Ride</h2><span class="badge badge-${escapeHTML(ride.status)}">${displayStatus(ride.status)}</span></div>
                 ${renderTimeline(ride.status)}
                 <div class="card" style="border-color: var(--primary);">
                     <div class="flex justify-between items-center mb-3">
-                        <div><p class="text-xs text-muted">CUSTOMER</p><p class="font-bold">${ride.customerName}</p><p class="text-sm">${ride.phone}</p></div>
-                        <button class="btn-outline btn-sm" id="btn-copy-details">Copy Info</button>
+                        <div class="status-message"><p class="text-xs text-muted">CUSTOMER</p><p class="font-bold">${escapeHTML(ride.customerName || 'Customer')}</p><p class="text-sm">${escapeHTML(ride.phone || 'Phone not provided')}</p>${/^[+0-9() .-]{5,30}$/.test(String(ride.phone || '')) ? `<a class="btn-outline btn-sm mt-1" href="tel:${encodeURIComponent(ride.phone)}">Call customer</a>` : ''}</div>
+                        <button type="button" class="btn-outline btn-sm" id="btn-copy-details">Copy Info</button>
                     </div>
-                    <div class="map-container"><iframe src="https://maps.google.com/maps?q=${encodeURIComponent(ride.pickup)}&output=embed"></iframe></div>
+                    <div class="map-container"><iframe title="Map showing ride pickup" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://maps.google.com/maps?q=${encodeURIComponent(ride.pickup)}&output=embed"></iframe></div>
                     <div class="flex justify-between items-center mb-2">
-                        <div><p class="text-xs text-muted">PICKUP</p><p class="font-bold text-sm">${ride.pickup}</p></div>
-                        <a href="${pickupMapUrl}" target="_blank" class="btn-primary btn-sm" style="text-decoration:none;">Open Map</a>
+                        <div class="status-message"><p class="text-xs text-muted">PICKUP</p><p class="font-bold text-sm">${escapeHTML(ride.pickup)}</p></div>
+                        <a href="${pickupMapUrl}" target="_blank" rel="noopener noreferrer" class="btn-primary btn-sm" style="text-decoration:none;">Open Map</a>
                     </div>
                     <div class="flex justify-between items-center">
-                        <div><p class="text-xs text-muted">DROP</p><p class="font-bold text-sm">${ride.destination}</p></div>
-                        <a href="${dropMapUrl}" target="_blank" class="btn-primary btn-sm" style="text-decoration:none;">Open Map</a>
+                        <div class="status-message"><p class="text-xs text-muted">DROP</p><p class="font-bold text-sm">${escapeHTML(ride.destination)}</p></div>
+                        <a href="${dropMapUrl}" target="_blank" rel="noopener noreferrer" class="btn-primary btn-sm" style="text-decoration:none;">Open Map</a>
                     </div>
                 </div>
+                ${renderFare(ride, 'driver')}
+                ${['accepted', 'arrived'].includes(ride.status) && ride.fareStatus !== 'accepted' ? `<form id="form-fare-quote" class="card"><label for="fare-quote">Your price (INR)</label><input id="fare-quote" name="fareQuote" type="number" min="1" max="1000000" step="1" inputmode="numeric" value="${Number.isSafeInteger(ride.fareQuote) && ride.fareQuote > 0 ? ride.fareQuote : ''}" required><p class="text-sm text-muted mt-1">Enter the total price you and the customer can agree on. No distance-based estimate is calculated.</p><button type="submit" class="btn-primary w-full mt-2" id="btn-send-fare">Send price to customer</button></form>` : ''}
+                ${['accepted', 'arrived', 'in_progress'].includes(ride.status) ? `<section class="card chat-panel" id="ride-chat" aria-label="Chat with customer"><h3 class="font-bold mb-1">Ride chat</h3><div id="chat-messages" class="chat-messages" aria-live="polite"><p class="text-sm text-muted">Loading messages…</p></div><form id="form-chat" class="chat-compose"><input id="chat-input" type="text" maxlength="1000" autocomplete="off" aria-label="Message to customer" placeholder="Message your customer" required><button type="submit" class="btn-primary btn-sm" id="btn-send-chat">Send</button></form></section>` : ''}
                 ${actionSection} ${cancelBtnSection}
             `;
+            if (['accepted', 'arrived', 'in_progress'].includes(ride.status)) setupRideChat(rideId);
 
-            document.getElementById('btn-copy-details').onclick = () => {
+            const fareForm = document.getElementById('form-fare-quote');
+            if (fareForm) fareForm.onsubmit = async event => {
+                event.preventDefault();
+                const button = document.getElementById('btn-send-fare');
+                const amount = Number(document.getElementById('fare-quote').value);
+                if (!Number.isSafeInteger(amount) || amount < 1 || amount > 1000000) {
+                    showToast('Enter a whole-number fare from ₹1 to ₹10,00,000.', true);
+                    return;
+                }
+                setLoading(button, true);
+                try {
+                    await runTransaction(db, async transaction => {
+                        const rideRef = doc(db, "rides", rideId);
+                        const rideSnapshot = await transaction.get(rideRef);
+                        if (!rideSnapshot.exists() || rideSnapshot.data().driverUid !== currentUser.uid) {
+                            throw new Error('This ride is no longer assigned to you.');
+                        }
+                        const latestRide = rideSnapshot.data();
+                        if (!['accepted', 'arrived'].includes(latestRide.status) || latestRide.fareStatus === 'accepted') {
+                            throw new Error('A fare can only be offered before the ride starts and before the customer agrees.');
+                        }
+                        transaction.update(rideRef, {
+                            fareQuote: amount,
+                            fareStatus: 'offered',
+                            fareOfferedAt: serverTimestamp()
+                        });
+                    });
+                    showToast('Price sent to the customer.');
+                } catch (error) {
+                    showToast(getErrorMessage(error), true);
+                    setLoading(button, false);
+                }
+            };
+
+            document.getElementById('btn-copy-details').onclick = async () => {
                 const text = `FLASH Ride:\nCustomer: ${ride.customerName}\nPhone: ${ride.phone}\nPickup: ${ride.pickup}\nDrop: ${ride.destination}`;
-                navigator.clipboard.writeText(text).then(() => { showToast("Details copied!"); });
+                try {
+                    if (!navigator.clipboard?.writeText) throw new Error('Clipboard access is unavailable in this browser.');
+                    await navigator.clipboard.writeText(text);
+                    showToast("Details copied!");
+                } catch (error) { showToast(getErrorMessage(error), true); }
             };
 
             const btnArrived = document.getElementById('btn-arrived');
-            if (btnArrived) btnArrived.onclick = async () => { setLoading(btnArrived, true); try { await updateDoc(doc(db, "rides", rideId), { status: 'arrived', arrivedAt: serverTimestamp() }); showToast("Arrived!"); } catch (e) { showToast(e.message, true); setLoading(btnArrived, false); } };
+            if (btnArrived) btnArrived.onclick = () => transitionDriverRide(rideId, 'accepted', 'arrived', { arrivedAt: serverTimestamp() }, btnArrived, 'Arrived!');
 
             const btnStart = document.getElementById('btn-start-ride');
-            if (btnStart) {
-                btnStart.onclick = async () => { setLoading(btnStart, true); try { await updateDoc(doc(db, "rides", rideId), { status: 'in_progress', startedAt: serverTimestamp() }); showToast("Ride Started!"); } catch (e) { showToast(e.message, true); setLoading(btnStart, false); } };
-            }
+            if (btnStart) btnStart.onclick = () => transitionDriverRide(rideId, 'arrived', 'in_progress', { startedAt: serverTimestamp() }, btnStart, 'Ride started!');
 
             const btnComplete = document.getElementById('btn-complete-ride');
-            if (btnComplete) btnComplete.onclick = async () => { setLoading(btnComplete, true); try { await updateDoc(doc(db, "rides", rideId), { status: 'completed', completedAt: serverTimestamp() }); showToast("Ride Completed!"); } catch (e) { showToast(e.message, true); setLoading(btnComplete, false); } };
+            if (btnComplete) btnComplete.onclick = () => transitionDriverRide(rideId, 'in_progress', 'completed', { completedAt: serverTimestamp() }, btnComplete, 'Ride completed!');
 
             const btnRelease = document.getElementById('btn-release-ride');
             if (btnRelease) {
                 btnRelease.onclick = () => {
                     showModal("Release Ride?", "This ride will go back to the pool for other drivers.", async () => {
                         setLoading(btnRelease, true);
-                        try { await updateDoc(doc(db, "rides", rideId), { status: 'requested', driverUid: null, driverName: null, driverPhone: null, acceptedAt: null, arrivedAt: null }); showToast("Ride released."); } 
-                        catch (e) { showToast(e.message, true); setLoading(btnRelease, false); }
+                        try {
+                            await runTransaction(db, async transaction => {
+                                const rideRef = doc(db, "rides", rideId);
+                                const requestRef = doc(db, "rideRequests", rideId);
+                                const [rideSnapshot, requestSnapshot] = await Promise.all([
+                                    transaction.get(rideRef),
+                                    transaction.get(requestRef)
+                                ]);
+                                if (!rideSnapshot.exists() || !requestSnapshot.exists() || rideSnapshot.data().driverUid !== currentUser.uid || requestSnapshot.data().driverUid !== currentUser.uid) {
+                                    throw new Error('This ride is no longer assigned to you.');
+                                }
+                                if (!['accepted', 'arrived'].includes(rideSnapshot.data().status) || requestSnapshot.data().status !== rideSnapshot.data().status) {
+                                    throw new Error('This ride can no longer be released.');
+                                }
+                                const releasedAt = serverTimestamp();
+                                transaction.update(rideRef, {
+                                    status: 'requested',
+                                    driverUid: null,
+                                    driverName: null,
+                                    driverPhone: null,
+                                    acceptedAt: null,
+                                    arrivedAt: null,
+                                    releasedAt
+                                });
+                                transaction.update(requestRef, {
+                                    status: 'requested',
+                                    driverUid: null,
+                                    acceptedAt: null,
+                                    releasedAt
+                                });
+                            });
+                            showToast("Ride released.");
+                        } catch (error) { showToast(getErrorMessage(error), true); setLoading(btnRelease, false); }
                     });
                 };
             }
+        }
+
+        async function transitionDriverRide(rideId, expectedStatus, nextStatus, fields, button, successMessage) {
+            setLoading(button, true);
+            try {
+                await runTransaction(db, async transaction => {
+                    const rideRef = doc(db, "rides", rideId);
+                    const requestRef = doc(db, "rideRequests", rideId);
+                    const [rideSnapshot, requestSnapshot] = await Promise.all([
+                        transaction.get(rideRef),
+                        transaction.get(requestRef)
+                    ]);
+                    if (!rideSnapshot.exists() || !requestSnapshot.exists()
+                        || rideSnapshot.data().driverUid !== currentUser.uid
+                        || requestSnapshot.data().driverUid !== currentUser.uid) {
+                        throw new Error('This ride is no longer assigned to you.');
+                    }
+                    if (rideSnapshot.data().status !== expectedStatus || requestSnapshot.data().status !== expectedStatus) {
+                        throw new Error('The ride status has changed. Please review the latest ride details.');
+                    }
+                    if (expectedStatus === 'arrived' && nextStatus === 'in_progress' && rideSnapshot.data().fareStatus !== 'accepted') {
+                        throw new Error('The customer must agree to the fare before the ride can start.');
+                    }
+                    transaction.update(rideRef, { ...fields, status: nextStatus });
+                    transaction.update(requestRef, { ...fields, status: nextStatus });
+                });
+                showToast(successMessage);
+            } catch (error) {
+                showToast(getErrorMessage(error), true);
+                setLoading(button, false);
+            }
+        }
+
+        function renderDriverHistory() {
+            cleanupListeners();
+            mainContent.innerHTML = `
+                <div class="flex justify-between items-center mb-2">
+                    <h2 class="font-bold text-primary text-lg">My Ride History</h2>
+                    <button type="button" class="btn-outline btn-sm" id="btn-back-to-rides">Available rides</button>
+                </div>
+                <div class="text-center mt-3"><div class="loader" style="margin: 0 auto;" role="status" aria-label="Loading ride history"></div></div>
+            `;
+            document.getElementById('btn-back-to-rides').onclick = renderDriverDashboard;
+            const historyQuery = query(collection(db, "rides"), where("driverUid", "==", currentUser.uid));
+            const unsubscribe = onSnapshot(historyQuery, snapshot => {
+                const completed = snapshot.docs
+                    .map(rideDoc => rideDoc.data())
+                    .filter(ride => ['completed', 'cancelled'].includes(ride.status))
+                    .sort((a, b) => {
+                        const dateA = a.completedAt || a.cancelledAt || a.createdAt;
+                        const dateB = b.completedAt || b.cancelledAt || b.createdAt;
+                        const timeA = dateA?.toMillis ? dateA.toMillis() : new Date(dateA || 0).getTime();
+                        const timeB = dateB?.toMillis ? dateB.toMillis() : new Date(dateB || 0).getTime();
+                        return timeB - timeA;
+                    });
+                const header = `<div class="flex justify-between items-center mb-2"><h2 class="font-bold text-primary text-lg">My Ride History</h2><button type="button" class="btn-outline btn-sm" id="btn-back-to-rides">Available rides</button></div>`;
+                if (!completed.length) {
+                    mainContent.innerHTML = `${header}<div class="empty-state">Completed rides will appear here.</div>`;
+                } else {
+                    const cards = completed.map(ride => `<div class="card"><div class="flex justify-between mb-1"><span class="badge badge-${ride.status}">${displayStatus(ride.status)}</span><span class="text-xs text-muted">${formatDate(ride.completedAt || ride.cancelledAt || ride.createdAt)}</span></div><p class="text-sm status-message"><span class="text-muted">From:</span> ${escapeHTML(ride.pickup || 'Pickup unavailable')}</p><p class="text-sm status-message"><span class="text-muted">To:</span> ${escapeHTML(ride.destination || 'Destination unavailable')}</p></div>`).join('');
+                    mainContent.innerHTML = `${header}${cards}`;
+                }
+                document.getElementById('btn-back-to-rides').onclick = renderDriverDashboard;
+            }, error => showToast(`Unable to load ride history: ${getErrorMessage(error)}`, true));
+            listeners.push(unsubscribe);
         }
     </script>
 </body>

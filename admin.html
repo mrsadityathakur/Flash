@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light">
+    <title>FLASH Admin</title>
+    <style>
+        :root { color-scheme: light; font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #111; background: #f4f5f6; }
+        * { box-sizing: border-box; }
+        body { margin: 0; min-height: 100vh; }
+        button, input, select { font: inherit; }
+        button { border: 0; border-radius: 12px; padding: 12px 16px; font-weight: 700; cursor: pointer; }
+        button:disabled { opacity: .55; cursor: wait; }
+        input, select { width: 100%; border: 1px solid #d6d9dc; border-radius: 10px; padding: 12px; background: #fff; }
+        label { display: block; margin: 14px 0 7px; font-size: .85rem; font-weight: 700; }
+        header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px max(20px, calc((100% - 1100px) / 2)); background: #fff; border-bottom: 1px solid #e4e6e8; }
+        header h1 { margin: 0; font-size: 1.15rem; }
+        main { width: min(100% - 32px, 1100px); margin: 28px auto; }
+        .hidden { display: none !important; }
+        .card { padding: 20px; margin-bottom: 18px; background: white; border: 1px solid #e5e7e9; border-radius: 16px; box-shadow: 0 8px 24px #1111110b; }
+        .login-card { max-width: 440px; margin: 8vh auto; }
+        .muted { color: #626970; line-height: 1.5; }
+        .primary { color: #fff; background: #111; }
+        .secondary { color: #111; background: #eff0f1; }
+        .danger { color: #a22121; background: #fff0f0; }
+        .stack { display: grid; gap: 12px; }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+        .stat { padding: 16px; background: #f6f7f8; border-radius: 12px; }
+        .stat strong { display: block; font-size: 1.5rem; }
+        .toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+        .toolbar h2, .card h2 { margin: 0 0 10px; font-size: 1.05rem; }
+        .table-wrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: .9rem; }
+        th, td { padding: 12px 10px; border-bottom: 1px solid #eceef0; vertical-align: top; }
+        th { color: #626970; font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; }
+        td { overflow-wrap: anywhere; }
+        td button { padding: 8px 10px; white-space: nowrap; }
+        .status { display: inline-block; padding: 5px 9px; border-radius: 999px; background: #f0f1f2; text-transform: capitalize; }
+        .notice { padding: 11px 13px; border-radius: 10px; background: #f1f2f3; }
+        .notice.error { color: #a22121; background: #fff0f0; }
+        .notice.success { color: #176b3a; background: #eaf8ef; }
+        .driver-form { display: grid; grid-template-columns: minmax(220px, 1fr) auto; gap: 12px; align-items: end; }
+        @media (max-width: 560px) { header { padding: 14px 16px; } .card { padding: 16px; } .driver-form { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>FLASH / Admin</h1>
+        <button id="logout" class="secondary hidden" type="button">Sign out</button>
+    </header>
+    <main>
+        <div id="notice" class="notice hidden" role="status"></div>
+        <section id="login" class="card login-card">
+            <h2>Admin sign in</h2>
+            <p class="muted">Use the configured admin email and its Supabase account password. Admin access is verified by the backend; no admin password or service key is stored in this page.</p>
+            <form id="login-form" class="stack">
+                <div><label for="email">Admin email</label><input id="email" type="email" autocomplete="username" required></div>
+                <div><label for="password">Password</label><input id="password" type="password" autocomplete="current-password" required></div>
+                <button class="primary" id="login-button" type="submit">Sign in</button>
+            </form>
+            <p class="muted">If this email has not registered yet, create its account in the main app, verify the email, then return here.</p>
+            <a href="./index.html">Back to FLASH</a>
+        </section>
+        <section id="dashboard" class="hidden">
+            <section class="card">
+                <div class="toolbar"><h2>App overview</h2><button id="refresh" class="secondary" type="button">Refresh</button></div>
+                <div id="stats" class="stats"></div>
+            </section>
+            <section class="card">
+                <h2>Driver eligibility</h2>
+                <p id="current-driver" class="muted"></p>
+                <form id="driver-form" class="driver-form">
+                    <div><label for="driver-select">Choose a verified account</label><select id="driver-select" required></select></div>
+                    <button class="primary" id="authorize-button" type="submit">Authorize as driver</button>
+                </form>
+                <button id="revoke-driver" class="danger hidden" type="button" style="margin-top:12px">Revoke driver access</button>
+                <p class="muted">Only one driver account can be authorized. Accounts with an active ride cannot be switched or revoked.</p>
+            </section>
+            <section class="card">
+                <h2>Request or dispatch a ride</h2>
+                <form id="dispatch-form" class="stack">
+                    <div class="driver-form">
+                        <div><label for="ride-customer">Customer</label><select id="ride-customer" required></select></div>
+                        <div><label for="ride-driver">Assign driver (optional)</label><select id="ride-driver"><option value="">Leave available for driver</option></select></div>
+                    </div>
+                    <div class="driver-form">
+                        <div><label for="ride-pickup">Pickup</label><input id="ride-pickup" maxlength="160" required></div>
+                        <div><label for="ride-destination">Destination</label><input id="ride-destination" maxlength="160" required></div>
+                    </div>
+                    <div class="driver-form">
+                        <div><label for="ride-phone">Contact phone (optional)</label><input id="ride-phone" type="tel" maxlength="30"></div>
+                        <div><label for="ride-instructions">Instructions (optional)</label><input id="ride-instructions" maxlength="300"></div>
+                    </div>
+                    <button class="primary" id="dispatch-button" type="submit">Create ride request</button>
+                    <p class="muted">Assigning the authorized driver accepts the ride immediately; otherwise all driver panels receive an available request live.</p>
+                </form>
+            </section>
+            <section class="card">
+                <h2>Accounts</h2>
+                <div class="table-wrap"><table><thead><tr><th>Name / email</th><th>Phone</th><th>App role</th><th>Created</th></tr></thead><tbody id="users"></tbody></table></div>
+            </section>
+            <section class="card">
+                <h2>Ride chat</h2>
+                <label for="chat-ride">Choose a ride conversation</label>
+                <select id="chat-ride"></select>
+                <div id="admin-chat-messages" class="chat-messages" aria-live="polite" style="display:grid;gap:8px;max-height:320px;overflow:auto;padding:14px;background:#f6f7f8;border-radius:12px;margin-top:12px"></div>
+                <form id="admin-chat-form" class="driver-form" style="margin-top:12px">
+                    <div><label for="admin-chat-text">Message</label><input id="admin-chat-text" maxlength="1000" required placeholder="Message the customer and driver"></div>
+                    <button class="primary" id="admin-chat-send" type="submit">Send message</button>
+                </form>
+                <p class="muted">Admin messages appear in the same customer-driver ride conversation.</p>
+            </section>
+            <section class="card">
+                <h2>Rides</h2>
+                <div class="table-wrap"><table><thead><tr><th>Ride</th><th>Customer</th><th>Route</th><th>Status</th><th>Created</th><th></th></tr></thead><tbody id="rides"></tbody></table></div>
+            </section>
+        </section>
+    </main>
+    <script type="module">
+        import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+
+        const supabase = createClient(
+            "https://hzxdasxebvcunbtecbio.supabase.co",
+            "sb_publishable_J-cORO6pStpYcJWBuOPjvQ_zR1nU5PK"
+        );
+        const loginPanel = document.getElementById("login");
+        const dashboard = document.getElementById("dashboard");
+        const notice = document.getElementById("notice");
+        const logoutButton = document.getElementById("logout");
+        let profiles = [];
+        let authorizedDriverId = null;
+        let rides = [];
+        let messages = [];
+        let realtimeChannel = null;
+        let refreshTimer = null;
+        let isRefreshing = false;
+
+        const escapeHTML = value => String(value ?? "").replace(/[&<>"']/g, char => ({
+            "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+        })[char]);
+        const formatDate = value => value ? new Date(value).toLocaleString() : "—";
+        const activeStatuses = new Set(["requested", "accepted", "arrived", "in_progress"]);
+
+        function showNotice(message, isError = false) {
+            notice.textContent = message;
+            notice.className = `notice ${isError ? "error" : "success"}`;
+            notice.classList.remove("hidden");
+        }
+
+        async function adminRequest(action, values = {}) {
+            const { data, error } = await supabase.functions.invoke("flash-admin", {
+                body: { action, ...values },
+            });
+            if (error) {
+                let responseError;
+                try {
+                    responseError = (await error.context?.json())?.error;
+                } catch {
+                    responseError = null;
+                }
+                throw new Error(data?.error || responseError || error.message || "Admin request failed.");
+            }
+            if (data?.error) throw new Error(data.error);
+            return data;
+        }
+
+        function render() {
+            const activeRides = rides.filter(ride => activeStatuses.has(ride.status)).length;
+            document.getElementById("stats").innerHTML = `
+                <div class="stat"><strong>${profiles.length}</strong><span>Accounts</span></div>
+                <div class="stat"><strong>${rides.length}</strong><span>Recent rides</span></div>
+                <div class="stat"><strong>${activeRides}</strong><span>Active rides</span></div>
+            `;
+            const driver = profiles.find(profile => profile.id === authorizedDriverId);
+            document.getElementById("current-driver").textContent = driver
+                ? `Authorized driver: ${driver.name} (${driver.email})`
+                : "No driver account is currently authorized.";
+            const driverSelect = document.getElementById("driver-select");
+            const eligibleProfiles = profiles.filter(profile =>
+                profile.role === "customer" || profile.id === authorizedDriverId
+            );
+            driverSelect.innerHTML = `<option value="">Choose an account…</option>` + eligibleProfiles.map(profile =>
+                `<option value="${escapeHTML(profile.id)}">${escapeHTML(profile.name)} — ${escapeHTML(profile.email)}${profile.id === authorizedDriverId ? " (current driver)" : ""}</option>`
+            ).join("");
+            if (authorizedDriverId) driverSelect.value = authorizedDriverId;
+            document.getElementById("revoke-driver").classList.toggle("hidden", !authorizedDriverId);
+            document.getElementById("ride-customer").innerHTML =
+                `<option value="">Choose a customer…</option>` + profiles
+                    .filter(profile => profile.role === "customer")
+                    .map(profile => `<option value="${escapeHTML(profile.id)}">${escapeHTML(profile.name)} — ${escapeHTML(profile.email)}</option>`)
+                    .join("");
+            document.getElementById("ride-driver").innerHTML =
+                `<option value="">Leave available for driver</option>` + profiles
+                    .filter(profile => profile.id === authorizedDriverId)
+                    .map(profile => `<option value="${escapeHTML(profile.id)}">${escapeHTML(profile.name)} — ${escapeHTML(profile.email)}</option>`)
+                    .join("");
+
+            document.getElementById("users").innerHTML = profiles.map(profile => `
+                <tr>
+                    <td>${escapeHTML(profile.name)}<br><span class="muted">${escapeHTML(profile.email)}</span></td>
+                    <td>${escapeHTML(profile.phone || "—")}</td>
+                    <td><span class="status">${escapeHTML(profile.role)}</span>${profile.id === authorizedDriverId ? " · authorized" : ""}</td>
+                    <td>${escapeHTML(formatDate(profile.created_at))}</td>
+                </tr>
+            `).join("") || `<tr><td colspan="4">No accounts found.</td></tr>`;
+
+            document.getElementById("rides").innerHTML = rides.map(ride => `
+                <tr>
+                    <td>${escapeHTML(ride.id)}</td>
+                    <td>${escapeHTML(ride.customer_name)}<br><span class="muted">${escapeHTML(ride.phone || "No phone")}</span></td>
+                    <td>${escapeHTML(ride.pickup)}<br><span class="muted">to ${escapeHTML(ride.destination)}</span></td>
+                    <td><span class="status">${escapeHTML(ride.status.replaceAll("_", " "))}</span></td>
+                    <td>${escapeHTML(formatDate(ride.created_at))}</td>
+                    <td>${activeStatuses.has(ride.status) ? `<button type="button" class="danger cancel-ride" data-ride-id="${escapeHTML(ride.id)}">Cancel ride</button>` : ""}</td>
+                </tr>
+            `).join("") || `<tr><td colspan="6">No rides found.</td></tr>`;
+
+            const chatRideSelect = document.getElementById("chat-ride");
+            const previousRideId = chatRideSelect.value;
+            const chatRides = rides.filter(ride =>
+                ["accepted", "arrived", "in_progress"].includes(ride.status)
+            );
+            chatRideSelect.innerHTML = `<option value="">Choose a ride…</option>` + chatRides.map(ride =>
+                `<option value="${escapeHTML(ride.id)}">${escapeHTML(ride.customer_name)} · ${escapeHTML(ride.pickup)} → ${escapeHTML(ride.destination)} (${escapeHTML(ride.status.replaceAll("_", " "))})</option>`
+            ).join("");
+            if (chatRides.some(ride => ride.id === previousRideId)) chatRideSelect.value = previousRideId;
+            renderChat();
+        }
+
+        async function loadOverview() {
+            if (isRefreshing) return;
+            isRefreshing = true;
+            try {
+            const result = await adminRequest("overview");
+            profiles = result.profiles || [];
+            rides = result.rides || [];
+            authorizedDriverId = result.authorizedDriverId || null;
+            render();
+            await loadChat(document.getElementById("chat-ride").value)
+                .catch(error => showNotice(error.message, true));
+            } finally {
+                isRefreshing = false;
+            }
+        }
+
+        async function loadChat(rideId) {
+            if (!rideId) {
+                messages = [];
+                renderChat();
+                return;
+            }
+            const result = await adminRequest("ride-chat", { rideId });
+            if (document.getElementById("chat-ride").value !== rideId) return;
+            messages = result.messages || [];
+            renderChat();
+        }
+
+        function renderChat() {
+            const rideId = document.getElementById("chat-ride").value;
+            const chatMessages = document.getElementById("admin-chat-messages");
+            const sendButton = document.getElementById("admin-chat-send");
+            const items = messages.filter(message => message.ride_id === rideId);
+            chatMessages.innerHTML = !rideId
+                ? `<p class="muted">Select a ride to open its chat.</p>`
+                : items.length
+                    ? items.map(message => `
+                        <div style="padding:10px 12px;background:#fff;border-radius:10px;overflow-wrap:anywhere">
+                            <strong>${escapeHTML(message.sender_name)}</strong>
+                            <span class="muted" style="font-size:.75rem">${escapeHTML(formatDate(message.created_at))}</span>
+                            <p style="margin:6px 0 0;white-space:pre-wrap">${escapeHTML(message.text)}</p>
+                        </div>
+                    `).join("")
+                    : `<p class="muted">No messages yet. Start the conversation.</p>`;
+            sendButton.disabled = !rideId;
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function stopRealtime() {
+            if (realtimeChannel) void supabase.removeChannel(realtimeChannel);
+            realtimeChannel = null;
+            if (refreshTimer) clearTimeout(refreshTimer);
+            refreshTimer = null;
+        }
+
+        function startRealtime() {
+            stopRealtime();
+            realtimeChannel = supabase.channel(`flash-admin-live-${crypto.randomUUID()}`)
+                .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, scheduleRefresh)
+                .on("postgres_changes", { event: "*", schema: "public", table: "rides" }, scheduleRefresh)
+                .on("postgres_changes", { event: "*", schema: "public", table: "ride_messages" }, scheduleRefresh)
+                .subscribe(status => {
+                    if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+                        showNotice("Live updates disconnected. Trying again; use Refresh if needed.", true);
+                    }
+                });
+        }
+
+        function scheduleRefresh() {
+            if (refreshTimer) clearTimeout(refreshTimer);
+            refreshTimer = setTimeout(() => {
+                refreshTimer = null;
+                loadOverview().catch(error => showNotice(error.message, true));
+            }, 250);
+        }
+
+        async function enterDashboard() {
+            loginPanel.classList.add("hidden");
+            dashboard.classList.remove("hidden");
+            logoutButton.classList.remove("hidden");
+            try {
+                await loadOverview();
+                startRealtime();
+            } catch (error) {
+                dashboard.classList.add("hidden");
+                loginPanel.classList.remove("hidden");
+                logoutButton.classList.add("hidden");
+                showNotice(error.message, true);
+            }
+        }
+
+        document.getElementById("login-form").addEventListener("submit", async event => {
+            event.preventDefault();
+            const button = document.getElementById("login-button");
+            button.disabled = true;
+            notice.classList.add("hidden");
+            const { error } = await supabase.auth.signInWithPassword({
+                email: document.getElementById("email").value.trim(),
+                password: document.getElementById("password").value,
+            });
+            button.disabled = false;
+            if (error) {
+                showNotice(error.message, true);
+                return;
+            }
+            await enterDashboard();
+        });
+
+        document.getElementById("driver-form").addEventListener("submit", async event => {
+            event.preventDefault();
+            const button = document.getElementById("authorize-button");
+            const userId = document.getElementById("driver-select").value;
+            if (!userId) return showNotice("Choose an account first.", true);
+            button.disabled = true;
+            try {
+                await adminRequest("authorize-driver", { userId });
+                showNotice("Driver account authorized.");
+                await loadOverview();
+            } catch (error) {
+                showNotice(error.message, true);
+            } finally {
+                button.disabled = false;
+            }
+        });
+
+        document.getElementById("dispatch-form").addEventListener("submit", async event => {
+            event.preventDefault();
+            const button = document.getElementById("dispatch-button");
+            button.disabled = true;
+            try {
+                await adminRequest("create-ride", {
+                    customerId: document.getElementById("ride-customer").value,
+                    driverId: document.getElementById("ride-driver").value || null,
+                    phone: document.getElementById("ride-phone").value.trim(),
+                    pickup: document.getElementById("ride-pickup").value.trim(),
+                    destination: document.getElementById("ride-destination").value.trim(),
+                    instructions: document.getElementById("ride-instructions").value.trim(),
+                });
+                document.getElementById("dispatch-form").reset();
+                showNotice("Ride request created; customer and driver panels will update live.");
+                await loadOverview();
+            } catch (error) {
+                showNotice(error.message, true);
+            } finally {
+                button.disabled = false;
+            }
+        });
+
+        document.getElementById("chat-ride").addEventListener("change", event => {
+            loadChat(event.currentTarget.value).catch(error => showNotice(error.message, true));
+        });
+
+        document.getElementById("admin-chat-form").addEventListener("submit", async event => {
+            event.preventDefault();
+            const rideId = document.getElementById("chat-ride").value;
+            const input = document.getElementById("admin-chat-text");
+            const button = document.getElementById("admin-chat-send");
+            if (!rideId || !input.value.trim()) return;
+            button.disabled = true;
+            try {
+                await adminRequest("send-message", { rideId, text: input.value.trim() });
+                input.value = "";
+                await loadOverview();
+            } catch (error) {
+                showNotice(error.message, true);
+            } finally {
+                button.disabled = false;
+                button.disabled = !document.getElementById("chat-ride").value;
+            }
+        });
+
+        document.getElementById("revoke-driver").addEventListener("click", async event => {
+            const button = event.currentTarget;
+            if (!authorizedDriverId || !confirm("Revoke this driver's access?")) return;
+            button.disabled = true;
+            try {
+                await adminRequest("revoke-driver", { userId: authorizedDriverId });
+                showNotice("Driver access revoked.");
+                await loadOverview();
+            } catch (error) {
+                showNotice(error.message, true);
+            } finally {
+                button.disabled = false;
+            }
+        });
+
+        document.getElementById("rides").addEventListener("click", async event => {
+            const button = event.target.closest(".cancel-ride");
+            if (!button || !confirm("Cancel this active ride?")) return;
+            button.disabled = true;
+            try {
+                await adminRequest("cancel-ride", { rideId: button.dataset.rideId });
+                showNotice("Ride cancelled.");
+                await loadOverview();
+            } catch (error) {
+                showNotice(error.message, true);
+                button.disabled = false;
+            }
+        });
+
+        document.getElementById("refresh").addEventListener("click", async () => {
+            try {
+                await loadOverview();
+                showNotice("Admin overview refreshed.");
+            } catch (error) {
+                showNotice(error.message, true);
+            }
+        });
+
+        logoutButton.addEventListener("click", async () => {
+            await supabase.auth.signOut();
+            dashboard.classList.add("hidden");
+            loginPanel.classList.remove("hidden");
+            logoutButton.classList.add("hidden");
+            stopRealtime();
+        });
+
+    </script>
+</body>
+</html>

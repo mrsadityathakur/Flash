@@ -3,31 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="theme-color" content="#000000">
+    <meta name="theme-color" content="#f6f6f6">
     <meta name="description" content="FLASH - Fast rides. Fair for everyone.">
-    <meta name="color-scheme" content="dark">
+    <meta name="color-scheme" content="light">
     <title>FLASH - Fast rides. Fair for everyone.</title>
     <style>
         :root {
-            --bg: #000000;
-            --surface: #111111;
-            --surface-light: #252525;
-            --primary: #FFD700;
-            --text: #ffffff;
-            --text-muted: #a0a0a0;
-            --danger: #ff4444;
-            --success: #00C851;
-            --radius: 16px;
-            --header-height: 60px;
-            --nav-height: 70px;
-            --gold-glow: 0 12px 36px rgba(255, 215, 0, 0.08);
+            --bg: #f3f4f6;
+            --bg-alt: #eef1f2;
+            --surface: #ffffff;
+            --surface-strong: #f6f6f6;
+            --surface-light: #eceef1;
+            --primary: #06c167;
+            --primary-strong: #05a958;
+            --text: #111111;
+            --text-muted: #5f6368;
+            --danger: #e24d4d;
+            --success: #1f9d5a;
+            --radius: 18px;
+            --header-height: 64px;
+            --nav-height: 76px;
+            --shadow-soft: 0 10px 28px rgba(17, 17, 17, 0.08);
         }
         
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg); color: var(--text); 
+            background: linear-gradient(180deg, #f4f5f6 0%, #eef1f3 100%);
+            color: var(--text);
             height: 100vh; height: 100dvh;
             overflow: hidden; display: flex; flex-direction: column;
         }
@@ -64,55 +68,79 @@
             outline: 2px solid var(--primary); outline-offset: 3px;
         }
         
-        .btn-primary { background-color: var(--primary); color: #000; box-shadow: 0 4px 15px rgba(255, 215, 0, 0.18); }
-        .btn-primary:hover:not(:disabled) { box-shadow: 0 7px 22px rgba(255, 215, 0, 0.28); }
-        .btn-outline { background-color: transparent; border: 1px solid var(--surface-light); color: var(--text); }
-        .btn-danger { background-color: rgba(255, 68, 68, 0.1); color: var(--danger); border: 1px solid rgba(255, 68, 68, 0.3); }
-        .btn-sm { padding: 8px 16px; font-size: 0.85rem; border-radius: 10px; }
+        .btn-primary {
+            background: linear-gradient(180deg, var(--primary) 0%, var(--primary-strong) 100%);
+            color: #ffffff;
+            box-shadow: 0 12px 24px rgba(6, 193, 103, 0.2);
+        }
+        .btn-primary:hover:not(:disabled) { box-shadow: 0 14px 30px rgba(6, 193, 103, 0.28); }
+        .btn-outline {
+            background: #ffffff;
+            border: 1px solid rgba(17, 17, 17, 0.12);
+            color: var(--text);
+        }
+        .btn-danger {
+            background: rgba(226, 77, 77, 0.08);
+            color: var(--danger);
+            border: 1px solid rgba(226, 77, 77, 0.2);
+        }
+        .btn-sm { padding: 10px 16px; font-size: 0.82rem; border-radius: 12px; }
 
         input, select, textarea {
-            width: 100%; background-color: var(--surface); border: 1px solid var(--surface-light);
-            color: var(--text); padding: 16px; border-radius: var(--radius); font-family: inherit;
-            font-size: 1rem; outline: none; transition: border-color 0.3s, box-shadow 0.3s;
+            width: 100%; background: #ffffff; border: 1px solid rgba(17, 17, 17, 0.12);
+            color: var(--text); padding: 16px; border-radius: 14px; font-family: inherit;
+            font-size: 1rem; outline: none; transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s ease;
+            box-shadow: 0 1px 0 rgba(17,17,17,0.02);
         }
-        input:focus, select:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(255,215,0,0.1); }
-        input::placeholder, textarea::placeholder { color: #777; }
+        input:focus, select:focus, textarea:focus { border-color: rgba(6, 193, 103, 0.7); box-shadow: 0 0 0 4px rgba(6, 193, 103, 0.12); }
+        input::placeholder, textarea::placeholder { color: #9aa0a6; }
         textarea { resize: vertical; min-height: 80px; }
-        label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;}
+        label { display: block; font-size: 0.78rem; color: var(--text-muted); margin-bottom: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }
         
-        .card { background: linear-gradient(145deg, #151515, #101010); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; border: 1px solid var(--surface-light); box-shadow: 0 8px 24px rgba(0,0,0,0.18); }
+        .card {
+            background: linear-gradient(180deg, #ffffff 0%, #fafafb 100%);
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 16px;
+            border: 1px solid rgba(17, 17, 17, 0.06);
+            box-shadow: var(--shadow-soft);
+        }
         
-        .badge { padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
-        .badge-requested { background: rgba(255, 215, 0, 0.15); color: var(--primary); }
-        .badge-accepted { background: rgba(0, 200, 81, 0.15); color: var(--success); }
-        .badge-arrived { background: rgba(0, 150, 255, 0.15); color: #0096FF; }
-        .badge-in_progress { background: rgba(255, 215, 0, 0.2); color: var(--primary); }
-        .badge-completed { background: rgba(136, 136, 136, 0.2); color: var(--text-muted); }
+        .badge {
+            display: inline-flex; align-items: center; justify-content: center;
+            padding: 7px 12px; border-radius: 999px; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em;
+            border: 1px solid rgba(17,17,17,0.08);
+        }
+        .badge-requested { background: rgba(6, 193, 103, 0.08); color: var(--primary); }
+        .badge-accepted { background: rgba(31, 157, 90, 0.1); color: var(--success); }
+        .badge-arrived { background: rgba(44, 125, 255, 0.08); color: #2a73ff; }
+        .badge-in_progress { background: rgba(6, 193, 103, 0.08); color: var(--primary); }
+        .badge-completed { background: rgba(17, 17, 17, 0.05); color: var(--text-muted); }
 
         #app { display: flex; flex-direction: column; height: 100%; position: relative; }
         
         #splash-screen {
             position: absolute; inset: 0; overflow: hidden; isolation: isolate;
-            background: radial-gradient(ellipse at 50% 42%, rgba(255, 215, 0, 0.09), transparent 34%), linear-gradient(160deg, #111 0%, #050505 48%, #0c0a00 100%); z-index: 9999;
+            background: linear-gradient(180deg, #fafafa 0%, #eef3f0 100%); z-index: 9999;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             transition: opacity 0.5s ease;
         }
-        #splash-screen::before, #splash-screen::after { position: absolute; z-index: -1; border: 1px solid rgba(255, 215, 0, 0.06); border-radius: 50%; content: ""; pointer-events: none; }
+        #splash-screen::before, #splash-screen::after { position: absolute; z-index: -1; border: 1px solid rgba(6, 193, 103, 0.2); border-radius: 50%; content: ""; pointer-events: none; }
         #splash-screen::before { width: min(92vw, 620px); aspect-ratio: 1; }
-        #splash-screen::after { width: min(76vw, 500px); aspect-ratio: 1; border-color: rgba(255, 255, 255, 0.035); }
+        #splash-screen::after { width: min(76vw, 500px); aspect-ratio: 1; border-color: rgba(17,17,17,0.06); }
         .splash-brand { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 30px 24px; }
-        .splash-eyebrow { display: flex; align-items: center; gap: 9px; color: #bcb8a2; font-size: 0.65rem; font-weight: 800; letter-spacing: 0.24em; text-transform: uppercase; }
-        .splash-eyebrow::before, .splash-eyebrow::after { width: 22px; height: 1px; background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.7)); content: ""; }
+        .splash-eyebrow { display: flex; align-items: center; gap: 9px; color: #6d7278; font-size: 0.65rem; font-weight: 800; letter-spacing: 0.24em; text-transform: uppercase; }
+        .splash-eyebrow::before, .splash-eyebrow::after { width: 22px; height: 1px; background: linear-gradient(90deg, transparent, rgba(6, 193, 103, 0.8)); content: ""; }
         .splash-eyebrow::after { transform: rotate(180deg); }
-        .splash-emblem { position: relative; display: grid; place-items: center; width: clamp(220px, 61vw, 310px); aspect-ratio: 1; margin: 25px 0 18px; border: 1px solid rgba(255, 215, 0, 0.3); border-radius: 50%; background: radial-gradient(circle, rgba(255, 215, 0, 0.14), rgba(255, 215, 0, 0.025) 58%, transparent 70%); box-shadow: 0 0 60px rgba(255, 215, 0, 0.08), inset 0 0 35px rgba(255, 215, 0, 0.05); }
-        .splash-emblem::before, .splash-emblem::after { position: absolute; border: 1px solid rgba(255, 215, 0, 0.17); border-radius: 50%; content: ""; pointer-events: none; }
+        .splash-emblem { position: relative; display: grid; place-items: center; width: clamp(220px, 61vw, 310px); aspect-ratio: 1; margin: 25px 0 18px; border: 1px solid rgba(6, 193, 103, 0.22); border-radius: 50%; background: radial-gradient(circle, rgba(6, 193, 103, 0.12), rgba(6, 193, 103, 0.02) 58%, transparent 70%); box-shadow: 0 14px 40px rgba(6, 193, 103, 0.08); }
+        .splash-emblem::before, .splash-emblem::after { position: absolute; border: 1px solid rgba(17, 17, 17, 0.08); border-radius: 50%; content: ""; pointer-events: none; }
         .splash-emblem::before { inset: 9px; }
-        .splash-emblem::after { inset: -12px; border-color: rgba(255, 255, 255, 0.09); border-style: dashed; animation: splash-orbit 36s linear infinite; }
-        .splash-logo { width: 82%; height: 82%; border-radius: 50%; object-fit: contain; filter: drop-shadow(0 0 22px rgba(255, 215, 0, 0.26)); animation: splash-float 3.4s ease-in-out infinite; }
-        .splash-wordmark { color: #ffe45c; font-size: clamp(3.3rem, 14vw, 5.2rem); font-weight: 950; font-style: italic; letter-spacing: -0.095em; line-height: 0.95; padding-right: 0.095em; text-shadow: 0 4px 32px rgba(255, 215, 0, 0.2); }
-        .splash-tagline { margin-top: 15px; color: #e4e1d4; font-size: clamp(0.68rem, 2.5vw, 0.82rem); font-weight: 650; letter-spacing: 0.17em; text-transform: uppercase; }
-        .splash-loading { display: flex; flex-direction: column; align-items: center; gap: 13px; margin-top: 42px; color: #aaa797; font-size: 0.64rem; font-weight: 750; letter-spacing: 0.22em; text-transform: uppercase; }
-        .splash-loading::before { width: 128px; height: 2px; border-radius: 2px; background: linear-gradient(90deg, transparent, var(--primary), transparent); background-size: 200% 100%; box-shadow: 0 0 12px rgba(255, 215, 0, 0.4); content: ""; animation: splash-progress 1.5s ease-in-out infinite; }
+        .splash-emblem::after { inset: -12px; border-style: dashed; animation: splash-orbit 36s linear infinite; }
+        .splash-logo { width: 82%; height: 82%; border-radius: 50%; object-fit: contain; filter: drop-shadow(0 0 20px rgba(6, 193, 103, 0.18)); animation: splash-float 3.4s ease-in-out infinite; }
+        .splash-wordmark { color: #111111; font-size: clamp(3.3rem, 14vw, 5.2rem); font-weight: 950; font-style: italic; letter-spacing: -0.095em; line-height: 0.95; padding-right: 0.095em; }
+        .splash-tagline { margin-top: 15px; color: #4d5359; font-size: clamp(0.68rem, 2.5vw, 0.82rem); font-weight: 650; letter-spacing: 0.17em; text-transform: uppercase; }
+        .splash-loading { display: flex; flex-direction: column; align-items: center; gap: 13px; margin-top: 42px; color: #5d646b; font-size: 0.64rem; font-weight: 750; letter-spacing: 0.22em; text-transform: uppercase; }
+        .splash-loading::before { width: 128px; height: 2px; border-radius: 2px; background: linear-gradient(90deg, transparent, var(--primary), transparent); background-size: 200% 100%; content: ""; animation: splash-progress 1.5s ease-in-out infinite; }
         @keyframes splash-float { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-5px) scale(1.02); } }
         @keyframes splash-progress { from { background-position: 100% 0; } to { background-position: -100% 0; } }
         @keyframes splash-orbit { to { transform: rotate(360deg); } }
@@ -124,13 +152,15 @@
 
         .app-header {
             min-height: var(--header-height); display: flex; align-items: center; justify-content: space-between;
-            padding: 0 20px; background-color: var(--bg); border-bottom: 1px solid var(--surface);
+            padding: 0 20px; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(17, 17, 17, 0.06);
+            box-shadow: 0 4px 18px rgba(17, 17, 17, 0.03);
             flex-shrink: 0; padding-top: max(0px, env(safe-area-inset-top)); z-index: 10;
         }
         .header-actions { display: flex; align-items: center; gap: 8px; }
-        .header-logo { display: flex; align-items: center; gap: 8px; }
-        .header-logo svg { width: 28px; height: 28px; fill: var(--primary); }
-        .header-logo h1 { font-size: 1.3rem; font-weight: 900; font-style: italic; letter-spacing: -1px;}
+        .header-logo { display: flex; align-items: center; gap: 10px; }
+        .header-logo svg { width: 24px; height: 24px; fill: var(--primary); }
+        .header-logo h1 { font-size: 1.35rem; font-weight: 900; font-style: italic; letter-spacing: -0.06em; color: #101010; }
         
         #main-content {
             flex: 1; overflow-y: auto; overflow-x: hidden; padding: 20px;
@@ -140,69 +170,304 @@
 
         .bottom-nav {
             position: absolute; bottom: 0; left: 0; right: 0; min-height: var(--nav-height);
-            background-color: rgba(18, 18, 18, 0.95); backdrop-filter: blur(10px);
-            border-top: 1px solid var(--surface-light); display: flex;
+            background: rgba(255, 255, 255, 0.92); backdrop-filter: blur(18px);
+            border-top: 1px solid rgba(17, 17, 17, 0.06); display: flex;
             justify-content: space-around; align-items: center; padding-bottom: env(safe-area-inset-bottom); z-index: 100;
+            box-shadow: 0 -8px 20px rgba(17, 17, 17, 0.04);
         }
-        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted); font-size: 0.7rem; font-weight: 600; gap: 4px; cursor: pointer; transition: color 0.2s, transform 0.2s; width: 25%; min-height: 58px; border: 0; border-radius: 12px; background: transparent; }
-        .nav-item svg { width: 24px; height: 24px; fill: currentColor; }
-        .nav-item.active { color: var(--primary); transform: translateY(-2px); }
+        .nav-item {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: var(--text-muted); font-size: 0.7rem; font-weight: 700; gap: 4px; cursor: pointer;
+            transition: color 0.2s ease, transform 0.2s ease, background 0.25s ease, box-shadow 0.25s ease;
+            width: 25%; min-height: 58px; border: 0; border-radius: 14px; background: transparent;
+        }
+        .nav-item svg { width: 22px; height: 22px; fill: currentColor; }
+        .nav-item.active {
+            color: var(--primary); background: rgba(6, 193, 103, 0.08);
+            transform: translateY(-2px); box-shadow: inset 0 0 0 1px rgba(6, 193, 103, 0.14);
+        }
 
-        .auth-container { display: flex; flex-direction: column; justify-content: center; min-height: 100%; padding: max(20px, env(safe-area-inset-top)) 20px max(20px, env(safe-area-inset-bottom)); z-index: 50; background: var(--bg); position: fixed; inset: 0; overflow-y: auto; }
+        .auth-container {
+            display: flex; flex-direction: column; justify-content: center; min-height: 100%;
+            padding: max(20px, env(safe-area-inset-top)) 20px max(20px, env(safe-area-inset-bottom));
+            z-index: 50; background: linear-gradient(180deg, #f8f9f9 0%, #eef3f0 100%);
+            position: fixed; inset: 0; overflow-y: auto;
+        }
         #auth-overlay > :is(.auth-tabs, form) { width: min(100%, 480px); margin-left: auto; margin-right: auto; }
         #auth-overlay > .text-center { width: 100%; }
-        .auth-tabs { display: flex; margin-bottom: 30px; background: var(--surface); border-radius: var(--radius); padding: 4px; }
-        .auth-tab { flex: 1; padding: 12px; min-height: 44px; text-align: center; color: var(--text-muted); cursor: pointer; font-weight: 700; font-size: 0.95rem; border-radius: 10px; transition: 0.3s; background: transparent; box-shadow: none; }
-        .auth-tab.active { background: var(--primary); color: #000; box-shadow: 0 2px 10px rgba(255, 215, 0, 0.3); }
+        .auth-tabs {
+            display: flex; margin-bottom: 30px; background: rgba(255,255,255,0.8);
+            border: 1px solid rgba(17,17,17,0.08); border-radius: var(--radius); padding: 4px;
+            box-shadow: 0 8px 16px rgba(17,17,17,0.03);
+        }
+        .auth-tab {
+            flex: 1; padding: 12px; min-height: 46px; text-align: center; color: var(--text-muted);
+            cursor: pointer; font-weight: 700; font-size: 0.95rem; border-radius: 12px; transition: 0.25s ease; background: transparent; box-shadow: none;
+        }
+        .auth-tab.active {
+            background: linear-gradient(180deg, var(--primary) 0%, var(--primary-strong) 100%);
+            color: #ffffff; box-shadow: 0 10px 20px rgba(6, 193, 103, 0.18);
+        }
+        .logo-container {
+            width: 92px; height: 92px; margin: 0 auto 12px; border-radius: 28px;
+            display: grid; place-items: center; background: linear-gradient(145deg, rgba(6, 193, 103, 0.1), rgba(255,255,255,0.8));
+            border: 1px solid rgba(6, 193, 103, 0.22); box-shadow: 0 12px 28px rgba(6, 193, 103, 0.08);
+        }
+        .logo-text {
+            font-size: 2.2rem; font-weight: 900; font-style: italic; letter-spacing: -0.08em; color: var(--primary);
+        }
         .form-group { margin-bottom: 20px; }
 
         #toast-container { position: fixed; top: max(16px, env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); z-index: 10000; display: flex; flex-direction: column; gap: 10px; width: min(90%, 400px); pointer-events: none; }
-        .toast { background: var(--surface-light); color: white; padding: 16px 20px; border-radius: var(--radius); font-size: 0.9rem; font-weight: 600; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); animation: slideDown 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), fadeOut 0.4s ease 3.6s forwards; border-left: 4px solid var(--primary); backdrop-filter: blur(10px); }
+        .toast {
+            background: rgba(17, 17, 17, 0.94); color: white; padding: 16px 20px; border-radius: 16px; font-size: 0.9rem; font-weight: 700; text-align: center;
+            box-shadow: 0 18px 38px rgba(17, 17, 17, 0.18); animation: slideDown 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), fadeOut 0.4s ease 3.6s forwards;
+            border-left: 4px solid var(--primary); backdrop-filter: blur(10px);
+        }
         .toast.error { border-left-color: var(--danger); }
         @keyframes slideDown { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         @keyframes fadeOut { to { opacity: 0; transform: translateY(-20px); } }
 
         #modal-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);
+            position: fixed; inset: 0; background: rgba(17, 17, 17, 0.32); backdrop-filter: blur(4px);
             z-index: 10001; display: flex; align-items: center; justify-content: center;
             opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 0.3s, visibility 0.3s;
         }
         #modal-overlay.active { opacity: 1; visibility: visible; pointer-events: all; }
-        .modal-box { background: var(--surface); width: 90%; max-width: 340px; border-radius: 20px; padding: 24px; transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); text-align: center; border: 1px solid var(--surface-light); }
+        .modal-box {
+            background: #ffffff;
+            width: 90%; max-width: 340px; border-radius: 22px; padding: 24px; transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); text-align: center;
+            border: 1px solid rgba(17,17,17,0.08); box-shadow: 0 20px 40px rgba(17, 17, 17, 0.12);
+        }
         #modal-overlay.active .modal-box { transform: scale(1); }
 
-        .loader { border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid var(--primary); border-radius: 50%; width: 24px; height: 24px; animation: spin 0.8s linear infinite; }
+        .loader { border: 3px solid rgba(17,17,17,0.08); border-top: 3px solid var(--primary); border-radius: 50%; width: 24px; height: 24px; animation: spin 0.8s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        .map-container { width: 100%; height: 180px; border-radius: var(--radius); overflow: hidden; margin-bottom: 16px; border: 1px solid var(--surface-light); background: #1a1a1a; }
-        .map-container iframe { width: 100%; height: 100%; border: none; filter: grayscale(80%) invert(90%) contrast(120%); }
+        .map-container { width: 100%; height: 180px; border-radius: var(--radius); overflow: hidden; margin-bottom: 16px; border: 1px solid rgba(17,17,17,0.08); background: #e8ecec; }
+        .map-container iframe { width: 100%; height: 100%; border: none; filter: grayscale(100%) contrast(110%); }
 
         .timeline { display: flex; justify-content: space-between; margin: 20px 0; position: relative; padding: 0 10px; }
-        .timeline::before { content: ''; position: absolute; top: 12px; left: 30px; right: 30px; height: 2px; background: var(--surface-light); z-index: 1; }
+        .timeline::before { content: ''; position: absolute; top: 12px; left: 30px; right: 30px; height: 2px; background: rgba(17,17,17,0.08); z-index: 1; }
         .timeline-step { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 8px; }
-        .timeline-dot { width: 24px; height: 24px; border-radius: 50%; background: var(--surface-light); display: flex; align-items: center; justify-content: center; border: 2px solid var(--bg); transition: 0.3s; }
-        .timeline-dot.active { background: var(--primary); box-shadow: 0 0 15px rgba(255, 215, 0, 0.5); }
-        .timeline-dot svg { width: 12px; height: 12px; fill: #000; }
+        .timeline-dot { width: 24px; height: 24px; border-radius: 50%; background: #e6e8eb; display: flex; align-items: center; justify-content: center; border: 2px solid var(--bg); transition: 0.3s; }
+        .timeline-dot.active { background: var(--primary); box-shadow: 0 0 15px rgba(6, 193, 103, 0.25); }
+        .timeline-dot svg { width: 12px; height: 12px; fill: #fff; }
         .timeline-label { font-size: 0.6rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; }
         .timeline-step.active .timeline-label { color: var(--primary); }
         .text-xs { font-size: 0.75rem; }
         .gap-2 { gap: 0.5rem; }
         .gap-3 { gap: 1rem; }
-        .empty-state { padding: 28px 18px; border: 1px dashed var(--surface-light); border-radius: var(--radius); color: var(--text-muted); text-align: center; }
+        .empty-state {
+            padding: 28px 18px; border: 1px dashed rgba(17,17,17,0.12); border-radius: var(--radius); color: var(--text-muted); text-align: center;
+            background: rgba(255,255,255,0.45);
+        }
         .status-message { overflow-wrap: anywhere; }
         .profile-card { width: min(100%, 720px); margin-inline: auto; }
         .profile-card .profile-info { min-width: 0; overflow-wrap: anywhere; }
         .chat-panel { margin-top: 16px; }
-        .chat-messages { display: flex; flex-direction: column; gap: 10px; max-height: 280px; min-height: 90px; overflow-y: auto; padding: 12px; background: #090909; border: 1px solid var(--surface-light); border-radius: 12px; }
-        .chat-message { max-width: 88%; align-self: flex-start; padding: 10px 12px; border-radius: 14px 14px 14px 4px; background: var(--surface-light); overflow-wrap: anywhere; }
-        .chat-message.mine { align-self: flex-end; background: rgba(255, 215, 0, 0.18); border: 1px solid rgba(255, 215, 0, 0.25); border-radius: 14px 14px 4px 14px; }
+        .chat-messages {
+            display: flex; flex-direction: column; gap: 10px; max-height: 280px; min-height: 90px; overflow-y: auto; padding: 12px; background: #f5f6f7;
+            border: 1px solid rgba(17,17,17,0.06); border-radius: 14px;
+        }
+        .chat-message {
+            max-width: 88%; align-self: flex-start; padding: 10px 12px; border-radius: 14px 14px 14px 4px; background: #ffffff; overflow-wrap: anywhere;
+            border: 1px solid rgba(17,17,17,0.05);
+        }
+        .chat-message.mine { align-self: flex-end; background: rgba(6, 193, 103, 0.08); border: 1px solid rgba(6, 193, 103, 0.12); border-radius: 14px 14px 4px 14px; }
         .chat-message-meta { display: flex; gap: 8px; margin-bottom: 4px; color: var(--text-muted); font-size: 0.7rem; }
         .chat-compose { display: flex; gap: 8px; margin-top: 10px; align-items: stretch; }
         .chat-compose input { min-width: 0; }
-        .fare-box { border: 1px solid rgba(255, 215, 0, 0.35); background: rgba(255, 215, 0, 0.06); border-radius: 12px; padding: 14px; margin: 12px 0; }
+        .fare-box { border: 1px solid rgba(6, 193, 103, 0.18); background: rgba(6, 193, 103, 0.05); border-radius: 14px; padding: 14px; margin: 12px 0; }
         .fare-amount { font-size: 1.6rem; font-weight: 800; color: var(--primary); }
         .map-container iframe { display: block; }
         #link-forgot { min-height: 44px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+
+        :root {
+            --primary: #111111;
+            --primary-strong: #000000;
+            --radius: 14px;
+            --shadow-soft: 0 8px 24px rgba(17, 17, 17, 0.07);
+        }
+        body {
+            background: #f6f6f6;
+            color: #111111;
+        }
+        button { border-radius: 12px; }
+        .btn-primary {
+            background: #111111;
+            color: #ffffff;
+            box-shadow: none;
+        }
+        .btn-primary:hover:not(:disabled) {
+            background: #333333;
+            box-shadow: none;
+        }
+        .btn-outline {
+            background: #ffffff;
+            color: #111111;
+            border-color: #d8d8d8;
+        }
+        .btn-danger {
+            background: #ffffff;
+            color: #c0392b;
+            border-color: #e8c9c6;
+        }
+        input, select, textarea {
+            border-radius: 10px;
+            box-shadow: none;
+        }
+        input:focus, select:focus, textarea:focus {
+            border-color: #111111;
+            box-shadow: 0 0 0 2px rgba(17, 17, 17, 0.12);
+        }
+        label {
+            color: #3f3f3f;
+            letter-spacing: 0.035em;
+        }
+        .card {
+            border-color: #e8e8e8;
+            box-shadow: var(--shadow-soft);
+        }
+        .badge-requested, .badge-in_progress {
+            color: #111111;
+            background: #f1f1f1;
+        }
+        .badge-accepted { color: #16834b; background: #e8f5ed; }
+        .badge-arrived { color: #245f9e; background: #eaf2fb; }
+        .app-header {
+            background: rgba(255, 255, 255, 0.96);
+            box-shadow: none;
+            border-bottom-color: #e9e9e9;
+        }
+        .header-logo svg { fill: #111111; filter: none; }
+        .bottom-nav {
+            background: rgba(255, 255, 255, 0.98);
+            border-top-color: #e8e8e8;
+            box-shadow: 0 -4px 16px rgba(17, 17, 17, 0.04);
+        }
+        .nav-item.active {
+            color: #111111;
+            background: #f1f1f1;
+            box-shadow: none;
+        }
+        .auth-container {
+            background: #f6f6f6;
+        }
+        .auth-tabs {
+            background: #eeeeee;
+            border-color: #eeeeee;
+            box-shadow: none;
+        }
+        .auth-tab.active {
+            color: #ffffff;
+            background: #111111;
+            box-shadow: none;
+        }
+        .logo-container {
+            background: #111111;
+            border-color: #111111;
+            box-shadow: none;
+        }
+        .logo-text { color: #ffffff; text-shadow: none; }
+        .splash-wordmark { color: #111111; text-shadow: none; }
+        .splash-emblem {
+            background: #ffffff;
+            border-color: #e5e5e5;
+            box-shadow: 0 12px 32px rgba(17, 17, 17, 0.08);
+        }
+        .splash-emblem::before, .splash-emblem::after { border-color: #e8e8e8; }
+        .splash-logo { filter: grayscale(1); }
+        .splash-loading::before { background: #111111; }
+        .timeline-dot.active {
+            background: #111111;
+            box-shadow: none;
+        }
+        .timeline-dot svg { fill: #ffffff; }
+        .timeline-step.active .timeline-label, .text-primary, .fare-amount { color: #111111; }
+        .fare-box {
+            border-color: #e5e5e5;
+            background: #f8f8f8;
+        }
+        .empty-state {
+            background: #ffffff;
+            border-color: #d9d9d9;
+        }
+        .map-container iframe { filter: grayscale(100%) contrast(105%); }
+        .chat-message.mine {
+            color: #ffffff;
+            background: #222222;
+            border-color: #222222;
+        }
+        .toast { border-left-color: #111111; }
+        .form-group { margin-bottom: 18px; }
+        label {
+            color: #333333;
+            font-size: 0.88rem;
+            font-weight: 600;
+            text-transform: none;
+            letter-spacing: 0;
+            margin-bottom: 7px;
+        }
+        input, select, textarea {
+            min-height: 54px;
+            padding: 15px 16px;
+            border: 1px solid transparent;
+            border-radius: 10px;
+            background: #f3f3f3;
+            color: #111111;
+            font-size: 1rem;
+            box-shadow: none;
+        }
+        input:hover, select:hover, textarea:hover { background: #eeeeee; }
+        input:focus, select:focus, textarea:focus {
+            border-color: #777777;
+            background: #ffffff;
+            box-shadow: 0 0 0 1px #777777;
+        }
+        input::placeholder, textarea::placeholder { color: #777777; }
+        textarea { min-height: 96px; }
+        form.card {
+            padding: 22px;
+            border-radius: 16px;
+            background: #ffffff;
+            border: 1px solid #e8e8e8;
+            box-shadow: 0 6px 20px rgba(17, 17, 17, 0.045);
+        }
+        #auth-overlay {
+            align-items: center;
+            justify-content: center;
+            gap: 0;
+            padding-left: 24px;
+            padding-right: 24px;
+        }
+        #auth-overlay > .text-center:first-child { margin-bottom: 20px; }
+        #auth-overlay > p.text-center { margin: 0 auto 18px; color: #5f6368; }
+        #auth-overlay > .auth-tabs { margin-bottom: 16px; }
+        #auth-overlay > form:not(.hidden) {
+            padding: 22px;
+            border: 1px solid #e7e7e7;
+            border-radius: 16px;
+            background: #ffffff;
+            box-shadow: 0 12px 32px rgba(17, 17, 17, 0.07);
+        }
+        #auth-overlay > h2 { margin: 0 auto 18px; }
+        #auth-overlay #link-forgot {
+            color: #333333;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+        #form-book-ride .btn-primary,
+        #form-edit-profile .btn-primary,
+        #form-change-password .btn-primary,
+        #form-login .btn-primary,
+        #form-signup .btn-primary,
+        #form-password-recovery .btn-primary {
+            min-height: 54px;
+            border-radius: 10px;
+            font-weight: 700;
+        }
+        .chat-compose input { min-height: 48px; }
         @media (min-width: 720px) {
             #main-content { width: min(100%, 720px); margin: 0 auto; }
             .app-header { padding-left: max(20px, calc((100vw - 720px) / 2)); padding-right: max(20px, calc((100vw - 720px) / 2)); }
@@ -280,9 +545,24 @@
     <script type="module">
         import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
+        const fetchWithTimeout = async (input, init = {}) => {
+            const controller = new AbortController();
+            const abortFromCaller = () => controller.abort();
+            const timeoutId = setTimeout(() => controller.abort(), 15000);
+            if (init.signal?.aborted) abortFromCaller();
+            else init.signal?.addEventListener('abort', abortFromCaller, { once: true });
+            try {
+                return await fetch(input, { ...init, signal: controller.signal });
+            } finally {
+                clearTimeout(timeoutId);
+                init.signal?.removeEventListener('abort', abortFromCaller);
+            }
+        };
+
         const supabase = createClient(
             "https://hzxdasxebvcunbtecbio.supabase.co",
-            "sb_publishable_J-cORO6pStpYcJWBuOPjvQ_zR1nU5PK"
+            "sb_publishable_J-cORO6pStpYcJWBuOPjvQ_zR1nU5PK",
+            { global: { fetch: fetchWithTimeout } }
         );
 
         let currentUser = null;
@@ -622,10 +902,10 @@
             
             authOverlay.innerHTML = `
                 <div class="text-center mb-3"><div class="logo-container" style="animation: none;"><div class="logo-text" style="font-size: 2.5rem;">FLASH</div></div></div>
-                <p class="text-center text-muted mb-1">Choose how you want to use FLASH</p>
-                <div class="auth-tabs" role="tablist" aria-label="Account role">
+                <p class="text-center text-muted mb-1">Sign in to book or manage rides</p>
+                <div class="auth-tabs" id="auth-role-tabs" role="tablist" aria-label="Account role">
                     <button type="button" class="auth-tab active" id="tab-customer-role" role="tab" aria-selected="true">Customer</button>
-                    <button type="button" class="auth-tab" id="tab-driver-role" role="tab" aria-selected="false">Driver</button>
+                    <button type="button" class="auth-tab" id="tab-driver-role" role="tab" aria-selected="false">Rider</button>
                 </div>
                 <div class="auth-tabs" role="tablist" aria-label="Account access">
                     <button type="button" class="auth-tab active" id="tab-login" role="tab" aria-selected="true" aria-controls="form-login">Login</button>
@@ -639,12 +919,12 @@
                     <button type="button" class="text-center mt-3 text-sm text-muted" id="link-forgot" style="background:transparent; border:0; width:100%; font-weight:600;">Forgot Password?</button>
                 </form>
                 <form id="form-signup" class="hidden" aria-hidden="true">
-                    <div class="form-group"><label for="signup-name">Full Name</label><input type="text" id="signup-name" name="name" autocomplete="name" maxlength="80" required placeholder="Your name"></div>
-                    <div class="form-group"><label for="signup-phone">Phone Number</label><input type="tel" id="signup-phone" name="phone" autocomplete="tel" maxlength="30" required placeholder="+1 555 123 4567"></div>
+                    <div class="form-group"><label for="signup-name">Full name (optional)</label><input type="text" id="signup-name" name="name" autocomplete="name" maxlength="80" placeholder="Your name"></div>
+                    <div class="form-group"><label for="signup-phone">Phone number (optional)</label><input type="tel" id="signup-phone" name="phone" autocomplete="tel" maxlength="30" placeholder="+1 555 123 4567"></div>
                     <div class="form-group"><label for="signup-email">Email</label><input type="email" id="signup-email" name="email" autocomplete="email" required placeholder="you@example.com"></div>
                     <div class="form-group"><label for="signup-password">Password (min 6 chars)</label><input type="password" id="signup-password" name="password" autocomplete="new-password" required minlength="6" placeholder="••••••••"></div>
-                    <p class="text-sm text-muted">FLASH automatically creates your permanent ride PIN. Find it in your profile after signing in.</p>
-                    <button type="submit" class="btn-primary w-full mt-2" id="btn-signup">Create Customer Account</button>
+                    <p class="text-sm text-muted">New accounts start as customers. FLASH creates your ride PIN automatically. Phone is optional.</p>
+                    <button type="submit" class="btn-primary w-full mt-2" id="btn-signup">Create customer account</button>
                 </form>
             `;
 
@@ -655,10 +935,10 @@
                 document.getElementById('tab-customer-role').setAttribute('aria-selected', String(!isDriver));
                 document.getElementById('tab-driver-role').classList.toggle('active', isDriver);
                 document.getElementById('tab-driver-role').setAttribute('aria-selected', String(isDriver));
-                document.getElementById('auth-role-title').textContent = `${isDriver ? 'Driver' : 'Customer'} account`;
-                document.getElementById('login-email-label').textContent = `${isDriver ? 'Driver' : 'Customer'} email`;
-                document.getElementById('btn-login').textContent = `${isDriver ? 'Driver' : 'Customer'} Login`;
-                document.getElementById('btn-signup').textContent = `Create ${isDriver ? 'Driver' : 'Customer'} Account`;
+                document.getElementById('auth-role-title').textContent = `${isDriver ? 'Rider' : 'Customer'} account`;
+                document.getElementById('login-email-label').textContent = `${isDriver ? 'Rider' : 'Customer'} email`;
+                document.getElementById('btn-login').textContent = `${isDriver ? 'Rider' : 'Customer'} Login`;
+                document.getElementById('btn-signup').textContent = 'Create customer account';
             };
             document.getElementById('tab-customer-role').onclick = () => selectAuthRole('customer');
             document.getElementById('tab-driver-role').onclick = () => selectAuthRole('driver');
@@ -672,6 +952,9 @@
                 document.getElementById('form-login').setAttribute('aria-hidden', String(showSignup));
                 document.getElementById('form-signup').classList.toggle('hidden', !showSignup);
                 document.getElementById('form-signup').setAttribute('aria-hidden', String(!showSignup));
+                document.getElementById('auth-role-tabs').classList.toggle('hidden', showSignup);
+                document.getElementById('auth-role-tabs').setAttribute('aria-hidden', String(showSignup));
+                document.getElementById('auth-role-title').textContent = showSignup ? 'Create a customer account' : `${selectedAuthRole === 'driver' ? 'Rider' : 'Customer'} account`;
             };
             document.getElementById('tab-login').onclick = () => selectAuthTab(false);
             document.getElementById('tab-signup').onclick = () => selectAuthTab(true);
@@ -698,19 +981,17 @@
                     const name = document.getElementById('signup-name').value.trim();
                     const phone = document.getElementById('signup-phone').value.trim();
                     const email = document.getElementById('signup-email').value.trim();
-                    if (!name || !phone) throw new Error('Enter your name and phone number.');
-                    const accountRole = selectedAuthRole;
                     const { data, error } = await supabase.auth.signUp({
                         email,
                         password: document.getElementById('signup-password').value,
                         options: {
-                            data: { name, phone, role: accountRole }
+                            data: { name, phone }
                         }
                     });
                     if (error) throw error;
                     showToast(data.session
-                        ? `Your FLASH ${accountRole} account is ready.`
-                        : `Check ${email} to confirm your ${accountRole} account.`);
+                        ? 'Your FLASH customer account is ready.'
+                        : `Check ${email} to confirm your customer account.`);
                 } catch (error) {
                     showToast(getErrorMessage(error), true);
                 } finally {
@@ -721,10 +1002,65 @@
             document.getElementById('link-forgot').onclick = async () => {
                 const email = document.getElementById('login-email').value; if (!email) return showToast("Enter your email first", true);
                 try {
-                    const { error } = await supabase.auth.resetPasswordForEmail(email.trim());
+                    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+                        redirectTo: `${window.location.origin}${window.location.pathname}`
+                    });
                     if (error) throw error;
                     showToast("Password reset link sent.");
                 } catch (error) { showToast(getErrorMessage(error), true); }
+            };
+        }
+
+        function renderPasswordRecovery() {
+            let authOverlay = document.getElementById('auth-overlay');
+            if (!authOverlay) {
+                authOverlay = document.createElement('div');
+                authOverlay.id = 'auth-overlay';
+                authOverlay.className = 'auth-container';
+                document.body.appendChild(authOverlay);
+            }
+            authOverlay.classList.remove('hidden');
+            authOverlay.innerHTML = `
+                <div class="w-full" style="max-width: 480px; margin: auto;">
+                    <h2 class="font-bold text-lg mb-1">Set a new password</h2>
+                    <p class="text-muted text-sm mb-2">Choose a new password for your FLASH account.</p>
+                    <form id="form-password-recovery" class="card">
+                        <div class="form-group">
+                            <label for="recovery-password">New password</label>
+                            <input id="recovery-password" type="password" autocomplete="new-password" minlength="6" required placeholder="At least 6 characters">
+                        </div>
+                        <div class="form-group">
+                            <label for="recovery-password-confirm">Confirm new password</label>
+                            <input id="recovery-password-confirm" type="password" autocomplete="new-password" minlength="6" required placeholder="Enter the password again">
+                        </div>
+                        <button type="submit" class="btn-primary w-full" id="btn-save-recovery-password">Update password</button>
+                    </form>
+                </div>
+            `;
+            document.getElementById('form-password-recovery').onsubmit = async event => {
+                event.preventDefault();
+                const password = document.getElementById('recovery-password').value;
+                const confirmation = document.getElementById('recovery-password-confirm').value;
+                const button = document.getElementById('btn-save-recovery-password');
+                if (password.length < 6) {
+                    showToast('Password must be at least 6 characters.', true);
+                    return;
+                }
+                if (password !== confirmation) {
+                    showToast('Passwords do not match.', true);
+                    return;
+                }
+                setLoading(button, true);
+                try {
+                    const { error } = await supabase.auth.updateUser({ password });
+                    if (error) throw error;
+                    authOverlay.remove();
+                    showToast('Password updated successfully.');
+                } catch (error) {
+                    showToast(`Could not update password: ${getErrorMessage(error)}`, true);
+                } finally {
+                    setLoading(button, false);
+                }
             };
         }
 
@@ -770,6 +1106,13 @@
         }
 
         supabase.auth.onAuthStateChange((event, session) => {
+            if (event === 'PASSWORD_RECOVERY') {
+                setTimeout(async () => {
+                    if (session?.user) await handleAuthStateChange(session.user);
+                    renderPasswordRecovery();
+                }, 0);
+                return;
+            }
             if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
                 setTimeout(() => { void handleAuthStateChange(session?.user || null); }, 0);
             }
@@ -786,7 +1129,7 @@
             }
             currentMode = mode; activeRideId = null; cleanupListeners();
             if (mode === 'customer') { headerTitle.innerText = "FLASH"; btnExitDriver.style.display = 'none'; btnDriverAccount.style.display = 'none'; bottomNav.style.display = 'flex'; renderCustomerHome(); }
-            else { headerTitle.innerText = "Driver Dashboard"; btnExitDriver.style.display = 'block'; btnDriverAccount.style.display = 'block'; bottomNav.style.display = 'none'; renderDriverDashboard(); }
+            else { headerTitle.innerText = "Rider Dashboard"; btnExitDriver.style.display = 'block'; btnDriverAccount.style.display = 'block'; bottomNav.style.display = 'none'; renderDriverDashboard(); }
         }
 
         async function changeUserRole(role, button) {
@@ -806,7 +1149,7 @@
                 const { error } = await supabase.rpc('switch_user_role', { p_role: role });
                 if (error) throw error;
                 userProfile.role = role;
-                showToast(role === 'driver' ? 'Driver mode is ready.' : 'Switched to customer mode.');
+                showToast(role === 'driver' ? 'Rider mode is ready.' : 'Switched to customer mode.');
                 switchMode(role);
             } catch (error) {
                 showToast(getErrorMessage(error), true);
@@ -845,7 +1188,7 @@
                     <form id="form-book-ride">
                         <div class="form-group"><label for="pickup">Pickup Location</label><input type="text" id="pickup" name="pickup" maxlength="160" autocomplete="street-address" required placeholder="Enter pickup address"></div>
                         <div class="form-group"><label for="destination">Where to?</label><input type="text" id="destination" name="destination" maxlength="160" required placeholder="Enter destination"></div>
-                        <div class="form-group"><label for="contact-phone">Contact Number</label><input type="tel" id="contact-phone" name="phone" maxlength="30" autocomplete="tel" required value="${escapeHTML(userProfile.phone)}"></div>
+                        <div class="form-group"><label for="contact-phone">Contact number (optional)</label><input type="tel" id="contact-phone" name="phone" maxlength="30" autocomplete="tel" value="${escapeHTML(userProfile.phone || '')}"></div>
                         <div class="form-group"><label for="ride-type">Vehicle Type</label><select id="ride-type" name="rideType"><option value="bike">Bike (Fastest)</option></select></div>
                         <div class="form-group"><label for="instructions">Note for Driver (Optional)</label><textarea id="instructions" name="instructions" maxlength="300" rows="2" placeholder="e.g. I'm at the main gate"></textarea></div>
                         <button type="submit" class="btn-primary w-full mt-2" id="btn-book">Confirm Booking</button>
@@ -864,7 +1207,7 @@
                         bottomNav.querySelector('[data-view="profile"]').click();
                         throw new Error('Set your six-digit ride PIN in Profile before booking.');
                     }
-                    if (!pickup || !destination || !phone) throw new Error('Complete the pickup, destination, and contact number fields.');
+                    if (!pickup || !destination) throw new Error('Enter your pickup location and destination.');
                     if (pickup.length > 160 || destination.length > 160 || phone.length > 30 || instructions.length > 300) {
                         throw new Error('One or more fields are longer than allowed.');
                     }
@@ -1019,6 +1362,12 @@
                     <p class="text-sm text-muted mb-1">Email: ${escapeHTML(userProfile.email)} (managed by Supabase Auth)</p>
                     <button type="submit" class="btn-primary w-full mt-2" id="btn-save-profile">Save account details</button>
                 </form>
+                <form id="form-change-password" class="card">
+                    <h3 class="font-bold mb-2">Change password</h3>
+                    <div class="form-group"><label for="new-password">New password</label><input id="new-password" type="password" autocomplete="new-password" minlength="6" required placeholder="At least 6 characters"></div>
+                    <div class="form-group"><label for="confirm-new-password">Confirm new password</label><input id="confirm-new-password" type="password" autocomplete="new-password" minlength="6" required placeholder="Enter it again"></div>
+                    <button type="submit" class="btn-primary w-full mt-2" id="btn-change-password">Update password</button>
+                </form>
                 <div class="card">
                     <h3 class="font-bold mb-1 text-primary">Your permanent ride PIN</h3>
                     <p class="text-sm text-muted mb-2">This PIN was generated for your account. Give it to your driver only after you are picked up; the driver must verify it to start the ride.</p>
@@ -1029,7 +1378,7 @@
                 </div>
                 ${userProfile.role === 'driver'
                     ? `<div class="card"><h3 class="font-bold mb-1 text-primary">Driver account</h3><div class="flex flex-col gap-2"><button type="button" class="btn-primary w-full" id="btn-open-driver">Back to Driver Dashboard</button><button type="button" class="btn-outline w-full" id="btn-driver-history">My Ride History</button><button type="button" class="btn-outline w-full" id="btn-switch-customer">Switch to Customer</button></div></div>`
-                    : `<div class="card"><h3 class="font-bold mb-1">Become a driver</h3><p class="text-sm text-muted mb-2">Switch to driver mode instantly. No admin approval is required.</p><button type="button" class="btn-outline w-full" id="btn-become-driver">Switch to Driver</button></div>`}
+                    : `<div class="card"><h3 class="font-bold mb-1">Become a driver</h3><p class="text-sm text-muted mb-2">Switch to driver mode. Rider mode is available only to the authorized account.</p><button type="button" class="btn-outline w-full" id="btn-become-driver">Switch to Driver</button></div>`}
                 <button class="btn-outline w-full mt-2" id="btn-logout">Logout</button>
             `;
             document.getElementById('form-edit-profile').onsubmit = async event => {
@@ -1051,6 +1400,30 @@
                     renderProfile();
                 } catch (error) {
                     showToast(`Could not save account details: ${getErrorMessage(error)}`, true);
+                    setLoading(button, false);
+                }
+            };
+            document.getElementById('form-change-password').onsubmit = async event => {
+                event.preventDefault();
+                const password = document.getElementById('new-password').value;
+                const confirmation = document.getElementById('confirm-new-password').value;
+                const button = document.getElementById('btn-change-password');
+                if (password.length < 6) {
+                    showToast('Password must be at least 6 characters.', true);
+                    return;
+                }
+                if (password !== confirmation) {
+                    showToast('Passwords do not match.', true);
+                    return;
+                }
+                setLoading(button, true);
+                try {
+                    const { error } = await supabase.auth.updateUser({ password });
+                    if (error) throw error;
+                    showToast('Password updated successfully.');
+                    document.getElementById('form-change-password').reset();
+                } catch (error) {
+                    showToast(`Could not update password: ${getErrorMessage(error)}`, true);
                     setLoading(button, false);
                 }
             };

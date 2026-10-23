@@ -1182,9 +1182,8 @@
                 actionSection = `<button class="btn-primary w-full mt-2" id="btn-arrived">I've Arrived at Pickup</button>`;
                 cancelBtnSection = `<button class="btn-danger w-full mt-2" id="btn-release-ride">Cancel & Release Ride</button>`;
             } else if (ride.status === 'arrived') {
-                actionSection = ride.fareStatus === 'accepted'
-                    ? `<form id="form-start-ride" class="card mt-2"><label for="start-ride-pin">Customer's 6-digit ride PIN</label><input id="start-ride-pin" name="startPin" type="password" inputmode="numeric" autocomplete="off" pattern="[0-9]{6}" minlength="6" maxlength="6" required placeholder="Enter PIN given by customer"><p class="text-sm text-muted mt-1">Enter the PIN the customer gives you after pickup. Five incorrect attempts lock the PIN for 15 minutes.</p><button type="submit" class="btn-primary w-full mt-2" id="btn-start-ride">Verify PIN & Start Ride</button></form>`
-                    : `<p class="empty-state mt-2">Wait for the customer to agree to your fare before starting.</p>`;
+                const fareAccepted = ride.fareStatus === 'accepted';
+                actionSection = `<form id="form-start-ride" class="card mt-2"><h3 class="font-bold mb-1">Start ride with customer PIN</h3><label for="start-ride-pin">Customer's 6-digit ride PIN</label><input id="start-ride-pin" name="startPin" type="password" inputmode="numeric" autocomplete="off" pattern="[0-9]{6}" minlength="6" maxlength="6" required placeholder="Enter PIN given by customer"><p class="text-sm text-muted mt-1">Ask the customer for their permanent PIN after pickup. Five incorrect attempts lock PIN verification for 15 minutes.</p>${fareAccepted ? '' : `<p class="text-sm text-danger mt-1">The customer must accept your fare before the ride can start.</p>`}<button type="submit" class="btn-primary w-full mt-2" id="btn-start-ride" ${fareAccepted ? '' : 'disabled'}>${fareAccepted ? 'Verify PIN & Start Ride' : 'Waiting for fare acceptance'}</button></form>`;
                 cancelBtnSection = `<button class="btn-danger w-full mt-2" id="btn-release-ride">Cancel & Release Ride</button>`;
             } else if (ride.status === 'in_progress') {
                 actionSection = `<button class="btn-primary w-full mt-2" id="btn-complete-ride">Complete Ride</button>`;
@@ -1253,6 +1252,10 @@
             const startRideForm = document.getElementById('form-start-ride');
             if (startRideForm) startRideForm.onsubmit = async event => {
                 event.preventDefault();
+                if (ride.fareStatus !== 'accepted') {
+                    showToast('Wait for the customer to accept the fare before starting the ride.', true);
+                    return;
+                }
                 const pinInput = document.getElementById('start-ride-pin');
                 const button = document.getElementById('btn-start-ride');
                 const pin = pinInput.value;
